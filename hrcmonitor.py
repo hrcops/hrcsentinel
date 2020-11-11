@@ -1,4 +1,3 @@
-pwd
 #!/usr/bin/env conda run -n ska3 python
 import os
 import sys
