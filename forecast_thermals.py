@@ -31,7 +31,7 @@ from scipy.signal import hilbert
 from msidlists import *
 from event_times import *
 from plot_stylers import *
-from Scripts.hrcmonitor import convert_chandra_time
+from hrcmonitor import convert_chandra_time
 
 
 def compute_yearly_average(values, window):
