@@ -37,7 +37,6 @@ plt.style.use('ggplot')
 labelsizes = 12
 plt.rcParams['font.size'] = labelsizes
 
-
 plt.rcParams['axes.titlesize'] = labelsizes
 plt.rcParams['axes.labelsize'] = labelsizes
 plt.rcParams['xtick.labelsize'] = labelsizes - 2
