@@ -214,13 +214,13 @@ def main():
         six_days_ago = dt.date.today() - dt.timedelta(days=6)
         two_days_hence = dt.date.today() + dt.timedelta(days=2)
 
-        
-        plt.tight_layout()
+
+
         update_plot(counter, plot_start=six_days_ago,
                     plot_end=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'), force_limits=True)
 
-        plt.tight_layout()
         plt.draw()
+        plt.tight_layout()
         plt.savefig(fig_save_directory + 'status.png', dpi=300)
         plt.savefig(fig_save_directory + 'status.pdf',
                     dpi=300, rasterized=True)
