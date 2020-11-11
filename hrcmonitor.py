@@ -1,3 +1,4 @@
+pwd
 #!/usr/bin/env conda run -n ska3 python
 import os
 import sys
@@ -194,7 +195,7 @@ def main():
     minutes of sleep to avoid overwhelming MAUDE and wasting cycles.
     '''
 
-    fig_save_directory = '/Users/grant/HEAD/data/wdocs/tremblay/HRCOps/plots/'
+    fig_save_directory = '/data/wdocs/tremblay/HRCOps/plots/'
 
     plt.ion()
     plt.figure(figsize=(17, 6))

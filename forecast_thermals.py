@@ -54,7 +54,7 @@ def compute_yearly_average(values, window):
 
 def make_thermal_plots(counter=None):
 
-    fig_save_directory = '/Users/grant/HEAD/data/wdocs/tremblay/HRCOps/plots/thermals/'
+    fig_save_directory = '/data/wdocs/tremblay/HRCOps/plots/thermals/'
 
     # Fetch all MSIDs
     msids_daily = fetch.Msidset(
