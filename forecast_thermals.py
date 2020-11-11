@@ -34,6 +34,37 @@ from event_times import *
 from plot_stylers import *
 
 
+def convert_chandra_time(rawtimes):
+    """
+    Convert input CXC time (seconds since 1998.0) to the time base required for
+    the matplotlib plot_date function (days since start of the Year 1 A.D).
+    """
+
+    # rawtimes is in units of CXC seconds, or seconds since 1998.0
+    # Compute the Delta T between 1998.0 (CXC's Epoch) and 1970.0 (Unix Epoch)
+
+    seconds_since_1998_0 = rawtimes[0]
+
+    cxctime = dt.datetime(1998, 1, 1, 0, 0, 0)
+    unixtime = dt.datetime(1970, 1, 1, 0, 0, 0)
+
+    # Calculate the first offset from 1970.0, needed by matplotlib's plotdate
+    # The below is equivalent (within a few tens of seconds) to the command
+    # t0 = Chandra.Time.DateTime(times[0]).unix
+    delta_time = (cxctime - unixtime).total_seconds() + seconds_since_1998_0
+
+    plotdate_start = mdate.epoch2num(delta_time)
+
+    # Now we use a relative offset from plotdate_start
+    # the number 86,400 below is the number of seconds in a UTC day
+
+    chandratime = (np.asarray(rawtimes) -
+                   rawtimes[0]) / 86400. + plotdate_start
+
+    return chandratime
+
+
+
 def compute_yearly_average(values, window):
 
     array = values
