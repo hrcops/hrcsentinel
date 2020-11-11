@@ -168,17 +168,15 @@ def make_thermal_plots(counter=None):
     ax.text(dt.datetime.now(pytz.utc), ax.get_ylim()[1]+0.3,
             'Now', fontsize=10, color='slategray')
 
-    plt.show()
-
     fig.savefig(figure_savename, dpi=300, bbox_inches='tight')
 
-    fetch.data_source.set('cxc')
+
+
 
     # Make Figure 2
 
+    fetch.data_source.set('cxc')
     figure_savename = fig_save_directory + "all_trends_withlatest.png"
-    # Make this True to ensure the file size is small. Otherwise you're plotting thousands of vector points.
-    rasterized = True
 
     fig, ax = plt.subplots(figsize=(17, 8))
 

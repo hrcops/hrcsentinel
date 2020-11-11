@@ -214,6 +214,8 @@ def main():
         six_days_ago = dt.date.today() - dt.timedelta(days=6)
         two_days_hence = dt.date.today() + dt.timedelta(days=2)
 
+        
+        plt.tight_layout()
         update_plot(counter, plot_start=six_days_ago,
                     plot_end=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'), force_limits=True)
 
