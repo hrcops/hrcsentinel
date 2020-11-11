@@ -14,7 +14,7 @@ import matplotlib.dates as mdate
 from matplotlib import gridspec
 
 import matplotlib.pyplot as plt
-# import mpld3
+plt.switch_backend('agg')
 
 import numpy as np
 import pandas as pd
@@ -196,7 +196,7 @@ def main():
 
     fig_save_directory = '/data/wdocs/tremblay/HRCOps/plots/'
 
-    plt.ion()
+    # plt.ion()
     plt.figure(figsize=(17, 6))
 
     counter = 0
