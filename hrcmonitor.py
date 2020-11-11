@@ -14,7 +14,7 @@ import matplotlib.dates as mdate
 from matplotlib import gridspec
 
 import matplotlib.pyplot as plt
-import mpld3
+# import mpld3
 
 import numpy as np
 import pandas as pd
@@ -23,22 +23,26 @@ from msidlists import *
 from event_times import *
 from plot_stylers import *
 
+from forecast_thermals import *
 
 
-def styleplots():
-    """
-    Make plots pretty and labels clear.
-    """
-    plt.style.use('ggplot')
+# allow_subset=True should let us draw more data points
+# fetch.data_source.set('maude allow_subset=True') fetch.data_source.set('cxc',
+# 'maude allow_subset=True') Be careful if you mix cxc and maude telemetry.
+# There is an offset between the DN-->count conversion.
+# fetch.data_source.set('maude')
 
-    base_text_size = 8
 
-    plt.rcParams['font.sans-serif'] = 'Arial'
-    plt.rcParams['font.size'] = base_text_size
-    plt.rcParams['axes.titlesize'] = base_text_size + 2
-    plt.rcParams['axes.labelsize'] = base_text_size
-    plt.rcParams['xtick.labelsize'] = base_text_size
-    plt.rcParams['ytick.labelsize'] = base_text_size
+plt.style.use('ggplot')
+labelsizes = 8
+plt.rcParams['font.sans-serif'] = 'Arial'
+plt.rcParams['font.size'] = labelsizes
+
+
+plt.rcParams['axes.titlesize'] = labelsizes
+plt.rcParams['axes.labelsize'] = labelsizes
+plt.rcParams['xtick.labelsize'] = labelsizes - 2
+plt.rcParams['ytick.labelsize'] = labelsizes - 2
 
 
 def convert_chandra_time(rawtimes):
@@ -87,7 +91,7 @@ def convert_to_doy(datetime_start):
     return doystring
 
 
-def update_plot(counter, plot_start=dt.datetime(2020, 8, 31, 00), plot_end=dt.date.today() + dt.timedelta(days=2), sampling='full', current_hline=False, date_format=mdate.DateFormatter('%d %H'), missionwide=False):
+def update_plot(counter, plot_start=dt.datetime(2020, 8, 31, 00), plot_end=dt.date.today() + dt.timedelta(days=2), sampling='full', current_hline=False, date_format=mdate.DateFormatter('%d %H'), force_limits=False, missionwide=False):
     plotnum = -1
     for i in range(3):
         for j in range(4):
@@ -125,6 +129,16 @@ def update_plot(counter, plot_start=dt.datetime(2020, 8, 31, 00), plot_end=dt.da
                         ax.axhline(
                             latest_data[msid].vals[-1], color=yellow, zorder=2)
                         # then we've fetched from CXC/Ska and we don't. So grab it (with low fetch overhead)
+                if force_limits is True:
+                    ax.set_ylim(dashboard_limits[plotnum])
+
+            if plotnum == 2:
+                # Then this is the Bus Current plot. Overplot the CAUTION and WARNING limits
+                ax.axhspan(2.3, 2.5, facecolor=yellow, alpha=0.3)
+                ax.axhspan(2.5, 4.0, facecolor=red, alpha=0.3)
+
+            if plotnum == 10:
+                ax.set_yscale('log')
 
             if missionwide is True and plotnum == 11:
                 ax.set_ylabel(r'Counts s$^{-1}$')
@@ -133,7 +147,7 @@ def update_plot(counter, plot_start=dt.datetime(2020, 8, 31, 00), plot_end=dt.da
                 # It will have already plotted pitch. So just clear it.
                 ax.clear()
                 ax.plot_date(convert_chandra_time(
-                    data['2SHEV1RT'].times), data['2SHEV1RT'].vals, markersize=1, label=msid, zorder=1, rasterized=True)
+                    data['2SHEV1RT'].times), data['2SHEV1RT'].midvals, markersize=1, label=msid, zorder=1, rasterized=True)
                 with fetch.data_source('maude'):
                     latest_data = fetch.get_telem(
                         '2SHEV1RT', start=convert_to_doy(yesterday), quiet=True)
@@ -143,9 +157,9 @@ def update_plot(counter, plot_start=dt.datetime(2020, 8, 31, 00), plot_end=dt.da
             ax.set_xlim(plot_start, plot_end)
             ax.set_ylabel(dashboard_units[plotnum])
 
-            ax.axvline(eventdate, color=red)
-            ax.axvline(time_of_second_anomaly, color=red)
-            ax.axvline(time_of_cap_1543, color='gray')
+            # ax.axvline(eventdate, color=red)
+            # ax.axvline(time_of_second_anomaly, color=red)
+            # ax.axvline(time_of_cap_1543, color='gray')
             ax.axvline(dt.datetime.now(pytz.utc),
                        color='gray', alpha=0.5)
 
@@ -154,7 +168,7 @@ def update_plot(counter, plot_start=dt.datetime(2020, 8, 31, 00), plot_end=dt.da
 
             plt.gca().xaxis.set_major_formatter(date_format)
 
-            plt.xticks(rotation=40)
+            plt.xticks(rotation=0)
 
             ax.legend(prop={'size': 8}, loc=3)
             ax.set_title('{}'.format(
@@ -162,15 +176,15 @@ def update_plot(counter, plot_start=dt.datetime(2020, 8, 31, 00), plot_end=dt.da
 
             if missionwide is True:
                 if plotnum == 10:
-                    ax.set_ylim(1, 20000)
+                    ax.set_ylim(1, 10000)
                     ax.set_yscale('log')
                 if plotnum == 11:
                     ax.set_ylim(1, 10000)
                     ax.set_title('Shield Rate'.format(),
                                  color='slategray', loc='center')
 
-            plt.suptitle('Iteration {} | Updated as of {} EST'.format(
-                counter, dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), color='slategray', size=8)
+            plt.suptitle(t='Iteration {} | Updated as of {} EST'.format(
+                counter, dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), y=0.99, color='slategray', size=6)
 
 
 def main():
@@ -179,33 +193,41 @@ def main():
     both plots. Saves them to preferred directories. Pauses the loop for a few
     minutes of sleep to avoid overwhelming MAUDE and wasting cycles.
     '''
-    styleplots()
 
     fig_save_directory = '/Users/grant/HEAD/data/wdocs/tremblay/HRCOps/plots/'
 
     plt.ion()
-    plt.figure(0, figsize=(16, 7))
+    plt.figure(figsize=(17, 6))
 
     counter = 0
 
     while True:
 
-        fetch.data_source.set('cxc', 'maude allow_subset=True')
+        # fetch.data_source.set('cxc', 'maude allow_subset=False')
+        fetch.data_source.set('maude allow_subset=False')
 
         print("Refreshing dashboard (Iteration {}) at {}".format(
             counter, dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), flush=True)
 
+        two_days_ago = dt.date.today() - dt.timedelta(days=2)
+        four_days_ago = dt.date.today() - dt.timedelta(days=4)
         six_days_ago = dt.date.today() - dt.timedelta(days=6)
         two_days_hence = dt.date.today() + dt.timedelta(days=2)
 
         update_plot(counter, plot_start=six_days_ago,
-                    plot_end=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d %H'))
+                    plot_end=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'), force_limits=True)
 
         plt.tight_layout()
         plt.draw()
         plt.savefig(fig_save_directory + 'status.png', dpi=300)
         plt.savefig(fig_save_directory + 'status.pdf',
                     dpi=300, rasterized=True)
+        print('Saved Current Status Plots to {}'.format(
+            fig_save_directory), end="\r", flush=True)
+        # Clear the command line manually
+        sys.stdout.write("\033[K")
+
+        plt.clf()
 
         fetch.data_source.set('cxc')
 
@@ -217,9 +239,19 @@ def main():
         plt.savefig(fig_save_directory + 'status_wide.png', dpi=300)
         plt.savefig(fig_save_directory + 'status_wide.pdf',
                     dpi=300, rasterized=True)
+        print('Saved Mission-Wide Plots to {}'.format(
+            fig_save_directory), end="\r", flush=True)
+        # Clear the command line manually
+        sys.stdout.write("\033[K")
 
-        # fig = plt.gcf()
-        # mpld3.fig_to_html(fig, fig_save_directory + 'interactive_plot.html')
+        # # fig = plt.gcf()
+        # # mpld3.fig_to_html(fig, fig_save_directory + 'interactive_plot.html')
+
+        print('Updating Thermal Plots', end="\r", flush=True)
+        make_thermal_plots(counter)
+        print('Done', end="\r", flush=True)
+        # Clear the command line manually
+        sys.stdout.write("\033[K")
 
         counter += 1
         sleep_period_seconds = 120
