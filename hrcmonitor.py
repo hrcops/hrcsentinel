@@ -256,7 +256,7 @@ def main():
         sys.stdout.write("\033[K")
 
         counter += 1
-        sleep_period_seconds = 120
+        sleep_period_seconds = 60
         for i in range(0, sleep_period_seconds):
             # you need to flush this print statement
             print('Refreshing plots in {} seconds...'.format(

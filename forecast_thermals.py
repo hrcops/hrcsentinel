@@ -153,6 +153,10 @@ def make_thermal_plots(counter=None):
     color_idx = np.linspace(0, 1, n_lines)
 
     for i, msid in zip(color_idx, ordered_msidlist):
+
+        print('Plotting {}'.format(msid), end='\r', flush=True)
+        # Clear the command line manually
+        sys.stdout.write("\033[K")
         ax.plot_date(convert_chandra_time(msids_daily[msid].times),
                      msids_daily[msid].means, '.', alpha=1.0, markersize=2.5, label='{}'.format(msid), color=plt.cm.RdYlBu_r(i),  rasterized=rasterized)
 
@@ -196,6 +200,10 @@ def make_thermal_plots(counter=None):
     color_idx = np.linspace(0, 1, n_lines)
 
     for i, msid in zip(color_idx, ordered_msidlist):
+
+        print('Plotting {}'.format(msid), end='\r', flush=True)
+        # Clear the command line manually
+        sys.stdout.write("\033[K")
 
         times = convert_chandra_time(msids_daily[msid].times)
         # ax.plot(all_trends["{}_trend".format(msidname)], lw=3.0, label=msidname, color=plt.cm.coolwarm(i))
