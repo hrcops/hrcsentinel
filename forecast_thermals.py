@@ -33,14 +33,7 @@ from msidlists import *
 from event_times import *
 from plot_stylers import *
 
-plt.style.use('ggplot')
-labelsizes = 12
-plt.rcParams['font.size'] = labelsizes
 
-plt.rcParams['axes.titlesize'] = labelsizes
-plt.rcParams['axes.labelsize'] = labelsizes
-plt.rcParams['xtick.labelsize'] = labelsizes - 2
-plt.rcParams['ytick.labelsize'] = labelsizes - 2
 
 
 def convert_chandra_time(rawtimes):
@@ -93,6 +86,16 @@ def compute_yearly_average(values, window):
 
 
 def make_thermal_plots(counter=None):
+
+
+    plt.style.use('ggplot')
+    labelsizes = 12
+    plt.rcParams['font.size'] = labelsizes
+
+    plt.rcParams['axes.titlesize'] = labelsizes
+    plt.rcParams['axes.labelsize'] = labelsizes
+    plt.rcParams['xtick.labelsize'] = labelsizes - 2
+    plt.rcParams['ytick.labelsize'] = labelsizes - 2
 
     fig_save_directory = '/data/wdocs/tremblay/HRCOps/plots/thermals/'
 
