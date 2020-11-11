@@ -26,13 +26,6 @@ from plot_stylers import *
 from forecast_thermals import *
 
 
-# allow_subset=True should let us draw more data points
-# fetch.data_source.set('maude allow_subset=True') fetch.data_source.set('cxc',
-# 'maude allow_subset=True') Be careful if you mix cxc and maude telemetry.
-# There is an offset between the DN-->count conversion.
-# fetch.data_source.set('maude')
-
-
 plt.style.use('ggplot')
 labelsizes = 8
 # plt.rcParams['font.sans-serif'] = 'Arial'
@@ -180,6 +173,7 @@ def update_plot(counter, plot_start=dt.datetime(2020, 8, 31, 00), plot_end=dt.da
                     ax.set_yscale('log')
                 if plotnum == 11:
                     ax.set_ylim(1, 10000)
+                    ax.set_ylabel(r"Counts s$^{-1}$")
                     ax.set_title('Shield Rate'.format(),
                                  color='slategray', loc='center')
 
@@ -194,7 +188,7 @@ def main():
     minutes of sleep to avoid overwhelming MAUDE and wasting cycles.
     '''
 
-    fig_save_directory = '/data/wdocs/tremblay/HRCOps/plots/'
+    fig_save_directory = '/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/'
 
     # plt.ion()
     plt.figure(figsize=(17, 6))
@@ -241,6 +235,7 @@ def main():
         plt.savefig(fig_save_directory + 'status_wide.png', dpi=300)
         plt.savefig(fig_save_directory + 'status_wide.pdf',
                     dpi=300, rasterized=True)
+
         print('Saved Mission-Wide Plots to {}'.format(
             fig_save_directory), end="\r", flush=True)
         # Clear the command line manually
@@ -255,8 +250,14 @@ def main():
         # Clear the command line manually
         sys.stdout.write("\033[K")
 
+
+        print('Saved Thermal Plots to {}'.format(
+            fig_save_directory), end="\r", flush=True)
+        # Clear the command line manually
+        sys.stdout.write("\033[K")
+
         counter += 1
-        sleep_period_seconds = 60
+        sleep_period_seconds = 30
         for i in range(0, sleep_period_seconds):
             # you need to flush this print statement
             print('Refreshing plots in {} seconds...'.format(

@@ -87,17 +87,7 @@ def compute_yearly_average(values, window):
 
 def make_thermal_plots(counter=None):
 
-
-    plt.style.use('ggplot')
-    labelsizes = 12
-    plt.rcParams['font.size'] = labelsizes
-
-    plt.rcParams['axes.titlesize'] = labelsizes
-    plt.rcParams['axes.labelsize'] = labelsizes
-    plt.rcParams['xtick.labelsize'] = labelsizes - 2
-    plt.rcParams['ytick.labelsize'] = labelsizes - 2
-
-    fig_save_directory = '/data/wdocs/tremblay/HRCOps/plots/thermals/'
+    fig_save_directory = '/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/'
 
     # Fetch all MSIDs
     msids_daily = fetch.Msidset(
@@ -143,7 +133,6 @@ def make_thermal_plots(counter=None):
 
     # Make Figure 1
 
-    figure_savename = fig_save_directory + "thermals_daily.png"
     # Make this True to ensure the file size is small. Otherwise you're plotting thousands of vector points.
     rasterized = True
 
@@ -154,21 +143,31 @@ def make_thermal_plots(counter=None):
 
     for i, msid in zip(color_idx, ordered_msidlist):
 
-        print('Plotting {}'.format(msid), end='\r', flush=True)
+        print('Plotting daily thermals for {}'.format(msid), end='\r', flush=True)
         # Clear the command line manually
         sys.stdout.write("\033[K")
         ax.plot_date(convert_chandra_time(msids_daily[msid].times),
                      msids_daily[msid].means, '.', alpha=1.0, markersize=2.5, label='{}'.format(msid), color=plt.cm.RdYlBu_r(i),  rasterized=rasterized)
 
-    ax.set_ylabel('Temperature (C)')
-    ax.set_xlabel('Date')
+        # Draw a large point line where the current data point is
+        with fetch.data_source('maude'):
+            latest_datapoint = fetch.Msid(msid)
+            ax.plot_date(convert_chandra_time(latest_datapoint.times)[
+                         -1], latest_datapoint.vals[-1], markersize=8, color=plt.cm.RdYlBu_r(i), rasterized=rasterized, zorder=4)
+
+
+
+    ax.set_ylabel("Temperature (C)", fontsize=10)
+    ax.set_xlabel("Date", fontsize=10)
+    plt.xticks(fontsize=10)
+    plt.yticks(fontsize=10)
     ax.set_ylim(0, 40)
 
     # ax.set_xlim(dt.date(2018, 10, 6), dt.date(2018, 10, 30))
 
     if counter is not None:
-        ax.set_title('Iteration {} | Updated as of {} EST'.format(
-            counter, dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), color='slategray', size=6)
+        ax.set_title('HRC Thermistor MSIDs (Daily Means) | Iteration {} | Updated as of {} EST'.format(
+            counter, dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), color='slategray', size=10)
     else:
         ax.set_title(
             "HRC Thermistor Temperatures (Daily Averages) Over the Mission Lifetime", color='slategray', size=6)
@@ -184,15 +183,16 @@ def make_thermal_plots(counter=None):
     ax.text(dt.datetime.now(pytz.utc), ax.get_ylim()[1]+0.3,
             'Now', fontsize=10, color='slategray')
 
-    fig.savefig(figure_savename, dpi=300, bbox_inches='tight')
+    fig.savefig(fig_save_directory + 'thermals.png', dpi=300, bbox_inches='tight')
+    fig.savefig(fig_save_directory + 'thermals.pdf', dpi=300, bbox_inches='tight')
 
+    plt.close()
 
 
 
     # Make Figure 2
 
     fetch.data_source.set('cxc')
-    figure_savename = fig_save_directory + "all_trends_withlatest.png"
 
     fig, ax = plt.subplots(figsize=(17, 8))
 
@@ -201,7 +201,7 @@ def make_thermal_plots(counter=None):
 
     for i, msid in zip(color_idx, ordered_msidlist):
 
-        print('Plotting {}'.format(msid), end='\r', flush=True)
+        print('Plotting thermal trends for {}'.format(msid), end='\r', flush=True)
         # Clear the command line manually
         sys.stdout.write("\033[K")
 
@@ -216,21 +216,24 @@ def make_thermal_plots(counter=None):
         with fetch.data_source('maude'):
             latest_datapoint = fetch.Msid(msid)
             ax.plot_date(convert_chandra_time(latest_datapoint.times)[
-                         -1], latest_datapoint.vals[-1], markersize=10.0, color=plt.cm.RdYlBu_r(i), rasterized=rasterized)
+                         -1], latest_datapoint.vals[-1], markersize=8, color=plt.cm.RdYlBu_r(i), rasterized=rasterized, zorder=4)
 
     ax.legend(prop={'size': 13}, loc='center left',
               bbox_to_anchor=(1, 0.5))
     # plt.legend(title='title', bbox_to_anchor=(1.05, 1), loc='upper left')
 
     if counter is not None:
-        ax.set_title('Iteration {} | Updated as of {} EST'.format(
-            counter, dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), color='slategray', size=6)
+        ax.set_title('Moving Average Thermal Trends | Iteration {} | Updated as of {} EST'.format(
+            counter, dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), color='slategray', size=10)
     else:
         ax.set_title(
             "HRC Thermistor Temperatures (Moving Averages) Over the Mission Lifetime", color='slategray', size=6)
 
-    ax.set_ylabel("Temperature (C)")
-    ax.set_xlabel("Date")
+    ax.set_ylabel("Temperature (C)", fontsize=10)
+    ax.set_xlabel("Date", fontsize=10)
+
+    plt.xticks(fontsize=10)
+    plt.yticks(fontsize=10)
 
     ax.axvline(dt.datetime.now(pytz.utc),
                color='gray', alpha=0.5)
@@ -240,8 +243,10 @@ def make_thermal_plots(counter=None):
 
     ax.set_xlim(dt.datetime(2001, 1, 1), dt.datetime(2022, 1, 1))
 
-    fig.savefig(figure_savename, dpi=300, bbox_inches='tight')
+    fig.savefig(fig_save_directory + 'thermal_trends.png', dpi=300, bbox_inches='tight')
+    fig.savefig(fig_save_directory + 'thermal_trends.pdf', dpi=300, bbox_inches='tight')
 
+    plt.close()
 
 if __name__ == "__main__":
     print('Updating Thermal Plots...', end='')
