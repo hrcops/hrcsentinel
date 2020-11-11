@@ -35,7 +35,7 @@ from forecast_thermals import *
 
 plt.style.use('ggplot')
 labelsizes = 8
-plt.rcParams['font.sans-serif'] = 'Arial'
+# plt.rcParams['font.sans-serif'] = 'Arial'
 plt.rcParams['font.size'] = labelsizes
 
 
