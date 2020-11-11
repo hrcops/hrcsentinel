@@ -1,15 +1,5 @@
 #!/usr/bin/env python
 
-import datetime as dt
-
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdate
-
-from hrcsentinel import hrccore as hrc
-
-
-# MSIDlists
-
 voltage_msids = ['2P24VAVL',  # 24 V bus EED voltage,
                  '2P15VAVL',  # +15 V bus EED voltage
                  '2P05VAVL',  # +05 V bus EED voltage
