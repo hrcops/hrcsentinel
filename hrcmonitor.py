@@ -1,4 +1,10 @@
 #!/usr/bin/env conda run -n ska3 python
+from forecast_thermals import *
+from plot_stylers import *
+from event_times import *
+from msidlists import *
+import pandas as pd
+import numpy as np
 import os
 import sys
 import shutil
@@ -15,15 +21,6 @@ from matplotlib import gridspec
 
 import matplotlib.pyplot as plt
 plt.switch_backend('agg')
-
-import numpy as np
-import pandas as pd
-
-from msidlists import *
-from event_times import *
-from plot_stylers import *
-
-from forecast_thermals import *
 
 
 plt.style.use('ggplot')
@@ -197,64 +194,68 @@ def main():
 
     while True:
 
-        # fetch.data_source.set('cxc', 'maude allow_subset=False')
-        fetch.data_source.set('maude allow_subset=False')
+        try:
 
-        print("Refreshing dashboard (Iteration {}) at {}".format(
-            counter, dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), flush=True)
+            # fetch.data_source.set('cxc', 'maude allow_subset=False')
+            fetch.data_source.set('maude allow_subset=False')
 
-        two_days_ago = dt.date.today() - dt.timedelta(days=2)
-        four_days_ago = dt.date.today() - dt.timedelta(days=4)
-        six_days_ago = dt.date.today() - dt.timedelta(days=6)
-        two_days_hence = dt.date.today() + dt.timedelta(days=2)
+            print("Refreshing dashboard (Iteration {}) at {}".format(
+                counter, dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), flush=True)
 
+            two_days_ago = dt.date.today() - dt.timedelta(days=2)
+            four_days_ago = dt.date.today() - dt.timedelta(days=4)
+            six_days_ago = dt.date.today() - dt.timedelta(days=6)
+            two_days_hence = dt.date.today() + dt.timedelta(days=2)
 
+            update_plot(counter, plot_start=six_days_ago,
+                        plot_end=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'), force_limits=True)
 
-        update_plot(counter, plot_start=six_days_ago,
-                    plot_end=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'), force_limits=True)
+            plt.draw()
+            plt.tight_layout()
+            plt.savefig(fig_save_directory + 'status.png', dpi=300)
+            plt.savefig(fig_save_directory + 'status.pdf',
+                        dpi=300, rasterized=True)
+            print('Saved Current Status Plots to {}'.format(
+                fig_save_directory), end="\r", flush=True)
+            # Clear the command line manually
+            sys.stdout.write("\033[K")
 
-        plt.draw()
-        plt.tight_layout()
-        plt.savefig(fig_save_directory + 'status.png', dpi=300)
-        plt.savefig(fig_save_directory + 'status.pdf',
-                    dpi=300, rasterized=True)
-        print('Saved Current Status Plots to {}'.format(
-            fig_save_directory), end="\r", flush=True)
-        # Clear the command line manually
-        sys.stdout.write("\033[K")
+            plt.clf()
 
-        plt.clf()
+            fetch.data_source.set('cxc')
 
-        fetch.data_source.set('cxc')
+            update_plot(counter, plot_start=dt.datetime(
+                2000, 1, 4), plot_end=None, sampling='daily', date_format=mdate.DateFormatter('%Y'), current_hline=True, missionwide=True)
 
-        update_plot(counter, plot_start=dt.datetime(
-            2000, 1, 4), plot_end=None, sampling='daily', date_format=mdate.DateFormatter('%Y'), current_hline=True, missionwide=True)
+            plt.tight_layout()
+            plt.draw()
+            plt.savefig(fig_save_directory + 'status_wide.png', dpi=300)
+            plt.savefig(fig_save_directory + 'status_wide.pdf',
+                        dpi=300, rasterized=True)
 
-        plt.tight_layout()
-        plt.draw()
-        plt.savefig(fig_save_directory + 'status_wide.png', dpi=300)
-        plt.savefig(fig_save_directory + 'status_wide.pdf',
-                    dpi=300, rasterized=True)
+            print('Saved Mission-Wide Plots to {}'.format(
+                fig_save_directory), end="\r", flush=True)
+            # Clear the command line manually
+            sys.stdout.write("\033[K")
 
-        print('Saved Mission-Wide Plots to {}'.format(
-            fig_save_directory), end="\r", flush=True)
-        # Clear the command line manually
-        sys.stdout.write("\033[K")
+            # # fig = plt.gcf()
+            # # mpld3.fig_to_html(fig, fig_save_directory + 'interactive_plot.html')
 
-        # # fig = plt.gcf()
-        # # mpld3.fig_to_html(fig, fig_save_directory + 'interactive_plot.html')
+            print('Updating Thermal Plots', end="\r", flush=True)
+            make_thermal_plots(counter)
+            print('Done', end="\r", flush=True)
+            # Clear the command line manually
+            sys.stdout.write("\033[K")
 
-        print('Updating Thermal Plots', end="\r", flush=True)
-        make_thermal_plots(counter)
-        print('Done', end="\r", flush=True)
-        # Clear the command line manually
-        sys.stdout.write("\033[K")
+            print('Saved Thermal Plots to {}'.format(
+                fig_save_directory), end="\r", flush=True)
+            # Clear the command line manually
+            sys.stdout.write("\033[K")
 
-
-        print('Saved Thermal Plots to {}'.format(
-            fig_save_directory), end="\r", flush=True)
-        # Clear the command line manually
-        sys.stdout.write("\033[K")
+        except Exception as e:
+            print("ERROR on Iteration {}: {}".format(counter, e))
+            print("Pressing on...")
+            continue
 
         counter += 1
         sleep_period_seconds = 30
