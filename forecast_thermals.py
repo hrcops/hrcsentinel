@@ -1,5 +1,11 @@
 #!/usr/bin/env conda run -n ska3 python
-#!/usr/bin/env conda run -n ska3 python
+
+from msidlists import *
+from scipy.signal import hilbert
+from scipy.interpolate import interp1d
+from scipy.interpolate import spline
+import pandas as pd
+import numpy as np
 import os
 import sys
 import shutil
@@ -17,23 +23,11 @@ import pytz
 import matplotlib.dates as mdate
 from matplotlib import gridspec
 
+from chandratime import convert_chandra_time, convert_to_doy
+
+
 import matplotlib.pyplot as plt
 plt.switch_backend('agg')
-
-import numpy as np
-import pandas as pd
-
-import numpy as np
-from scipy.interpolate import spline
-from scipy.interpolate import interp1d
-from scipy.signal import hilbert
-
-
-from msidlists import *
-from event_times import *
-from plot_stylers import *
-
-
 
 
 def convert_chandra_time(rawtimes):
@@ -66,7 +60,6 @@ def convert_chandra_time(rawtimes):
     return chandratime
 
 
-
 def compute_yearly_average(values, window):
 
     array = values
@@ -85,9 +78,7 @@ def compute_yearly_average(values, window):
     return moving_ave_array
 
 
-def make_thermal_plots(counter=None):
-
-    fig_save_directory = '/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/'
+def make_thermal_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/'):
 
     # Fetch all MSIDs
     msids_daily = fetch.Msidset(
@@ -143,7 +134,8 @@ def make_thermal_plots(counter=None):
 
     for i, msid in zip(color_idx, ordered_msidlist):
 
-        print('Plotting daily thermals for {}'.format(msid), end='\r', flush=True)
+        print('Plotting daily thermals for {}'.format(
+            msid), end='\r', flush=True)
         # Clear the command line manually
         sys.stdout.write("\033[K")
         ax.plot_date(convert_chandra_time(msids_daily[msid].times),
@@ -154,8 +146,6 @@ def make_thermal_plots(counter=None):
             latest_datapoint = fetch.Msid(msid)
             ax.plot_date(convert_chandra_time(latest_datapoint.times)[
                          -1], latest_datapoint.vals[-1], markersize=8, color=plt.cm.RdYlBu_r(i), rasterized=rasterized, zorder=4)
-
-
 
     ax.set_ylabel("Temperature (C)", fontsize=10)
     ax.set_xlabel("Date", fontsize=10)
@@ -183,12 +173,12 @@ def make_thermal_plots(counter=None):
     ax.text(dt.datetime.now(pytz.utc), ax.get_ylim()[1]+0.3,
             'Now', fontsize=10, color='slategray')
 
-    fig.savefig(fig_save_directory + 'thermals.png', dpi=300, bbox_inches='tight')
-    fig.savefig(fig_save_directory + 'thermals.pdf', dpi=300, bbox_inches='tight')
+    fig.savefig(fig_save_directory + 'thermals.png',
+                dpi=300, bbox_inches='tight')
+    fig.savefig(fig_save_directory + 'thermals.pdf',
+                dpi=300, bbox_inches='tight')
 
     plt.close()
-
-
 
     # Make Figure 2
 
@@ -201,7 +191,8 @@ def make_thermal_plots(counter=None):
 
     for i, msid in zip(color_idx, ordered_msidlist):
 
-        print('Plotting thermal trends for {}'.format(msid), end='\r', flush=True)
+        print('Plotting thermal trends for {}'.format(
+            msid), end='\r', flush=True)
         # Clear the command line manually
         sys.stdout.write("\033[K")
 
@@ -243,10 +234,13 @@ def make_thermal_plots(counter=None):
 
     ax.set_xlim(dt.datetime(2001, 1, 1), dt.datetime(2022, 1, 1))
 
-    fig.savefig(fig_save_directory + 'thermal_trends.png', dpi=300, bbox_inches='tight')
-    fig.savefig(fig_save_directory + 'thermal_trends.pdf', dpi=300, bbox_inches='tight')
+    fig.savefig(fig_save_directory + 'thermal_trends.png',
+                dpi=300, bbox_inches='tight')
+    fig.savefig(fig_save_directory + 'thermal_trends.pdf',
+                dpi=300, bbox_inches='tight')
 
     plt.close()
+
 
 if __name__ == "__main__":
     print('Updating Thermal Plots...', end='')

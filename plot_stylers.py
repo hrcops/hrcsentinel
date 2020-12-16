@@ -4,6 +4,7 @@
 import matplotlib.pyplot as plt
 
 # Grab the ggplot colors so you can manually set them
+
 plt.style.use('ggplot')
 rasterized = True
 markersize = 1.8

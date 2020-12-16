@@ -1,25 +1,29 @@
 #!/usr/bin/env conda run -n ska3 python
-from forecast_thermals import *
-from plot_stylers import *
-from event_times import *
-from msidlists import *
-import pandas as pd
-import numpy as np
-import os
-import sys
-import shutil
-import time
-import pytz
-import traceback
-
-import Ska.engarchive.fetch as fetch
-import Chandra.Time
-
-import datetime as dt
-import matplotlib.dates as mdate
-from matplotlib import gridspec
 
 import matplotlib.pyplot as plt
+from matplotlib import gridspec
+import matplotlib.dates as mdate
+import datetime as dt
+import Chandra.Time
+import Ska.engarchive.fetch as fetch
+import socket
+import traceback
+import pytz
+import time
+import shutil
+import sys
+import os
+import traceback
+import numpy as np
+import pandas as pd
+from msidlists import *
+from event_times import *
+from plot_stylers import *
+from forecast_thermals import make_thermal_plots
+from plot_motors import make_motor_plots
+
+from chandratime import convert_chandra_time, convert_to_doy
+
 plt.switch_backend('agg')
 
 
@@ -33,52 +37,6 @@ plt.rcParams['axes.titlesize'] = labelsizes
 plt.rcParams['axes.labelsize'] = labelsizes
 plt.rcParams['xtick.labelsize'] = labelsizes - 2
 plt.rcParams['ytick.labelsize'] = labelsizes - 2
-
-
-def convert_chandra_time(rawtimes):
-    """
-    Convert input CXC time (seconds since 1998.0) to the time base required for
-    the matplotlib plot_date function (days since start of the Year 1 A.D).
-    """
-
-    # rawtimes is in units of CXC seconds, or seconds since 1998.0
-    # Compute the Delta T between 1998.0 (CXC's Epoch) and 1970.0 (Unix Epoch)
-
-    seconds_since_1998_0 = rawtimes[0]
-
-    cxctime = dt.datetime(1998, 1, 1, 0, 0, 0)
-    unixtime = dt.datetime(1970, 1, 1, 0, 0, 0)
-
-    # Calculate the first offset from 1970.0, needed by matplotlib's plotdate
-    # The below is equivalent (within a few tens of seconds) to the command
-    # t0 = Chandra.Time.DateTime(times[0]).unix
-    delta_time = (cxctime - unixtime).total_seconds() + seconds_since_1998_0
-
-    plotdate_start = mdate.epoch2num(delta_time)
-
-    # Now we use a relative offset from plotdate_start
-    # the number 86,400 below is the number of seconds in a UTC day
-
-    chandratime = (np.asarray(rawtimes) -
-                   rawtimes[0]) / 86400. + plotdate_start
-
-    return chandratime
-
-
-def convert_to_doy(datetime_start):
-    '''
-    Return a string like '2020:237' that will be passed to start= in
-    fetch.get_telem() and fetch.MSID(). Note that you have to zero-pad the day
-    number e.g. 2020:002 instead of 2020:2, otherwise the pull will fail.
-    '''
-
-    year = datetime_start.year
-    day_of_year = datetime_start.timetuple().tm_yday
-
-    # you have to zero-pad the day number!
-    doystring = '{}:{:03d}'.format(year, day_of_year)
-
-    return doystring
 
 
 def update_plot(counter, plot_start=dt.datetime(2020, 8, 31, 00), plot_end=dt.date.today() + dt.timedelta(days=2), sampling='full', current_hline=False, date_format=mdate.DateFormatter('%d %H'), force_limits=False, missionwide=False):
@@ -185,7 +143,15 @@ def main():
     minutes of sleep to avoid overwhelming MAUDE and wasting cycles.
     '''
 
-    fig_save_directory = '/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/'
+    if socket.gethostname() == 'han-v.cfa.harvard.edu':
+        print('Recognized host: {}'.format(socket.gethostname()))
+        fig_save_directory = '/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/'
+    elif socket.gethostname() == 'symmetry.local':
+        print('Recognized host: {}'.format(socket.gethostname()))
+        fig_save_directory = '/Users/grant/Desktop/'
+    else:
+        sys.exit('I do not recognize the hostname {}. Exiting.'.format(
+            socket.gethostname()))
 
     # plt.ion()
     plt.figure(figsize=(17, 6))
@@ -238,11 +204,20 @@ def main():
             # Clear the command line manually
             sys.stdout.write("\033[K")
 
-            # # fig = plt.gcf()
-            # # mpld3.fig_to_html(fig, fig_save_directory + 'interactive_plot.html')
+            print('Updating Motor Plots', end="\r", flush=True)
+            make_motor_plots(counter, fig_save_directory=fig_save_directory, plot_start=six_days_ago,
+                             plot_end=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'))
+            print('Done', end="\r", flush=True)
+            # Clear the command line manually
+            sys.stdout.write("\033[K")
+
+            print('Saved Motor Plots to {}'.format(
+                fig_save_directory), end="\r", flush=True)
+            # Clear the command line manually
+            sys.stdout.write("\033[K")
 
             print('Updating Thermal Plots', end="\r", flush=True)
-            make_thermal_plots(counter)
+            make_thermal_plots(counter, fig_save_directory=fig_save_directory)
             print('Done', end="\r", flush=True)
             # Clear the command line manually
             sys.stdout.write("\033[K")
@@ -254,6 +229,8 @@ def main():
 
         except Exception as e:
             print("ERROR on Iteration {}: {}".format(counter, e))
+            print("Heres the traceback:")
+            print(traceback.format_exc())
             print("Pressing on...")
             continue
 

@@ -5,8 +5,7 @@ import datetime as dt
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdate
 
-
-from hrcmonitor import convert_chandra_time
+from chandratime import convert_chandra_time, convert_to_doy
 
 # Use today's date, plus 2 days
 end_date = dt.date.today() + dt.timedelta(days=2)

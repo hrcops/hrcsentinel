@@ -256,3 +256,45 @@ dashboard_limits = [(-20, 30),
                     (10, 15000),
                     (40, 190)
                     ]
+
+
+motor_dashboard_msids = [["2DRLSOP", "2DRLSCL"],
+                         ["2PYLSHM", "2PYLSMX", "2MYLSHM", "2MYLSMX"],
+                         ["2CSLSHM", "2CSLSMX"],
+                         ["2FSPYST", "2FSNYST"],
+                         ["2NYMTAST", "2PYMTAST"],
+                         ["2CLMTAST", "2DRMTAST", "2ALMTAST",
+                             "2MSMDARS", "2MDIRAST"],
+                         ["2MSNBAMD", "2MSNAAMD", "2MSLBAMD", "2MSLAAMD",
+                          "2MSLBAMD", "2MSLAAMD", "2MSPRAMD"],
+                         ["2MSDRAMD", "2MCMDARS"],
+                         ["2MCNBAMD", "2MCNAAMD", "2MCPRAMD"],
+                         ["2MDRVAST"],
+                         ["2SMOIAST", "2SMOIAST"],
+                         ["2DROTAST", "2DROIAST"]]
+
+motor_dashboard_tiles = ["Door Primary Limit Switches",
+                         "+/- Y Shutters",
+                         "Cal Source Motors",
+                         "+/- Y Failsafe Shutters",
+                         "+/- Y Shutter Select",
+                         "Door Motor Select",
+                         "Motor Stat or Motion Toward A/B",
+                         "Motor Drive Enable",
+                         "Motor Command REG MV",
+                         "Motor Drive Enable",
+                         "Overcurrent / Overtemp Flags",
+                         "Overcurrent / Overtemp enable"]
+
+motor_dashboard_units = ["0 = ENA, 1 = DISA",
+                         "0 = ENA, 1 = DISA",
+                         "0 = ENA, 1 = DISA",
+                         "0 = ENA, 1 = DISA",
+                         "0 = ENA, 1 = DISA",
+                         "0 = ENA, 1 = DISA",
+                         "0 = ENA, 1 = DISA",
+                         "0 = ENA, 1 = DISA",
+                         "0 = ENA, 1 = DISA",
+                         "0 = ENA, 1 = DISA",
+                         "0 = ENA, 1 = DISA",
+                         "0 = ENA, 1 = DISA"]
