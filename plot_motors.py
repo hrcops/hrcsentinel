@@ -94,6 +94,7 @@ def make_motor_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/hrc
                 dpi=300, bbox_inches='tight')
     plt.tight_layout()
     plt.close()
+    fetch.data_source.set('cxc')
 
 
 if __name__ == "__main__":
