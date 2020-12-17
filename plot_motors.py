@@ -33,7 +33,17 @@ plt.switch_backend('agg')
 
 def make_motor_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/', plot_start=dt.datetime(2020, 8, 31, 00), plot_end=dt.date.today() + dt.timedelta(days=2), sampling='full', current_hline=False, date_format=mdate.DateFormatter('%d %H'), force_limits=False, missionwide=False):
 
-    fig = plt.figure(figsize=(17, 9))
+    plt.style.use('ggplot')
+    labelsizes = 8
+    # plt.rcParams['font.sans-serif'] = 'Arial'
+    plt.rcParams['font.size'] = labelsizes
+
+    plt.rcParams['axes.titlesize'] = labelsizes
+    plt.rcParams['axes.labelsize'] = labelsizes
+    plt.rcParams['xtick.labelsize'] = labelsizes - 2
+    plt.rcParams['ytick.labelsize'] = labelsizes - 2
+
+    fig = plt.figure(figsize=(17, 8))
     plotnum = -1
     for i in range(3):
         for j in range(4):
@@ -49,7 +59,7 @@ def make_motor_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/hrc
                 sys.stdout.write("\033[K")
 
                 ax.plot_date(convert_chandra_time(
-                    data[msid].times), data[msid].raw_vals, markersize=1, label=msid, zorder=1, rasterized=True)
+                    data[msid].times), data[msid].raw_vals, markersize=1, label=msid, zorder=1, rasterized=True, alpha=0.8)
 
                 # Plot a HORIZONTAL line at location of last data point.
                 if current_hline is True:
@@ -74,12 +84,13 @@ def make_motor_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/hrc
 
             if counter is not None:
                 plt.suptitle(t='Iteration {} | Updated as of {} EST'.format(counter, dt.datetime.now(
-                ).strftime("%Y-%b-%d %H:%M:%S")), y=0.99, color='slategray', size=6)
+                ).strftime("%Y-%b-%d %H:%M:%S")), y=0.94, color='slategray', size=6)
 
             fig.savefig(fig_save_directory + 'motors.png',
                         dpi=300, bbox_inches='tight')
             fig.savefig(fig_save_directory + 'motors.pdf',
                         dpi=300, bbox_inches='tight')
+    plt.tight_layout()
     plt.close()
 
 
