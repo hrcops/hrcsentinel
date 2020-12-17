@@ -33,6 +33,8 @@ plt.switch_backend('agg')
 
 def make_motor_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/', plot_start=dt.datetime(2020, 8, 31, 00), plot_end=dt.date.today() + dt.timedelta(days=2), sampling='full', current_hline=False, date_format=mdate.DateFormatter('%d %H'), force_limits=False, missionwide=False):
 
+    fetch.data_source.set('maude allow_subset=False')
+
     plt.style.use('ggplot')
     labelsizes = 8
     # plt.rcParams['font.sans-serif'] = 'Arial'
@@ -82,14 +84,14 @@ def make_motor_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/hrc
             ax.set_title('{}'.format(
                 motor_dashboard_tiles[plotnum]), color='slategray', loc='center')
 
-            if counter is not None:
-                plt.suptitle(t='Iteration {} | Updated as of {} EST'.format(counter, dt.datetime.now(
-                ).strftime("%Y-%b-%d %H:%M:%S")), y=0.94, color='slategray', size=6)
+    if counter is not None:
+        plt.suptitle(t='Iteration {} | Updated as of {} EST'.format(counter, dt.datetime.now(
+        ).strftime("%Y-%b-%d %H:%M:%S")), y=0.94, color='slategray', size=6)
 
-            fig.savefig(fig_save_directory + 'motors.png',
-                        dpi=300, bbox_inches='tight')
-            fig.savefig(fig_save_directory + 'motors.pdf',
-                        dpi=300, bbox_inches='tight')
+    fig.savefig(fig_save_directory + 'motors.png',
+                dpi=300, bbox_inches='tight')
+    fig.savefig(fig_save_directory + 'motors.pdf',
+                dpi=300, bbox_inches='tight')
     plt.tight_layout()
     plt.close()
 
