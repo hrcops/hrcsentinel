@@ -1,9 +1,6 @@
 #!/usr/bin/env conda run -n ska3 python
 
 from msidlists import *
-from scipy.signal import hilbert
-from scipy.interpolate import interp1d
-from scipy.interpolate import spline
 import pandas as pd
 import numpy as np
 import os
@@ -30,36 +27,6 @@ import matplotlib.pyplot as plt
 plt.switch_backend('agg')
 
 
-def convert_chandra_time(rawtimes):
-    """
-    Convert input CXC time (seconds since 1998.0) to the time base required for
-    the matplotlib plot_date function (days since start of the Year 1 A.D).
-    """
-
-    # rawtimes is in units of CXC seconds, or seconds since 1998.0
-    # Compute the Delta T between 1998.0 (CXC's Epoch) and 1970.0 (Unix Epoch)
-
-    seconds_since_1998_0 = rawtimes[0]
-
-    cxctime = dt.datetime(1998, 1, 1, 0, 0, 0)
-    unixtime = dt.datetime(1970, 1, 1, 0, 0, 0)
-
-    # Calculate the first offset from 1970.0, needed by matplotlib's plotdate
-    # The below is equivalent (within a few tens of seconds) to the command
-    # t0 = Chandra.Time.DateTime(times[0]).unix
-    delta_time = (cxctime - unixtime).total_seconds() + seconds_since_1998_0
-
-    plotdate_start = mdate.epoch2num(delta_time)
-
-    # Now we use a relative offset from plotdate_start
-    # the number 86,400 below is the number of seconds in a UTC day
-
-    chandratime = (np.asarray(rawtimes) -
-                   rawtimes[0]) / 86400. + plotdate_start
-
-    return chandratime
-
-
 def compute_yearly_average(values, window):
 
     array = values
@@ -82,9 +49,9 @@ def make_thermal_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/h
 
     # Fetch all MSIDs
     msids_daily = fetch.Msidset(
-        monitor_temperature_msids, start='2000:001', stat='daily', filter_bad=True)
+        monitor_temperature_msids, start='2001:001', stat='daily', filter_bad=True)
     msids_5min = fetch.MSIDset(
-        monitor_temperature_msids, start='2000:001', stat='5min', filter_bad=True)
+        monitor_temperature_msids, start='2001:001', stat='5min', filter_bad=True)
 
     ave_table = Table()  # Instantiate an empty AstroPy table that we can later sort
 
@@ -143,7 +110,7 @@ def make_thermal_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/h
 
         # Draw a large point line where the current data point is
         with fetch.data_source('maude'):
-            latest_datapoint = fetch.Msid(msid)
+            latest_datapoint = fetch.Msid(msid, start='2020:340')
             ax.plot_date(convert_chandra_time(latest_datapoint.times)[
                          -1], latest_datapoint.vals[-1], markersize=8, color=plt.cm.RdYlBu_r(i), rasterized=rasterized, zorder=4)
 
@@ -205,7 +172,7 @@ def make_thermal_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/h
 
         # Draw a large point line where the current data point is
         with fetch.data_source('maude'):
-            latest_datapoint = fetch.Msid(msid)
+            latest_datapoint = fetch.Msid(msid, start='2020:340')
             ax.plot_date(convert_chandra_time(latest_datapoint.times)[
                          -1], latest_datapoint.vals[-1], markersize=8, color=plt.cm.RdYlBu_r(i), rasterized=rasterized, zorder=4)
 
