@@ -130,7 +130,7 @@ def update_plot(counter, plot_start=dt.datetime(2020, 8, 31, 00), plot_end=dt.da
                 dashboard_tiles[plotnum]), color='slategray', loc='center')
 
     plt.suptitle(t='Iteration {} | Updated as of {} EST'.format(
-        counter, dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), y=1.1, color='slategray', size=6)
+        counter, dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), y=0.99, color='slategray', size=6)
 
     if missionwide is False:
         plt.savefig(fig_save_directory + 'status.png', dpi=300)
