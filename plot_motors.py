@@ -59,15 +59,18 @@ def make_motor_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/hrc
                 # Clear the command line manually
                 sys.stdout.write("\033[K")
 
+                # plotting the absolute value here to ignore -1
                 ax.plot_date(convert_chandra_time(
-                    data[msid].times), data[msid].raw_vals, markersize=1, label=msid, zorder=1, rasterized=True, alpha=0.8)
+                    data[msid].times), abs(data[msid].raw_vals), markersize=1, label=msid, zorder=1, rasterized=True, alpha=0.8)
 
                 # Plot a HORIZONTAL line at location of last data point.
                 if current_hline is True:
                     ax.axhline(data[msid].vals[-1], color=green, zorder=2)
 
             ax.set_xlim(plot_start, plot_end)
-            ax.set_ylabel(motor_dashboard_units[plotnum])
+            ax.set_ylim(-0.2, 1.2)
+
+            # ax.set_ylabel(motor_dashboard_units[plotnum])
 
             ax.axvline(dt.datetime.now(pytz.utc),
                        color='gray', alpha=0.5)
@@ -78,11 +81,12 @@ def make_motor_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/hrc
             plt.gca().xaxis.set_major_formatter(date_format)
 
             plt.xticks(rotation=0)
+            ax.set_yticks([0, 1])
+            ax.set_yticklabels(['ENAB', 'DISAB'])
 
             ax.legend(prop={'size': 8}, loc=3)
             ax.set_title('{}'.format(
                 motor_dashboard_tiles[plotnum]), color='slategray', loc='center')
-            ax.set_ylim(-1, 1)
 
     if counter is not None:
         plt.suptitle(t='Iteration {} | Updated as of {} EST'.format(counter, dt.datetime.now(

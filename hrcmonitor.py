@@ -180,22 +180,22 @@ def main():
             six_days_ago = dt.date.today() - dt.timedelta(days=6)
             two_days_hence = dt.date.today() + dt.timedelta(days=2)
 
-            update_plot(counter, plot_start=six_days_ago, fig_save_directory=fig_save_directory,
-                        plot_end=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'), force_limits=True)
+            # update_plot(counter, plot_start=six_days_ago, fig_save_directory=fig_save_directory,
+            #             plot_end=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'), force_limits=True)
 
-            print('Saved Current Status Plots to {}'.format(
-                fig_save_directory), end="\r", flush=True)
-            # Clear the command line manually
-            sys.stdout.write("\033[K")
+            # print('Saved Current Status Plots to {}'.format(
+            #     fig_save_directory), end="\r", flush=True)
+            # # Clear the command line manually
+            # sys.stdout.write("\033[K")
 
-            fetch.data_source.set('cxc')
-            update_plot(counter, fig_save_directory=fig_save_directory, plot_start=dt.datetime(
-                2000, 1, 4), plot_end=None, sampling='daily', date_format=mdate.DateFormatter('%Y'), current_hline=True, missionwide=True)
+            # fetch.data_source.set('cxc')
+            # update_plot(counter, fig_save_directory=fig_save_directory, plot_start=dt.datetime(
+            #     2000, 1, 4), plot_end=None, sampling='daily', date_format=mdate.DateFormatter('%Y'), current_hline=True, missionwide=True)
 
-            print('Saved Mission-Wide Plots to {}'.format(
-                fig_save_directory), end="\r", flush=True)
-            # Clear the command line manually
-            sys.stdout.write("\033[K")
+            # print('Saved Mission-Wide Plots to {}'.format(
+            #     fig_save_directory), end="\r", flush=True)
+            # # Clear the command line manually
+            # sys.stdout.write("\033[K")
 
             print('Updating Motor Plots', end="\r", flush=True)
             make_motor_plots(counter, fig_save_directory=fig_save_directory, plot_start=six_days_ago,
