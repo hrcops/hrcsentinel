@@ -105,6 +105,8 @@ def update_plot(counter, plot_start=dt.datetime(2020, 8, 31, 00), plot_end=dt.da
                 # Then this is the Bus Current plot. Overplot the CAUTION and WARNING limits
                 ax.axhspan(2.3, 2.5, facecolor=yellow, alpha=0.3)
                 ax.axhspan(2.5, 4.0, facecolor=red, alpha=0.3)
+                # Also, save the latest bus current value for the suptitle
+                latest_bus_current = np.round(data[msid].vals[-1], 2)
 
             if plotnum == 10:
                 ax.set_yscale('log')
@@ -129,8 +131,8 @@ def update_plot(counter, plot_start=dt.datetime(2020, 8, 31, 00), plot_end=dt.da
             ax.set_title('{}'.format(
                 dashboard_tiles[plotnum]), color='slategray', loc='center')
 
-    plt.suptitle(t='Iteration {} | Updated as of {} EST'.format(
-        counter, dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), y=0.99, color='slategray', size=6)
+    plt.suptitle(t='Latest Bus Current: {} A\nIteration {} | Updated as of {} EST'.format(latest_bus_current,
+                                                                                          counter, dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), color='slategray', size=6)
 
     if missionwide is False:
         plt.savefig(fig_save_directory + 'status.png', dpi=300)
