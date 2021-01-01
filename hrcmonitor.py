@@ -16,9 +16,11 @@ import os
 import traceback
 import numpy as np
 import pandas as pd
+
 from msidlists import *
 from event_times import *
 from plot_stylers import *
+
 from forecast_thermals import make_thermal_plots
 from plot_motors import make_motor_plots
 
@@ -32,18 +34,37 @@ labelsizes = 8
 # plt.rcParams['font.sans-serif'] = 'Arial'
 plt.rcParams['font.size'] = labelsizes
 
-
 plt.rcParams['axes.titlesize'] = labelsizes
 plt.rcParams['axes.labelsize'] = labelsizes
 plt.rcParams['xtick.labelsize'] = labelsizes - 2
 plt.rcParams['ytick.labelsize'] = labelsizes - 2
 
+# Use the new Matplotlib 3.X constrained_layout solver in lieu of tight_layout()
+# plt.rcParams['figure.constrained_layout.use'] = True
 
-def update_plot(counter, plot_start=dt.datetime(2020, 8, 31, 00), plot_end=dt.date.today() + dt.timedelta(days=2), sampling='full', current_hline=False, date_format=mdate.DateFormatter('%d %H'), force_limits=False, missionwide=False):
+
+def update_plot(counter, plot_start=dt.datetime(2020, 8, 31, 00), plot_end=dt.date.today() + dt.timedelta(days=2), sampling='full', current_hline=False, date_format=mdate.DateFormatter('%d %H'), force_limits=False, missionwide=False, fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/'):
     plotnum = -1
+
+    fig = plt.figure(figsize=(16, 6), constrained_layout=True)
+    gs = fig.add_gridspec(3, 4)
+
+    if missionwide is False:
+        # Then override the existing dashboard_msid* with the missionwide one
+        dashboard_msids = dashboard_msids_latest
+        dashboard_tiles = dashboard_tiles_latest
+        dashboard_limits = dashboard_limits_latest
+        dashboard_units = dashboard_units_latest
+    elif missionwide is True:
+        # Then override the existing dashboard_msid* with the missionwide one
+        dashboard_msids = dashboard_msids_missionwide
+        dashboard_tiles = dashboard_tiles_missionwide
+        dashboard_limits = dashboard_limits_missionwide
+        dashboard_units = dashboard_units_missionwide
+
     for i in range(3):
         for j in range(4):
-            ax = plt.subplot2grid((3, 4), (i, j))
+            ax = fig.add_subplot(gs[i, j])
             plotnum += 1
             for msid in dashboard_msids[plotnum]:
 
@@ -88,26 +109,12 @@ def update_plot(counter, plot_start=dt.datetime(2020, 8, 31, 00), plot_end=dt.da
             if plotnum == 10:
                 ax.set_yscale('log')
 
-            if missionwide is True and plotnum == 11:
-                ax.set_ylabel(r'Counts s$^{-1}$')
-                data = fetch.get_telem('2SHEV1RT', start=plot_start, sampling=sampling,
-                                       max_fetch_Mb=100000, max_output_Mb=100000, quiet=True)
-                # It will have already plotted pitch. So just clear it.
-                ax.clear()
-                ax.plot_date(convert_chandra_time(
-                    data['2SHEV1RT'].times), data['2SHEV1RT'].midvals, markersize=1, label=msid, zorder=1, rasterized=True)
-                with fetch.data_source('maude'):
-                    latest_data = fetch.get_telem(
-                        '2SHEV1RT', start=convert_to_doy(yesterday), quiet=True)
-                ax.axhline(
-                    latest_data['2SHEV1RT'].vals[-1], color=yellow, zorder=2)
-
             ax.set_xlim(plot_start, plot_end)
-            ax.set_ylabel(dashboard_units[plotnum])
+            ax.set_ylabel(dashboard_units[plotnum], color='slategray', size=8)
 
-            # ax.axvline(eventdate, color=red)
-            # ax.axvline(time_of_second_anomaly, color=red)
-            # ax.axvline(time_of_cap_1543, color='gray')
+            if plotnum in range(8, 12):
+                ax.set_xlabel('Date (UTC)', color='slategray', size=6)
+
             ax.axvline(dt.datetime.now(pytz.utc),
                        color='gray', alpha=0.5)
 
@@ -122,18 +129,19 @@ def update_plot(counter, plot_start=dt.datetime(2020, 8, 31, 00), plot_end=dt.da
             ax.set_title('{}'.format(
                 dashboard_tiles[plotnum]), color='slategray', loc='center')
 
-            if missionwide is True:
-                if plotnum == 10:
-                    ax.set_ylim(1, 10000)
-                    ax.set_yscale('log')
-                if plotnum == 11:
-                    ax.set_ylim(1, 10000)
-                    ax.set_ylabel(r"Counts s$^{-1}$")
-                    ax.set_title('Shield Rate'.format(),
-                                 color='slategray', loc='center')
+    plt.suptitle(t='Iteration {} | Updated as of {} EST'.format(
+        counter, dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), y=1.1, color='slategray', size=6)
 
-            plt.suptitle(t='Iteration {} | Updated as of {} EST'.format(
-                counter, dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), y=0.99, color='slategray', size=6)
+    if missionwide is False:
+        plt.savefig(fig_save_directory + 'status.png', dpi=300)
+        plt.savefig(fig_save_directory + 'status.pdf',
+                    dpi=300, rasterized=True)
+    elif missionwide is True:
+        plt.savefig(fig_save_directory + 'status_wide.png', dpi=300)
+        plt.savefig(fig_save_directory + 'status_wide.pdf',
+                    dpi=300, rasterized=True)
+
+    plt.close()
 
 
 def main():
@@ -154,7 +162,6 @@ def main():
             socket.gethostname()))
 
     # plt.ion()
-    plt.figure(figsize=(17, 6))
 
     counter = 0
 
@@ -173,31 +180,17 @@ def main():
             six_days_ago = dt.date.today() - dt.timedelta(days=6)
             two_days_hence = dt.date.today() + dt.timedelta(days=2)
 
-            update_plot(counter, plot_start=six_days_ago,
+            update_plot(counter, plot_start=six_days_ago, fig_save_directory=fig_save_directory,
                         plot_end=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'), force_limits=True)
 
-            plt.draw()
-            # plt.tight_layout()
-            plt.savefig(fig_save_directory + 'status.png', dpi=300)
-            plt.savefig(fig_save_directory + 'status.pdf',
-                        dpi=300, rasterized=True)
             print('Saved Current Status Plots to {}'.format(
                 fig_save_directory), end="\r", flush=True)
             # Clear the command line manually
             sys.stdout.write("\033[K")
 
-            plt.clf()
-
             fetch.data_source.set('cxc')
-
-            update_plot(counter, plot_start=dt.datetime(
+            update_plot(counter, fig_save_directory=fig_save_directory, plot_start=dt.datetime(
                 2000, 1, 4), plot_end=None, sampling='daily', date_format=mdate.DateFormatter('%Y'), current_hline=True, missionwide=True)
-
-            # plt.tight_layout()
-            plt.draw()
-            plt.savefig(fig_save_directory + 'status_wide.png', dpi=300)
-            plt.savefig(fig_save_directory + 'status_wide.pdf',
-                        dpi=300, rasterized=True)
 
             print('Saved Mission-Wide Plots to {}'.format(
                 fig_save_directory), end="\r", flush=True)

@@ -30,7 +30,7 @@ plt.switch_backend('agg')
 
 def make_motor_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/', plot_start=dt.datetime(2020, 8, 31, 00), plot_end=dt.date.today() + dt.timedelta(days=2), sampling='full', current_hline=False, date_format=mdate.DateFormatter('%d %H'), force_limits=False, missionwide=False):
 
-    fetch.data_source.set('maude allow_subset=False')
+    fetch.data_source.set('maude allow_subset=True')
 
     plt.style.use('ggplot')
     labelsizes = 8
@@ -42,11 +42,13 @@ def make_motor_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/hrc
     plt.rcParams['xtick.labelsize'] = labelsizes - 2
     plt.rcParams['ytick.labelsize'] = labelsizes - 2
 
-    fig = plt.figure(figsize=(17, 8))
+    fig = plt.figure(figsize=(16, 6), constrained_layout=True)
+    gs = fig.add_gridspec(3, 4)
+
     plotnum = -1
     for i in range(3):
         for j in range(4):
-            ax = plt.subplot2grid((3, 4), (i, j))
+            ax = fig.add_subplot(gs[i, j])
             plotnum += 1
             for msid in motor_dashboard_msids[plotnum]:
                 data = fetch.get_telem(
@@ -80,16 +82,16 @@ def make_motor_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/hrc
             ax.legend(prop={'size': 8}, loc=3)
             ax.set_title('{}'.format(
                 motor_dashboard_tiles[plotnum]), color='slategray', loc='center')
+            ax.set_ylim(-1, 1)
 
     if counter is not None:
         plt.suptitle(t='Iteration {} | Updated as of {} EST'.format(counter, dt.datetime.now(
-        ).strftime("%Y-%b-%d %H:%M:%S")), y=0.94, color='slategray', size=6)
+        ).strftime("%Y-%b-%d %H:%M:%S")), color='slategray', size=6)
 
     fig.savefig(fig_save_directory + 'motors.png',
                 dpi=300, bbox_inches='tight')
     fig.savefig(fig_save_directory + 'motors.pdf',
                 dpi=300, bbox_inches='tight')
-    plt.tight_layout()
     plt.close()
     fetch.data_source.set('cxc')
 
