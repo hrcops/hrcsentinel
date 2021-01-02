@@ -121,7 +121,7 @@ def update_plot(counter, plot_start=dt.datetime(2020, 8, 31, 00), plot_end=dt.da
                        color='gray', alpha=0.5)
 
             ax.text(dt.datetime.now(pytz.utc), ax.get_ylim()[1],
-                    'Now ({})'.format(dt.datetime.now().strftime("%H:%M:%S")), fontsize=6, color='slategray')
+                    'Now', fontsize=6, color='slategray')
 
             plt.gca().xaxis.set_major_formatter(date_format)
 
