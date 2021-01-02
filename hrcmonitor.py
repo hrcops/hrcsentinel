@@ -90,14 +90,14 @@ def update_plot(counter, plot_start=dt.datetime(2020, 8, 31, 00), plot_end=dt.da
                         ax.axhline(data[msid].vals[-1],
                                    color=green, zorder=2)
                     elif missionwide is True:
-                        today = dt.datetime.utcnow().date()
-                        yesterday = today - dt.timedelta(days=1)
-                        with fetch.data_source('maude'):
-                            latest_data = fetch.get_telem(
-                                msid, start=convert_to_doy(yesterday), quiet=True)
-                        ax.axhline(
-                            latest_data[msid].vals[-1], color=yellow, zorder=2)
-                        # then we've fetched from CXC/Ska and we don't. So grab it (with low fetch overhead)
+                        if plotnum != 0:
+                            today = dt.datetime.utcnow().date()
+                            yesterday = today - dt.timedelta(days=1)
+                            with fetch.data_source('maude'):
+                                latest_data = fetch.get_telem(
+                                    msid, start=convert_to_doy(yesterday), quiet=True)
+                            ax.axhline(
+                                latest_data[msid].vals[-1], color=yellow, zorder=2)
                 if force_limits is True:
                     ax.set_ylim(dashboard_limits[plotnum])
 
@@ -111,17 +111,25 @@ def update_plot(counter, plot_start=dt.datetime(2020, 8, 31, 00), plot_end=dt.da
             if plotnum == 10:
                 ax.set_yscale('log')
 
+            if missionwide is True:
+                if plotnum == 11:
+                    ax.set_yscale('log')
+
             ax.set_xlim(plot_start, plot_end)
             ax.set_ylabel(dashboard_units[plotnum], color='slategray', size=8)
 
             if plotnum in range(8, 12):
                 ax.set_xlabel('Date (UTC)', color='slategray', size=6)
 
-            ax.axvline(dt.datetime.now(pytz.utc),
-                       color='gray', alpha=0.5)
-
-            ax.text(dt.datetime.now(pytz.utc), ax.get_ylim()[1],
-                    'Now', fontsize=6, color='slategray')
+            if missionwide is True:
+                if plotnum == 0:
+                    ax.text(time_of_cap_1543, ax.get_ylim()[
+                            1], 'Side B Swap', fontsize=6, color='slategray')
+                    ax.axvline(time_of_cap_1543, color='gray', alpha=0.5)
+            else:
+                ax.text(dt.datetime.now(pytz.utc), ax.get_ylim()[1],
+                        'Now', fontsize=6, color='slategray')
+                ax.axvline(dt.datetime.now(pytz.utc), color='gray', alpha=0.5)
 
             plt.gca().xaxis.set_major_formatter(date_format)
 
@@ -194,7 +202,7 @@ def main():
 
             fetch.data_source.set('cxc')
             update_plot(counter, fig_save_directory=fig_save_directory, plot_start=dt.datetime(
-                2000, 1, 4), plot_end=None, sampling='daily', date_format=mdate.DateFormatter('%Y'), current_hline=True, missionwide=True)
+                2000, 1, 4), plot_end=None, sampling='daily', date_format=mdate.DateFormatter('%Y'), current_hline=True, missionwide=True, force_limits=True)
 
             print('Saved Mission-Wide Plots to {}'.format(
                 fig_save_directory), end="\r", flush=True)

@@ -244,7 +244,7 @@ dashboard_units_latest = ["Voltage (V)",
                           "Degrees"]
 
 dashboard_limits_latest = [(-20, 30),
-                           (26, 32),
+                           (25, 29),
                            (1.4, 2.7),
                            (10, 35),
                            (10, 35),
@@ -257,7 +257,7 @@ dashboard_limits_latest = [(-20, 30),
                            (40, 190)
                            ]
 
-dashboard_msids_missionwide = [["2P24VBVL", "2P15VBVL", "2N15VBVL", "2P05VBVL", "2C05PALV", "2C15PALV", "2C15NALV", "2C24PALV"],
+dashboard_msids_missionwide = [["2P24VBVL", "2P15VBVL", "2N15VBVL", "2P05VBVL"],
                                ["2PRBSVL"],
                                ["2PRBSCR"],
                                ["2PMT1T", "2PMT2T"],
@@ -297,17 +297,17 @@ dashboard_units_missionwide = ["Voltage (V)",
                                r"Counts s$^{-1}$"]
 
 dashboard_limits_missionwide = [(-20, 30),
-                                (26, 32),
+                                (26, 31),
                                 (1.4, 2.7),
-                                (10, 35),
-                                (10, 35),
-                                (10, 35),
-                                (10, 35),
-                                (10, 35),
-                                (20, 35),
-                                (30, 40),
-                                (10, 15000),
-                                (10, 15000)
+                                (5, 35),
+                                (5, 35),
+                                (5, 35),
+                                (5, 35),
+                                (5, 35),
+                                (5, 35),
+                                (5, 50),
+                                (1, 1000000),
+                                (10, 1000000)
                                 ]
 
 
