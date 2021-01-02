@@ -177,12 +177,10 @@ def main():
             print("Refreshing dashboard (Iteration {}) at {}".format(
                 counter, dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), flush=True)
 
-            two_days_ago = dt.date.today() - dt.timedelta(days=2)
-            four_days_ago = dt.date.today() - dt.timedelta(days=4)
-            six_days_ago = dt.date.today() - dt.timedelta(days=6)
+            five_days_ago = dt.date.today() - dt.timedelta(days=5)
             two_days_hence = dt.date.today() + dt.timedelta(days=2)
 
-            update_plot(counter, plot_start=six_days_ago, fig_save_directory=fig_save_directory,
+            update_plot(counter, plot_start=five_days_ago, fig_save_directory=fig_save_directory,
                         plot_end=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'), force_limits=True)
 
             print('Saved Current Status Plots to {}'.format(
@@ -200,7 +198,7 @@ def main():
             sys.stdout.write("\033[K")
 
             print('Updating Motor Plots', end="\r", flush=True)
-            make_motor_plots(counter, fig_save_directory=fig_save_directory, plot_start=six_days_ago,
+            make_motor_plots(counter, fig_save_directory=fig_save_directory, plot_start=five_days_ago,
                              plot_end=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'))
             print('Done', end="\r", flush=True)
             # Clear the command line manually
