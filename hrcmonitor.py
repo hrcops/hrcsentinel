@@ -121,7 +121,7 @@ def update_plot(counter, plot_start=dt.datetime(2020, 8, 31, 00), plot_end=dt.da
                        color='gray', alpha=0.5)
 
             ax.text(dt.datetime.now(pytz.utc), ax.get_ylim()[1],
-                    'Now', fontsize=6, color='slategray')
+                    'Now ({})'.format(dt.datetime.now().strftime("%H:%M:%S")), fontsize=6, color='slategray')
 
             plt.gca().xaxis.set_major_formatter(date_format)
 
@@ -131,8 +131,12 @@ def update_plot(counter, plot_start=dt.datetime(2020, 8, 31, 00), plot_end=dt.da
             ax.set_title('{}'.format(
                 dashboard_tiles[plotnum]), color='slategray', loc='center')
 
-    plt.suptitle(t='Latest Bus Current: {} A\nIteration {} | Updated as of {} EST'.format(np.round(latest_bus_current, 2),
-                                                                                          counter, dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), color='slategray', size=6)
+    if missionwide is False:
+        plt.suptitle(t='Latest Bus Current: {} A\nIteration {} | Updated as of {} EST'.format(np.round(
+            latest_bus_current, 2), counter, dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), color='slategray', size=6)
+    elif missionwide is True:
+        plt.suptitle(t='Iteration {} | Updated as of {} EST'.format(np.round(latest_bus_current, 2),
+                                                                    counter, dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), color='slategray', size=6)
 
     if missionwide is False:
         plt.savefig(fig_save_directory + 'status.png', dpi=300)
