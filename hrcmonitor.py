@@ -240,12 +240,12 @@ def main():
             continue
 
         counter += 1
-        sleep_period_seconds = 30
+        sleep_period_seconds = 3
         for i in range(0, sleep_period_seconds):
             # you need to flush this print statement
             print('Refreshing plots in {} seconds...'.format(
                 sleep_period_seconds-i), end="\r", flush=True)
-            time.sleep(1)
+            time.sleep(1)  # sleep for 1 second per iteration
 
 
 if __name__ == "__main__":
