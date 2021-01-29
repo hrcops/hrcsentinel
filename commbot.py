@@ -3,16 +3,17 @@
 import sys
 import requests
 import json
-import time
+
+from Ska.engarchive import fetch
 
 import numpy as np
 
-from Ska.engarchive import fetch
+import time
+from cxotime import CxoTime
 import datetime as dt
 from chandratime import convert_chandra_time, convert_to_doy
 
-
-fetch.data_source.set('maude allow_subset=True')
+import astropy.units as u
 
 
 def send_slack_message(message, blocks=None):
@@ -32,66 +33,79 @@ def send_slack_message(message, blocks=None):
         'blocks': json.dumps(blocks) if blocks else None}).json()
 
 
-in_comm_counter = 0
+def grab_critical_telemetry():
 
-while True:
+    # Repeating myself because now needs to be re-established whenever this is called vOv
+    now = CxoTime.now() - 300 * u.s
 
-    # Re-establish today. This is just to ensure we're not fetching too much
-    # data from MAUDE, to keep the requests small (and therefore fast)
-    now = dt.datetime.now()
-    today = dt.date.today()
+    critical_msidlist = ['CCSDSTMF', '2SHEV1RT', '2PRBSCR', '2FHTRMZT']
+    critical_msids = fetch.get_telem(
+        critical_msidlist, start=now, quiet=True, unit_system='eng')
 
-    ref_vcdu = fetch.MSID('CVCDUCTR', start=convert_to_doy(today)).vals[-1]
-    time.sleep(5)
-    latest_vcdu = fetch.MSID('CVCDUCTR', start=convert_to_doy(today)).vals[-1]
+    tm_format = critical_msids['CCSDSTMF']
+    shield_rate = critical_msids['2SHEV1RT'].vals[-1]
+    if shield_rate > 0:
+        shield_state = 'UP'
+    elif shield_rate == 0:
+        shield_state = 'DOWN'
+    bus_current = np.round(critical_msids['2PRBSCR'].vals[-1], 2)
+    fea_temp = np.round(critical_msids['2FHTRMZT'].vals[-1], 2)
 
-    frame_delta = latest_vcdu - ref_vcdu
+    telem = {'Format': tm_format, 'Shield Rate': shield_rate, 'Shield State': shield_state,
+             'Bus Current': bus_current, 'FEA Temp': fea_temp}
 
-    if frame_delta > 0:
-        if in_comm_counter == 4:
-            # when comm is first established, grab latest telemetry and report it
-            # BUT, we wait until we reach comm_counter = 4 to make sure that MAUDE has telem
+    return telem
 
-            critical_msidlist = ['2SHEV1RT', '2PRBSCR', '2FHTRMZT']
-            critical_msids = fetch.get_telem(
-                critical_msidlist, quiet=True, unit_system='eng')
 
-            shield_rate = critical_msids['2SHEV1RT'].vals[-1]
-            if shield_rate > 0:
-                shield_state = 'UP'
-            elif shield_rate == 0:
-                shield_state = 'DOWN'
-            bus_current = np.round(critical_msids['2PRBSCR'].vals[-1], 2)
-            fea_temp = np.round(critical_msids['2FHTRMZT'].vals[-1], 2)
+def main():
 
-            message = f'We are now *IN COMM* as of `{now.strftime("%m/%d/%Y %H:%M:%S")}`. \n *Shields are {shield_state}* with a count rate of `{shield_rate} cps`. \n *Bus Current* is `{bus_current} A` (warning limit is 2.3 A). \n *FEA Temperature* is `{fea_temp} C`'
+    fetch.data_source.set('maude allow_subset=True')
 
-            send_slack_message(message)
+    recently_in_comm = False
+    in_comm_counter = 0
 
-        in_comm_counter += 1
-        print(
-            f'({now.strftime("%m/%d/%Y %H:%M:%S")} | Refresh #{in_comm_counter}) IN COMM. VCDU increment is: {frame_delta}', end="\r", flush=True)
+    while True:
 
-    elif frame_delta == 0:
+        # Just grab the last 60 seconds of data to keep the request small and fast
+        now = CxoTime.now() - 60 * u.s
 
-        # If we have previously been in comm, in_comm_counter will be > 0
-        if in_comm_counter > 0:
+        # If there are new, time-tagged VCDU frame values within the last 60 seconds, this will not be empty
+        ref_vcdu = fetch.Msid('CVCDUCTR', start=now)
 
-            critical_msidlist = ['2SHEV1RT', '2PRBSCR', '2FHTRMZT']
-            critical_msids = fetch.get_telem(
-                critical_msidlist, quiet=True, unit_system='eng')
+        time.sleep(2)  # These fetches are really fast. Slow it down a bit.
 
-            shield_rate = critical_msids['2SHEV1RT'].vals[-1]
-            if shield_rate > 0:
-                shield_state = 'UP'
-            elif shield_rate == 0:
-                shield_state = 'DOWN'
-            bus_current = np.round(critical_msids['2PRBSCR'].vals[-1], 2)
-            fea_temp = np.round(critical_msids['2FHTRMZT'].vals[-1], 2)
+        if len(ref_vcdu) == 0:
+            # Then we clearly are not in comm.
 
-            message = f'Comm appears to have ENDED at `{now.strftime("%d/%m/%Y %H:%M:%S")}`. LAST Telemetry: \n *Shields were {shield_state}* with a count rate of `{shield_rate} cps`. \n *Bus Current* was `{bus_current} A` (warning limit is 2.3 A). \n *FEA Temperature* was `{fea_temp} C`'
+            if recently_in_comm is True:
+                # then we've JUST been in comm and we need to report the end of comm
+                telem = grab_critical_telemetry()
+                message = f"It appears that COMM has ended as of `{now.strftime('% m/%d/%Y % H: % M: % S')}`. Last telemetry was in {telem['Format']}: \n *Shields were {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps`. \n *Bus Current* was `{telem['Bus Current']} A` (warning limit is 2.3 A). \n *FEA Temperature* was `{telem['FEA Temp']} C`"
 
-        # then reset the comm counter
-        in_comm_counter = 0
-        print(
-            f'({now.strftime("%m/%d/%Y %H:%M:%S")}) Chandra is not in Comm.', end="\r", flush=True)
+            recently_in_comm = False
+            in_comm_counter = 0
+            print(f'({now.strftime("%m/%d/%Y %H:%M:%S")}) Not in Comm.',
+                  end="\r", flush=True)
+
+        if len(ref_vcdu) > 0:
+            # Then it looks like we're in comm.
+            recently_in_comm = True
+            in_comm_counter += 1
+
+            time.sleep(5)  # Wait a few seconds for MAUDE to refresh
+            latest_vcdu = fetch.Msid('CVCDUCTR', start=now)
+
+            print(
+                f'({now.strftime("%m/%d/%Y %H:%M:%S")} | VCDU {latest_vcdu} | #{in_comm_counter}) IN COMM!', end="\r", flush=True)
+
+            if in_comm_counter == 5:
+                # Now we've waited ~half a minute or so for MAUDE to update
+                telem = grab_critical_telemetry()
+                # Craft a message string using this latest elemetry
+                message = f"We are now *IN COMM* as of `{now.strftime('% m/%d/%Y % H: % M: % S')}`. \n Telemetry Format = *{telem['Format']}* \n *Shields are {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps`. \n *Bus Current* is `{telem['Bus Current']} A` (warning limit is 2.3 A). \n *FEA Temperature* is `{telem['FEA Temp']} C`"
+                # Send the message using our slack bot
+                send_slack_message(message)
+
+
+if __name__ == '__main__':
+    main()
