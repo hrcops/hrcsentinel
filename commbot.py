@@ -3,6 +3,7 @@
 import sys
 import requests
 import json
+import time
 
 import numpy as np
 
@@ -15,7 +16,9 @@ fetch.data_source.set('maude allow_subset=True')
 
 
 def send_slack_message(message, blocks=None):
-    slack_token = 'xoxb-363522423683-1713488156384-k7gDCZZORhiOy0RXgqgT9eEg'
+    with open('/Users/grant/.slackbot/slackbot_oauth_token', 'r') as tokenfile:
+        token = tokenfile.readlines()[0]
+    slack_token = token
     slack_channel = '#comm_passes'
     slack_icon_url = 'https://avatars.slack-edge.com/2021-01-28/1695804235940_26ef808c676830611f43_512.png'
     slack_user_name = 'HRC CommBot'
@@ -39,10 +42,10 @@ while True:
     today = dt.date.today()
 
     ref_vcdu = fetch.MSID('CVCDUCTR', start=convert_to_doy(today)).vals[-1]
+    time.sleep(5)
     latest_vcdu = fetch.MSID('CVCDUCTR', start=convert_to_doy(today)).vals[-1]
 
     frame_delta = latest_vcdu - ref_vcdu
-    # frame_delta = 1  # for testing in comm behavior
 
     if frame_delta > 0:
         if in_comm_counter == 4:
@@ -61,13 +64,13 @@ while True:
             bus_current = np.round(critical_msids['2PRBSCR'].vals[-1], 2)
             fea_temp = np.round(critical_msids['2FHTRMZT'].vals[-1], 2)
 
-            message = f'We are now *IN COMM* as of `{now.strftime("%d/%m/%Y %H:%M:%S")}`. \n *Shields are {shield_state}* with a count rate of `{shield_rate} cps`. \n *Bus Current* is `{bus_current} A` (warning limit is 2.3 A). \n *FEA Temperature* is `{fea_temp} C`'
+            message = f'We are now *IN COMM* as of `{now.strftime("%m/%d/%Y %H:%M:%S")}`. \n *Shields are {shield_state}* with a count rate of `{shield_rate} cps`. \n *Bus Current* is `{bus_current} A` (warning limit is 2.3 A). \n *FEA Temperature* is `{fea_temp} C`'
 
             send_slack_message(message)
 
         in_comm_counter += 1
         print(
-            f'({now.strftime("%d/%m/%Y %H:%M:%S")} | Iteration {in_comm_counter}) IN COMM. VCDU increment is: {frame_delta}', end="\r", flush=True)
+            f'({now.strftime("%m/%d/%Y %H:%M:%S")} | Refresh #{in_comm_counter}) IN COMM. VCDU increment is: {frame_delta}', end="\r", flush=True)
 
     elif frame_delta == 0:
 
@@ -89,6 +92,6 @@ while True:
             message = f'Comm appears to have ENDED at `{now.strftime("%d/%m/%Y %H:%M:%S")}`. LAST Telemetry: \n *Shields were {shield_state}* with a count rate of `{shield_rate} cps`. \n *Bus Current* was `{bus_current} A` (warning limit is 2.3 A). \n *FEA Temperature* was `{fea_temp} C`'
 
         # then reset the comm counter
-        in_comm_counter == 0
+        in_comm_counter = 0
         print(
-            f'({now.strftime("%d/%m/%Y %H:%M:%S")} | Iteration {in_comm_counter}) NOT in COMM.', end="\r", flush=True)
+            f'({now.strftime("%m/%d/%Y %H:%M:%S")}) Chandra is not in Comm.', end="\r", flush=True)
