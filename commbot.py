@@ -61,18 +61,19 @@ def main():
 
     fetch.data_source.set('maude allow_subset=True')
 
+    # Just some initial settings
     recently_in_comm = False
     in_comm_counter = 0
 
+    # Loop infinitely :)
     while True:
-
         # Just grab the last 60 seconds of data to keep the request small and fast
         now = CxoTime.now() - 60 * u.s
 
-        # If there are new, time-tagged VCDU frame values within the last 60 seconds, this will not be empty
+        # If there VCDU frame values within the last 60 seconds, this will not be empty
         ref_vcdu = fetch.Msid('CVCDUCTR', start=now)
 
-        time.sleep(2)  # These fetches are really fast. Slow it down a bit.
+        time.sleep(2)  # These fetches are really fast. Slow the cadence a bit.
 
         if len(ref_vcdu) == 0:
             # Then we clearly are not in comm.
