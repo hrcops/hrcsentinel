@@ -17,13 +17,17 @@ import astropy.units as u
 
 
 def send_slack_message(message, blocks=None):
+
+    # KEEP YO TOKEN PRIVATE!
     with open('/Users/grant/.slackbot/slackbot_oauth_token', 'r') as tokenfile:
         token = tokenfile.readlines()[0]
+
     slack_token = token
     slack_channel = '#comm_passes'
     slack_icon_url = 'https://avatars.slack-edge.com/2021-01-28/1695804235940_26ef808c676830611f43_512.png'
     slack_user_name = 'HRC CommBot'
 
+    # Populate a JSON to push to the Slack API.
     return requests.post('https://slack.com/api/chat.postMessage', {
         'token': slack_token,
         'channel': slack_channel,
@@ -79,7 +83,7 @@ def main():
             # Then we clearly are not in comm.
 
             if recently_in_comm is True:
-                # then we've JUST been in comm and we need to report the end of comm
+                # then we've JUST been in comm and we need to report its end.
                 telem = grab_critical_telemetry()
                 message = f"It appears that COMM has ended as of `{now.strftime('% m/%d/%Y % H: % M: % S')}`. Last telemetry was in {telem['Format']}: \n *Shields were {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps`. \n *Bus Current* was `{telem['Bus Current']} A` (warning limit is 2.3 A). \n *FEA Temperature* was `{telem['FEA Temp']} C`"
 
