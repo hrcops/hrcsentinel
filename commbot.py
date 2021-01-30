@@ -98,7 +98,7 @@ def main():
             in_comm_counter += 1
 
             time.sleep(5)  # Wait a few seconds for MAUDE to refresh
-            latest_vcdu = fetch.Msid('CVCDUCTR', start=now)
+            latest_vcdu = fetch.Msid('CVCDUCTR', start=now).vals[-1]
 
             print(
                 f'({now.strftime("%m/%d/%Y %H:%M:%S")} | VCDU {latest_vcdu} | #{in_comm_counter}) IN COMM!', end="\r", flush=True)
