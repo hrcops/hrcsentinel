@@ -13,7 +13,6 @@ import time
 import shutil
 import sys
 import os
-import traceback
 import numpy as np
 import pandas as pd
 
