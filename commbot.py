@@ -24,6 +24,7 @@ def send_slack_message(message, blocks=None):
         # you need to do this to strip the \n
         slack_token = tokenfile.read().splitlines()[0]
 
+    # Add a comment here
     slack_channel = '#comm_passes'
     slack_icon_url = 'https://avatars.slack-edge.com/2021-01-28/1695804235940_26ef808c676830611f43_512.png'
     slack_user_name = 'HRC CommBot'
