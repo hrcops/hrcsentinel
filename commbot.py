@@ -24,7 +24,6 @@ def send_slack_message(message, blocks=None):
         # you need to do this to strip the \n
         slack_token = tokenfile.read().splitlines()[0]
 
-    # Add a comment here
     slack_channel = '#comm_passes'
     slack_icon_url = 'https://avatars.slack-edge.com/2021-01-28/1695804235940_26ef808c676830611f43_512.png'
     slack_user_name = 'HRC CommBot'
@@ -56,8 +55,12 @@ def grab_critical_telemetry(start=CxoTime.now() - 60 * u.s):
     fea_temp = np.round(critical_msids['2FHTRMZT'].vals[-1], 2)
     hrc_i_voltage = (
         critical_msids['2IMTPAST'].vals[-1], critical_msids['2IMBPAST'].vals[-1])
+    # HALF voltage for HRC-I is 42/53
+    # FULL voltage for HRC-S is 77/89
     hrc_s_voltage = (
         critical_msids['2SPTPAST'].vals[-1], critical_msids['2SPBPAST'].vals[-1])
+    # HALF voltage for HRC-S is 43/54 (top/bottom)
+    # FULL voltage is 93/105 (top/bottom)
 
     te_rate = critical_msids['2TLEV1RT'].vals[-1]
     ve_rate = critical_msids['2VLEV1RT'].vals[-1]
