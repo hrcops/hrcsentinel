@@ -100,8 +100,8 @@ def main():
 
                 recently_in_comm = False
                 in_comm_counter = 0
-                print(f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) Not in Comm.',
-                      end="\r", flush=True)
+                print(
+                    f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) Not in Comm.', end='\r')
 
             if len(ref_vcdu) > 0:
                 # Then it looks like we're in comm.
@@ -113,7 +113,7 @@ def main():
                     'CVCDUCTR', start=CxoTime.now() - 300 * u.s).vals[-1]
 
                 print(
-                    f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")} | VCDU {latest_vcdu} | #{in_comm_counter}) IN COMM!', end="\r", flush=True)
+                    f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")} | VCDU {latest_vcdu} | #{in_comm_counter}) IN COMM!', end='\r')
 
                 if in_comm_counter == 5:
                     # Now we've waited ~half a minute or so for MAUDE to update
@@ -125,9 +125,9 @@ def main():
                     send_slack_message(message)
 
         except Exception as e:
-            print(f"ERROR: {e}")
-            print("Heres the traceback:")
-            print(traceback.format_exc())
+            print(f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) ERROR: {e}')
+            # print("Heres the traceback:")
+            # print(traceback.format_exc())
             print("Pressing on...")
             if in_comm_counter > 0:
                 in_comm_counter -= 1
