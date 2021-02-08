@@ -4,6 +4,7 @@ import sys
 import requests
 import json
 import traceback
+import argparse
 
 from Ska.engarchive import fetch
 
@@ -17,14 +18,14 @@ from chandratime import convert_chandra_time, convert_to_doy
 import astropy.units as u
 
 
-def send_slack_message(message, blocks=None):
+def send_slack_message(message, channel='#comm_passes', blocks=None):
 
     # KEEP YO TOKEN PRIVATE!
     with open('/Users/grant/.slackbot/slackbot_oauth_token', 'r') as tokenfile:
         # you need to do this to strip the \n
         slack_token = tokenfile.read().splitlines()[0]
 
-    slack_channel = '#comm_passes'
+    slack_channel = channel
     slack_icon_url = 'https://avatars.slack-edge.com/2021-01-28/1695804235940_26ef808c676830611f43_512.png'
     slack_user_name = 'HRC CommBot'
 
@@ -71,13 +72,29 @@ def grab_critical_telemetry(start=CxoTime.now() - 60 * u.s):
     return telem
 
 
+def get_args():
+    '''Fetch command line args, if given'''
+
+    parser = argparse.ArgumentParser(
+        description='Monitor the VCDU telemetry stream, and send a message to the HRC Ops Slack with critical HRC telemetry whenever we are in comm.')
+
+    parser.add_argument("--fake_comm", help="Trick the code to think it's in comm. Useful for testing. ",
+                        action="store_true")
+
+    args = parser.parse_args()
+    return args
+
+
 def main():
 
     fetch.data_source.set('maude allow_subset=True')
 
+    args = get_args()
+
     # Just some initial settings
     recently_in_comm = False
     in_comm_counter = 0
+    fake_comm = args.fake_comm  # Boolean
 
     # Loop infinitely :)
     while True:
@@ -96,12 +113,13 @@ def main():
                     # then we've JUST been in comm and we need to report its end.
                     telem = grab_critical_telemetry(
                         start=CxoTime.now() - 1800 * u.s)
-                    message = f"It appears that COMM has ended as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}`. Last telemetry was in {telem['Format']}: \n *Shields were {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps`. \n *Bus Current* was `{telem['Bus Current']} A` (warning limit is 2.3 A). \n *FEA Temperature* was `{telem['FEA Temp']} C`"
+                    message = f"It appears that COMM has ended as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}` \n Last telemetry was in `{telem['Format']}`: \n *Shields were {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n *Bus Current* was `{telem['Bus Current']} A` (warning limit is 2.3 A)  \n *FEA Temperature* was `{telem['FEA Temp']} C`"
+                    send_slack_message(message)
 
                 recently_in_comm = False
                 in_comm_counter = 0
                 print(
-                    f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) Not in Comm.', end='\r')
+                    f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) Not in Comm.', end='\r\r\r')
 
             if len(ref_vcdu) > 0:
                 # Then it looks like we're in comm.
@@ -120,15 +138,16 @@ def main():
                     telem = grab_critical_telemetry(
                         start=CxoTime.now() - 300 * u.s)
                     # Craft a message string using this latest elemetry
-                    message = f"We are now *IN COMM* as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}` (_Chandra_ time). \n \n Telemetry Format = `{telem['Format']}` \n *HRC-I* Voltage Steps (Top/Bottom) = `{telem['HRC-I Voltage Steps'][0]}/{telem['HRC-I Voltage Steps'][1]}` \n *HRC-S* Voltage Steps (Top/Bottom) = `{telem['HRC-S Voltage Steps'][0]}/{telem['HRC-S Voltage Steps'][1]}`  \n \n *Total Event* Rate = `{telem['TE Rate']} cps`   \n *Valid Event* Rate = `{telem['VE Rate']} cps`  \n *Shields are {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n \n *Bus Current* is `{telem['Bus Current']} A` (warning limit is 2.3 A) \n \n *FEA Temperature* is `{telem['FEA Temp']} C`"
+                    message = f"We are now *IN COMM* as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}` (_Chandra_ time). \n \n Telemetry Format = `{telem['Format']}` \n *HRC-I* Voltage Steps (Top/Bottom) = `{telem['HRC-I Voltage Steps'][0]}/{telem['HRC-I Voltage Steps'][1]}` \n *HRC-S* Voltage Steps (Top/Bottom) = `{telem['HRC-S Voltage Steps'][0]}/{telem['HRC-S Voltage Steps'][1]}`  \n \n *Total Event* Rate = `{telem['TE Rate']} cps`   \n *Valid Event* Rate = `{telem['VE Rate']} cps`  \n *Shields are {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n \n *Bus Current* is `{telem['Bus Current']}`\n \n *FEA Temperature* is `{telem['FEA Temp']} C`"
                     # Send the message using our slack bot
                     send_slack_message(message)
 
         except Exception as e:
-            print(f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) ERROR: {e}')
+            print(
+                f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) ERROR: {e}', end='\r')
             # print("Heres the traceback:")
             # print(traceback.format_exc())
-            print("Pressing on...")
+            print("Pressing on...", end='\r')
             if in_comm_counter > 0:
                 in_comm_counter -= 1
             continue
