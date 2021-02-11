@@ -20,9 +20,9 @@ import astropy.units as u
 
 def send_slack_message(message, channel='#comm_passes', blocks=None):
 
-    # KEEP YO TOKEN PRIVATE!
+    # Never push the token to github!
     with open('/Users/grant/.slackbot/slackbot_oauth_token', 'r') as tokenfile:
-        # you need to do this to strip the \n
+        # .splitlines()[0] is needed to strip the \n character from the token file
         slack_token = tokenfile.read().splitlines()[0]
 
     slack_channel = channel
@@ -113,7 +113,7 @@ def main():
                     # then we've JUST been in comm and we need to report its end.
                     telem = grab_critical_telemetry(
                         start=CxoTime.now() - 1800 * u.s)
-                    message = f"It appears that COMM has ended as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}` \n Last telemetry was in `{telem['Format']}`: \n *Shields were {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n *Bus Current* was `{telem['Bus Current']} A` (warning limit is 2.3 A)  \n *FEA Temperature* was `{telem['FEA Temp']} C`"
+                    message = f"It appears that COMM has ended as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}` \n\n Last telemetry was in `{telem['Format']}` \n\n *Shields were {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n\n *Bus Current* was `{telem['Bus Current']} A` (warning limit is 2.3 A)  \n\n *FEA Temperature* was `{telem['FEA Temp']} C`"
                     send_slack_message(message)
 
                 recently_in_comm = False
