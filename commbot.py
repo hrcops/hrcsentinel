@@ -5,6 +5,7 @@ import requests
 import json
 import traceback
 import argparse
+import socket
 
 from Ska.engarchive import fetch
 
@@ -20,8 +21,18 @@ import astropy.units as u
 
 def send_slack_message(message, channel='#comm_passes', blocks=None):
 
+    # I run this on both the HEAD LAN and my home machine
+    # Make sure it's readable only to you, i.e. chmod og-rwx slackbot_oauth_token
+    if socket.gethostname() == 'han-v.cfa.harvard.edu':
+        slackbot_token_path = '/home/tremblay/.slackbot/slackbot_oauth_token'
+    elif socket.gethostname() == 'symmetry.local':
+        slackbot_token_path = '/Users/grant/.slackbot/slackbot_oauth_token'
+    else:
+        sys.exit('I do not recognize the hostname {}. Exiting.'.format(
+            socket.gethostname()))
+
     # Never push the token to github!
-    with open('/Users/grant/.slackbot/slackbot_oauth_token', 'r') as tokenfile:
+    with open(slackbot_token_path, 'r') as tokenfile:
         # .splitlines()[0] is needed to strip the \n character from the token file
         slack_token = tokenfile.read().splitlines()[0]
 
