@@ -119,7 +119,7 @@ def main():
                 recently_in_comm = False
                 in_comm_counter = 0
                 print(
-                    f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) Not in Comm.', end='\r\r\r')
+                    f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) Not in Comm.                                 ', end='\r\r\r')
 
             if len(ref_vcdu) > 0:
                 # Then it looks like we're in comm.
@@ -143,11 +143,11 @@ def main():
                     send_slack_message(message)
 
         except Exception as e:
-            print(
-                f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) ERROR: {e}', end='\r')
-            # print("Heres the traceback:")
-            # print(traceback.format_exc())
-            print("Pressing on...", end='\r')
+
+            print(f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) ERROR: {e}')
+            print("Heres the traceback:")
+            print(traceback.format_exc())
+            print("Pressing on...")
             if in_comm_counter > 0:
                 in_comm_counter -= 1
             continue
