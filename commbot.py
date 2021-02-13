@@ -155,10 +155,12 @@ def main():
 
         except Exception as e:
 
-            print(f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) ERROR: {e}')
-            print("Heres the traceback:")
-            print(traceback.format_exc())
-            print("Pressing on...")
+            # print(f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) ERROR: {e}')
+            print(
+                f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) MAUDE Error', end='\r')
+            # print("Heres the traceback:")
+            # print(traceback.format_exc())
+            # print("Pressing on...")
             if in_comm_counter > 0:
                 in_comm_counter -= 1
             continue
