@@ -231,6 +231,8 @@ def main():
             # Clear the command line manually
             sys.stdout.write("\033[K")
 
+            plt.close('all')
+
         except Exception as e:
             print("ERROR on Iteration {}: {}".format(counter, e))
             print("Heres the traceback:")
