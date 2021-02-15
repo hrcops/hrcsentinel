@@ -18,6 +18,8 @@ from chandratime import convert_chandra_time, convert_to_doy
 
 import astropy.units as u
 
+from heartbeat import are_we_in_comm
+
 
 def send_slack_message(message, channel='#comm_passes', blocks=None):
 
@@ -54,8 +56,10 @@ def grab_critical_telemetry(start=CxoTime.now() - 60 * u.s):
 
     critical_msidlist = ['CCSDSTMF', '2SHEV1RT', '2PRBSCR',
                          '2FHTRMZT', '2IMTPAST', '2IMBPAST', '2SPTPAST', '2SPBPAST', '2TLEV1RT', '2VLEV1RT']
-    critical_msids = fetch.get_telem(
-        critical_msidlist, start=start, quiet=True, unit_system='eng')
+    # critical_msids = fetch.get_telem(
+    #     critical_msidlist, start=start, quiet=True, unit_system='eng')
+
+    critical_msids = fetch.MSIDset(critical_msidlist, start=start)
 
     tm_format = critical_msids['CCSDSTMF'].vals[-1]
     shield_rate = critical_msids['2SHEV1RT'].vals[-1]
@@ -63,7 +67,9 @@ def grab_critical_telemetry(start=CxoTime.now() - 60 * u.s):
         shield_state = 'UP'
     elif shield_rate == 0:
         shield_state = 'DOWN'
-    bus_current = np.round(critical_msids['2PRBSCR'].vals[-1], 2)
+    bus_current_in_amps = np.round(critical_msids['2PRBSCR'].vals[-1], 2)
+    bus_current_in_dn = convert_bus_current_to_dn(bus_current_in_amps)
+
     fea_temp = np.round(critical_msids['2FHTRMZT'].vals[-1], 2)
     hrc_i_voltage = (
         critical_msids['2IMTPAST'].vals[-1], critical_msids['2IMBPAST'].vals[-1])
@@ -78,9 +84,27 @@ def grab_critical_telemetry(start=CxoTime.now() - 60 * u.s):
     ve_rate = critical_msids['2VLEV1RT'].vals[-1]
 
     telem = {'Format': tm_format, 'Shield Rate': shield_rate, 'Shield State': shield_state,
-             'Bus Current': bus_current, 'FEA Temp': fea_temp, 'HRC-I Voltage Steps': hrc_i_voltage, 'HRC-S Voltage Steps': hrc_s_voltage, 'TE Rate': te_rate, 'VE Rate': ve_rate}
+             'Bus Current (DN)': bus_current_in_dn, 'Bus Current (A)': bus_current_in_amps, 'FEA Temp': fea_temp, 'HRC-I Voltage Steps': hrc_i_voltage, 'HRC-S Voltage Steps': hrc_s_voltage, 'TE Rate': te_rate, 'VE Rate': ve_rate}
 
     return telem
+
+
+def convert_bus_current_to_dn(bus_current_in_amps):
+    '''
+    The DN-to-Current (Amps) conversion for 2PRBSCR is just a linear
+    offset in the form I = (m * DN) + b, from here: https://icxc.cfa.harvard.edu/hrcops/msid/hrc.msid.html
+    '''
+
+    # bus_current_in_amps = (m * DN) + b, were m=0.0682 and b=-8.65
+    # DN = (bus_current_in_amps - b) / m
+
+    b = -8.65
+    m = 0.0682
+
+    # Needs to be a whole integer
+    dn = int(round((bus_current_in_amps - b) / m))
+
+    return dn
 
 
 def get_args():
@@ -101,30 +125,25 @@ def main():
     fetch.data_source.set('maude allow_subset=True')
 
     args = get_args()
+    fake_comm = args.fake_comm
 
     # Just some initial settings
     recently_in_comm = False
     in_comm_counter = 0
-    fake_comm = args.fake_comm  # Boolean
 
     # Loop infinitely :)
     while True:
 
         try:
-            # If there VCDU frame values within the last 60 seconds, this will not be empty
-            ref_vcdu = fetch.Msid('CVCDUCTR', start=CxoTime.now() - 60 * u.s)
+            in_comm = are_we_in_comm(
+                verbose=False, cadence=2, fake_comm=fake_comm)
 
-            # These fetches are really fast. Slow the cadence a bit.
-            time.sleep(2)
-
-            if len(ref_vcdu) == 0:
-                # Then we clearly are not in comm.
-
-                if recently_in_comm is True:
+            if not in_comm:
+                if recently_in_comm:
                     # then we've JUST been in comm and we need to report its end.
                     telem = grab_critical_telemetry(
                         start=CxoTime.now() - 1800 * u.s)
-                    message = f"It appears that COMM has ended as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}` \n\n Last telemetry was in `{telem['Format']}` \n\n *Shields were {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n\n *Bus Current* was `{telem['Bus Current']} A` (warning limit is 2.3 A)  \n\n *FEA Temperature* was `{telem['FEA Temp']} C`"
+                    message = f"It appears that COMM has ended as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}` \n\n Last telemetry was in `{telem['Format']}` \n\n *Shields were {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n\n *HRC-I* Voltage Steps were (Top/Bottom) = `{telem['HRC-I Voltage Steps'][0]}/{telem['HRC-I Voltage Steps'][1]}` \n *HRC-S* Voltage Steps were (Top/Bottom) = `{telem['HRC-S Voltage Steps'][0]}/{telem['HRC-S Voltage Steps'][1]}`  \n\n *Bus Current* was `{telem['Bus Current (DN)']} DN` (`{telem['Bus Current (A)']} A` warning limit is `2.3 A`)  \n\n *FEA Temperature* was `{telem['FEA Temp']} C`"
                     send_slack_message(message)
 
                 recently_in_comm = False
@@ -132,35 +151,49 @@ def main():
                 print(
                     f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) Not in Comm.                                 ', end='\r\r\r')
 
-            if len(ref_vcdu) > 0:
-                # Then it looks like we're in comm.
+            if in_comm:
+                if fake_comm:
+                    # two days to make sure we grab previous comm
+                    start_time = CxoTime.now() - 2 * u.d
+                    bot_slack_channel = '#bot-testing'
+                if not fake_comm:
+                    start_time = CxoTime.now() - 300 * u.s  # 300 sec to make the grab really small
+                    bot_slack_channel = bot_slack_channel = '#comm-passes'
+
                 recently_in_comm = True
                 in_comm_counter += 1
 
                 time.sleep(5)  # Wait a few seconds for MAUDE to refresh
                 latest_vcdu = fetch.Msid(
-                    'CVCDUCTR', start=CxoTime.now() - 300 * u.s).vals[-1]
+                    'CVCDUCTR', start=start_time).vals[-1]
 
                 print(
-                    f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")} | VCDU {latest_vcdu} | #{in_comm_counter}) IN COMM!', end='\r')
+                    f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")} | VCDU {latest_vcdu} | #{in_comm_counter}) In Comm.', end='\r')
 
                 if in_comm_counter == 5:
                     # Now we've waited ~half a minute or so for MAUDE to update
                     telem = grab_critical_telemetry(
-                        start=CxoTime.now() - 300 * u.s)
+                        start=CxoTime.now() - 8 * u.h)
+
                     # Craft a message string using this latest elemetry
-                    message = f"We are now *IN COMM* as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}` (_Chandra_ time). \n \n Telemetry Format = `{telem['Format']}` \n *HRC-I* Voltage Steps (Top/Bottom) = `{telem['HRC-I Voltage Steps'][0]}/{telem['HRC-I Voltage Steps'][1]}` \n *HRC-S* Voltage Steps (Top/Bottom) = `{telem['HRC-S Voltage Steps'][0]}/{telem['HRC-S Voltage Steps'][1]}`  \n \n *Total Event* Rate = `{telem['TE Rate']} cps`   \n *Valid Event* Rate = `{telem['VE Rate']} cps`  \n *Shields are {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n \n *Bus Current* is `{telem['Bus Current']} A` (warning limit is 2.3 A)\n \n *FEA Temperature* is `{telem['FEA Temp']} C`"
+                    message = f"We are now *IN COMM* as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}` (_Chandra_ time). \n \n Telemetry Format = `{telem['Format']}` \n *HRC-I* Voltage Steps (Top/Bottom) = `{telem['HRC-I Voltage Steps'][0]}/{telem['HRC-I Voltage Steps'][1]}` \n *HRC-S* Voltage Steps (Top/Bottom) = `{telem['HRC-S Voltage Steps'][0]}/{telem['HRC-S Voltage Steps'][1]}`  \n \n *Total Event* Rate = `{telem['TE Rate']} cps`   \n *Valid Event* Rate = `{telem['VE Rate']} cps`  \n *Shields are {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n \n *Bus Current* is `{telem['Bus Current (DN)']} DN` (`{telem['Bus Current (A)']} A`) \n \n *FEA Temperature* is `{telem['FEA Temp']} C`"
                     # Send the message using our slack bot
-                    send_slack_message(message)
+                    send_slack_message(message, channel=bot_slack_channel)
 
         except Exception as e:
+            # MAUDE queries fail regularly as TM is streaming in (mismatched array sizes as data is being populated), 404s, etc.
+            # The solution is almost always to simply try again. Therefore this script just presses on in the event of an Exception.
+            if fake_comm:
+                # Then we want a verbose error message, because we're obviously in testing mode
+                print(f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) ERROR: {e}')
+                print("Heres the traceback:")
+                print(traceback.format_exc())
+                print("Pressing on...")
+            elif not fake_comm:
+                # Then we're likely in operational mode. Ignore the errors on the command line.
+                print(
+                    f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) MAUDE Error', end='\r')
 
-            # print(f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) ERROR: {e}')
-            print(
-                f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) MAUDE Error', end='\r')
-            # print("Heres the traceback:")
-            # print(traceback.format_exc())
-            # print("Pressing on...")
             if in_comm_counter > 0:
                 in_comm_counter -= 1
             continue
