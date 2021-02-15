@@ -1,5 +1,12 @@
 #!/usr/bin/env conda run -n ska3 python
 
+
+import time
+import shutil
+import sys
+import os
+import argparse
+
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
 import matplotlib.dates as mdate
@@ -9,10 +16,7 @@ import Ska.engarchive.fetch as fetch
 import socket
 import traceback
 import pytz
-import time
-import shutil
-import sys
-import os
+
 import numpy as np
 import pandas as pd
 
@@ -24,6 +28,9 @@ from forecast_thermals import make_thermal_plots
 from plot_motors import make_motor_plots
 
 from chandratime import convert_chandra_time, convert_to_doy
+from cxotime import CxoTime
+
+from heartbeat import are_we_in_comm
 
 plt.switch_backend('agg')
 
@@ -157,6 +164,19 @@ def update_plot(counter, plot_start=dt.datetime(2020, 8, 31, 00), plot_end=dt.da
     plt.close()
 
 
+def get_args():
+    '''Fetch command line args, if given'''
+
+    parser = argparse.ArgumentParser(
+        description='Monitor the VCDU telemetry stream, and update critical status plots whenever we are in comm.')
+
+    parser.add_argument("--fake_comm", help="Trick the code to think it's in comm. Useful for testing. ",
+                        action="store_true")
+
+    args = parser.parse_args()
+    return args
+
+
 def main():
     '''
     The main event loop. Sets plotting parameters and data sources, and makes
@@ -174,64 +194,84 @@ def main():
         sys.exit('I do not recognize the hostname {}. Exiting.'.format(
             socket.gethostname()))
 
-    # plt.ion()
+    args = get_args()
+    fake_comm = args.fake_comm
 
+    # Initial settings
     counter = 0
 
+    # Loop infinitely :)
     while True:
 
         try:
 
-            # fetch.data_source.set('cxc', 'maude allow_subset=False')
-            fetch.data_source.set('maude allow_subset=False')
+            in_comm = are_we_in_comm(
+                verbose=False, cadence=2, fake_comm=fake_comm)
 
-            print("Refreshing dashboard (Iteration {}) at {}".format(
-                counter, dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), flush=True)
+            if not in_comm:
+                print(
+                    f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) Not in Comm.                                 ', end='\r\r\r')
+            if in_comm:
 
-            five_days_ago = dt.date.today() - dt.timedelta(days=5)
-            two_days_hence = dt.date.today() + dt.timedelta(days=2)
+                # Explicitly set each time. This is obviously redundant but I'm paranoid
+                fetch.data_source.set('maude allow_subset=False')
 
-            update_plot(counter, plot_start=five_days_ago, fig_save_directory=fig_save_directory,
-                        plot_end=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'), force_limits=True)
+                print("Refreshing dashboard (Iteration {}) at {}".format(
+                    counter, dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), flush=True)
 
-            print('Saved Current Status Plots to {}'.format(
-                fig_save_directory), end="\r", flush=True)
-            # Clear the command line manually
-            sys.stdout.write("\033[K")
+                five_days_ago = dt.date.today() - dt.timedelta(days=5)
+                two_days_hence = dt.date.today() + dt.timedelta(days=2)
 
-            fetch.data_source.set('cxc')
-            update_plot(counter, fig_save_directory=fig_save_directory, plot_start=dt.datetime(
-                2000, 1, 4), plot_end=None, sampling='daily', date_format=mdate.DateFormatter('%Y'), current_hline=True, missionwide=True, force_limits=True)
+                update_plot(counter, plot_start=five_days_ago, fig_save_directory=fig_save_directory,
+                            plot_end=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'), force_limits=True)
 
-            print('Saved Mission-Wide Plots to {}'.format(
-                fig_save_directory), end="\r", flush=True)
-            # Clear the command line manually
-            sys.stdout.write("\033[K")
+                print('Saved Current Status Plots to {}'.format(
+                    fig_save_directory), end="\r", flush=True)
+                # Clear the command line manually
+                sys.stdout.write("\033[K")
 
-            print('Updating Motor Plots', end="\r", flush=True)
-            make_motor_plots(counter, fig_save_directory=fig_save_directory, plot_start=five_days_ago,
-                             plot_end=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'))
-            print('Done', end="\r", flush=True)
-            # Clear the command line manually
-            sys.stdout.write("\033[K")
+                fetch.data_source.set('cxc')
+                update_plot(counter, fig_save_directory=fig_save_directory, plot_start=dt.datetime(
+                    2000, 1, 4), plot_end=None, sampling='daily', date_format=mdate.DateFormatter('%Y'), current_hline=True, missionwide=True, force_limits=True)
 
-            print('Saved Motor Plots to {}'.format(
-                fig_save_directory), end="\r", flush=True)
-            # Clear the command line manually
-            sys.stdout.write("\033[K")
+                print('Saved Mission-Wide Plots to {}'.format(
+                    fig_save_directory), end="\r", flush=True)
+                # Clear the command line manually
+                sys.stdout.write("\033[K")
 
-            print('Updating Thermal Plots', end="\r", flush=True)
-            make_thermal_plots(counter, fig_save_directory=fig_save_directory)
-            print('Done', end="\r", flush=True)
-            # Clear the command line manually
-            sys.stdout.write("\033[K")
+                print('Updating Motor Plots', end="\r", flush=True)
+                make_motor_plots(counter, fig_save_directory=fig_save_directory, plot_start=five_days_ago,
+                                 plot_end=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'))
+                print('Done', end="\r", flush=True)
+                # Clear the command line manually
+                sys.stdout.write("\033[K")
 
-            print('Saved Thermal Plots to {}'.format(
-                fig_save_directory), end="\r", flush=True)
-            # Clear the command line manually
-            sys.stdout.write("\033[K")
+                print('Saved Motor Plots to {}'.format(
+                    fig_save_directory), end="\r", flush=True)
+                # Clear the command line manually
+                sys.stdout.write("\033[K")
 
-            plt.close('all')
+                print('Updating Thermal Plots', end="\r", flush=True)
+                make_thermal_plots(
+                    counter, fig_save_directory=fig_save_directory)
+                print('Done', end="\r", flush=True)
+                # Clear the command line manually
+                sys.stdout.write("\033[K")
+
+                print('Saved Thermal Plots to {}'.format(
+                    fig_save_directory), end="\r", flush=True)
+                # Clear the command line manually
+                sys.stdout.write("\033[K")
+
+                plt.close('all')
+
+                counter += 1
+                sleep_period_seconds = 3
+                for i in range(0, sleep_period_seconds):
+                    # you need to flush this print statement
+                    print('Refreshing plots in {} seconds...'.format(
+                        sleep_period_seconds-i), end="\r", flush=True)
+                    time.sleep(1)  # sleep for 1 second per iteration
 
         except Exception as e:
             print("ERROR on Iteration {}: {}".format(counter, e))
@@ -239,14 +279,6 @@ def main():
             print(traceback.format_exc())
             print("Pressing on...")
             continue
-
-        counter += 1
-        sleep_period_seconds = 3
-        for i in range(0, sleep_period_seconds):
-            # you need to flush this print statement
-            print('Refreshing plots in {} seconds...'.format(
-                sleep_period_seconds-i), end="\r", flush=True)
-            time.sleep(1)  # sleep for 1 second per iteration
 
 
 if __name__ == "__main__":

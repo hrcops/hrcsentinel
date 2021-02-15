@@ -127,7 +127,7 @@ def main():
     args = get_args()
     fake_comm = args.fake_comm
 
-    # Just some initial settings
+    # Initial settings
     recently_in_comm = False
     in_comm_counter = 0
 
