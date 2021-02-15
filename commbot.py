@@ -127,6 +127,11 @@ def main():
     args = get_args()
     fake_comm = args.fake_comm
 
+    if fake_comm:
+        bot_slack_channel = '#bot-testing'
+    elif not fake_comm:
+        bot_slack_channel = bot_slack_channel = '#comm_passes'
+
     # Initial settings
     recently_in_comm = False
     in_comm_counter = 0
@@ -144,7 +149,7 @@ def main():
                     telem = grab_critical_telemetry(
                         start=CxoTime.now() - 1800 * u.s)
                     message = f"It appears that COMM has ended as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}` \n\n Last telemetry was in `{telem['Format']}` \n\n *Shields were {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n\n *HRC-I* Voltage Steps were (Top/Bottom) = `{telem['HRC-I Voltage Steps'][0]}/{telem['HRC-I Voltage Steps'][1]}` \n *HRC-S* Voltage Steps were (Top/Bottom) = `{telem['HRC-S Voltage Steps'][0]}/{telem['HRC-S Voltage Steps'][1]}`  \n\n *Bus Current* was `{telem['Bus Current (DN)']} DN` (`{telem['Bus Current (A)']} A` warning limit is `2.3 A`)  \n\n *FEA Temperature* was `{telem['FEA Temp']} C`"
-                    send_slack_message(message)
+                    send_slack_message(message, channel=bot_slack_channel)
 
                 recently_in_comm = False
                 in_comm_counter = 0
@@ -155,10 +160,8 @@ def main():
                 if fake_comm:
                     # two days to make sure we grab previous comm
                     start_time = CxoTime.now() - 2 * u.d
-                    bot_slack_channel = '#bot-testing'
-                if not fake_comm:
+                elif not fake_comm:
                     start_time = CxoTime.now() - 300 * u.s  # 300 sec to make the grab really small
-                    bot_slack_channel = bot_slack_channel = '#comm-passes'
 
                 recently_in_comm = True
                 in_comm_counter += 1
