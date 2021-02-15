@@ -198,7 +198,9 @@ def main():
     fake_comm = args.fake_comm
 
     # Initial settings
-    counter = 0
+    recently_in_comm = False
+    in_comm_counter = 0
+    iteration_counter = 0
 
     # Loop infinitely :)
     while True:
@@ -209,20 +211,61 @@ def main():
                 verbose=False, cadence=2, fake_comm=fake_comm)
 
             if not in_comm:
+                if recently_in_comm:
+                    # Then generate the long term trending plots
+                    fetch.data_source.set('cxc')
+                    update_plot(iteration_counter, fig_save_directory=fig_save_directory, plot_start=dt.datetime(
+                        2000, 1, 4), plot_end=None, sampling='daily', date_format=mdate.DateFormatter('%Y'), current_hline=True, missionwide=True, force_limits=True)
+
+                    print('Saved Mission-Wide Plots to {}'.format(
+                        fig_save_directory), end="\r", flush=True)
+                    # Clear the command line manually
+                    sys.stdout.write("\033[K")
+
+                    print('Updating Motor Plots', end="\r", flush=True)
+                    make_motor_plots(iteration_counter, fig_save_directory=fig_save_directory, plot_start=five_days_ago,
+                                     plot_end=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'))
+                    print('Done', end="\r", flush=True)
+                    # Clear the command line manually
+                    sys.stdout.write("\033[K")
+
+                    print('Saved Motor Plots to {}'.format(
+                        fig_save_directory), end="\r", flush=True)
+                    # Clear the command line manually
+                    sys.stdout.write("\033[K")
+
+                    print('Updating Thermal Plots', end="\r", flush=True)
+                    make_thermal_plots(
+                        iteration_counter, fig_save_directory=fig_save_directory)
+                    print('Done', end="\r", flush=True)
+                    # Clear the command line manually
+                    sys.stdout.write("\033[K")
+
+                    print('Saved Thermal Plots to {}'.format(
+                        fig_save_directory), end="\r", flush=True)
+                    # Clear the command line manually
+                    sys.stdout.write("\033[K")
+
+                recently_in_comm = False
+                in_comm_counter = 0
+
                 print(
                     f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) Not in Comm.                                 ', end='\r\r\r')
             if in_comm:
+
+                recently_in_comm = True
+                in_comm_counter += 1
 
                 # Explicitly set each time. This is obviously redundant but I'm paranoid
                 fetch.data_source.set('maude allow_subset=False')
 
                 print("Refreshing dashboard (Iteration {}) at {}".format(
-                    counter, dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), flush=True)
+                    iteration_counter, dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), flush=True)
 
                 five_days_ago = dt.date.today() - dt.timedelta(days=5)
                 two_days_hence = dt.date.today() + dt.timedelta(days=2)
 
-                update_plot(counter, plot_start=five_days_ago, fig_save_directory=fig_save_directory,
+                update_plot(iteration_counter, plot_start=five_days_ago, fig_save_directory=fig_save_directory,
                             plot_end=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'), force_limits=True)
 
                 print('Saved Current Status Plots to {}'.format(
@@ -230,42 +273,9 @@ def main():
                 # Clear the command line manually
                 sys.stdout.write("\033[K")
 
-                fetch.data_source.set('cxc')
-                update_plot(counter, fig_save_directory=fig_save_directory, plot_start=dt.datetime(
-                    2000, 1, 4), plot_end=None, sampling='daily', date_format=mdate.DateFormatter('%Y'), current_hline=True, missionwide=True, force_limits=True)
-
-                print('Saved Mission-Wide Plots to {}'.format(
-                    fig_save_directory), end="\r", flush=True)
-                # Clear the command line manually
-                sys.stdout.write("\033[K")
-
-                print('Updating Motor Plots', end="\r", flush=True)
-                make_motor_plots(counter, fig_save_directory=fig_save_directory, plot_start=five_days_ago,
-                                 plot_end=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'))
-                print('Done', end="\r", flush=True)
-                # Clear the command line manually
-                sys.stdout.write("\033[K")
-
-                print('Saved Motor Plots to {}'.format(
-                    fig_save_directory), end="\r", flush=True)
-                # Clear the command line manually
-                sys.stdout.write("\033[K")
-
-                print('Updating Thermal Plots', end="\r", flush=True)
-                make_thermal_plots(
-                    counter, fig_save_directory=fig_save_directory)
-                print('Done', end="\r", flush=True)
-                # Clear the command line manually
-                sys.stdout.write("\033[K")
-
-                print('Saved Thermal Plots to {}'.format(
-                    fig_save_directory), end="\r", flush=True)
-                # Clear the command line manually
-                sys.stdout.write("\033[K")
-
                 plt.close('all')
 
-                counter += 1
+                iteration_counter += 1
                 sleep_period_seconds = 3
                 for i in range(0, sleep_period_seconds):
                     # you need to flush this print statement
@@ -274,7 +284,7 @@ def main():
                     time.sleep(1)  # sleep for 1 second per iteration
 
         except Exception as e:
-            print("ERROR on Iteration {}: {}".format(counter, e))
+            print("ERROR on Iteration {}: {}".format(iteration_counter, e))
             print("Heres the traceback:")
             print(traceback.format_exc())
             print("Pressing on...")
