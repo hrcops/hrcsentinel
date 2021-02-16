@@ -19,6 +19,9 @@ def scpimage(user='gtremblay', server='hrc15.cfa.harvard.edu', imagefile='/d0/hr
 
 
 def main():
+    '''
+    Copy i0.fits from HRC15, make a difference image, and load it up (or refresh it) in JS9/Voyager
+    '''
 
     iteration = 0
 
@@ -31,7 +34,8 @@ def main():
     while True:
 
         if iteration == 1:
-            os.system(f'vger {image}')
+            # Load the image in Vger/JS9 only once
+            os.system(f'vger {image} &')
 
         scpimage(destination=working_dir)
         copyfile(image, refimage)
@@ -52,7 +56,7 @@ def main():
 
         iteration += 1
 
-        os.system('js9 refresh')
+        os.system('js9 refresh')  # Reresh the image in ds9, preserving regions and view state
 
         plt.draw()
         plt.pause(5)
