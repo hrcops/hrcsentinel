@@ -56,10 +56,8 @@ def grab_critical_telemetry(start=CxoTime.now() - 60 * u.s):
 
     critical_msidlist = ['CCSDSTMF', '2SHEV1RT', '2PRBSCR',
                          '2FHTRMZT', '2IMTPAST', '2IMBPAST', '2SPTPAST', '2SPBPAST', '2TLEV1RT', '2VLEV1RT']
-    # critical_msids = fetch.get_telem(
-    #     critical_msidlist, start=start, quiet=True, unit_system='eng')
-
-    critical_msids = fetch.MSIDset(critical_msidlist, start=start)
+    critical_msids = fetch.get_telem(
+        critical_msidlist, start=start, quiet=True, unit_system='eng')
 
     tm_format = critical_msids['CCSDSTMF'].vals[-1]
     shield_rate = critical_msids['2SHEV1RT'].vals[-1]
