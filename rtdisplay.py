@@ -25,7 +25,7 @@ def main():
 
     iteration = 0
 
-    working_dir = '/Users/grant/Desktop/hvincrease/'
+    working_dir = '/Users/grant/Desktop/'
     image = working_dir + 'i0.fits'
     refimage = working_dir + 'i0_ref.fits'
 
