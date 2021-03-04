@@ -173,6 +173,9 @@ def get_args():
     parser.add_argument("--fake_comm", help="Trick the code to think it's in comm. Useful for testing. ",
                         action="store_true")
 
+    parser.add_argument("--force_ska", help="Trick the code pull from Ska/CXC instead of MAUDE with a switch to fetch.data_source.set() ",
+                        action="store_true")
+
     args = parser.parse_args()
     return args
 
@@ -258,6 +261,8 @@ def main():
 
                 # Explicitly set each time. This is obviously redundant but I'm paranoid
                 fetch.data_source.set('maude allow_subset=False')
+                if args.force_ska:
+                    fetch.data_source.set('cxc')
 
                 print("Refreshing dashboard (Iteration {}) at {}".format(
                     iteration_counter, dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), flush=True)

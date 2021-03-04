@@ -56,7 +56,8 @@ def main():
 
         iteration += 1
 
-        os.system('js9 refresh')  # Reresh the image in ds9, preserving regions and view state
+        # Reresh the image in ds9, preserving regions and view state
+        os.system('js9 refresh')
 
         plt.draw()
         plt.pause(5)
