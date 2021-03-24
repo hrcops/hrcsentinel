@@ -194,7 +194,7 @@ def main():
                 print("Heres the traceback:")
                 print(traceback.format_exc())
                 print("Pressing on...")
-            elif args.report_errorsi is False:
+            elif args.report_errors is False:
                 # Then we're likely in operational mode. Ignore the errors on the command line.
                 print(
                     f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) MAUDE Error =(                             ', end='\r\r\r')
