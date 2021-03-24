@@ -114,6 +114,9 @@ def get_args():
     parser.add_argument("--fake_comm", help="Trick the code to think it's in comm. Useful for testing. ",
                         action="store_true")
 
+    parser.add_argument("--report_errors", help="Print MAUDE exceptions (which are common) to the command line",
+                        action="store_true")
+
     args = parser.parse_args()
     return args
 
@@ -184,18 +187,19 @@ def main():
         except Exception as e:
             # MAUDE queries fail regularly as TM is streaming in (mismatched array sizes as data is being populated), 404s, etc.
             # The solution is almost always to simply try again. Therefore this script just presses on in the event of an Exception.
-            if fake_comm:
+
+            if args.report_errors is True:
                 # Then we want a verbose error message, because we're obviously in testing mode
                 print(f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) ERROR: {e}')
                 print("Heres the traceback:")
                 print(traceback.format_exc())
                 print("Pressing on...")
-            elif not fake_comm:
+            elif args.report_errorsi is False:
                 # Then we're likely in operational mode. Ignore the errors on the command line.
                 print(
-                    f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) MAUDE Error', end='\r')
-
+                    f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) MAUDE Error =(                             ', end='\r\r\r')
             if in_comm_counter > 0:
+                # Reset the comm counter to make the error "not count"
                 in_comm_counter -= 1
             continue
 

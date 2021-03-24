@@ -33,12 +33,13 @@ def main():
 
     while True:
 
-        if iteration == 1:
+        scpimage(destination=working_dir)
+
+        if iteration == 0:
             # Load the image in Vger/JS9 only once
             os.system(f'vger {image} &')
-
-        scpimage(destination=working_dir)
-        copyfile(image, refimage)
+            # Make sure you have a copy of the image to start with...
+            copyfile(image, refimage)
 
         imgdata = fits.getdata(image)
         refimgdata = fits.getdata(refimage)
@@ -60,6 +61,7 @@ def main():
         os.system('js9 refresh')
 
         plt.draw()
+        copyfile(image, refimage)
         plt.pause(5)
 
 

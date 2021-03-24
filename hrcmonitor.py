@@ -134,7 +134,7 @@ def update_plot(counter, plot_start=dt.datetime(2020, 8, 31, 00), plot_end=dt.da
                     ax.axvline(time_of_cap_1543, color='gray', alpha=0.5)
             else:
                 ax.text(dt.datetime.now(pytz.utc), ax.get_ylim()[1],
-                        'Now', fontsize=6, color='slategray')
+                        'Latest', fontsize=6, color='slategray')
                 ax.axvline(dt.datetime.now(pytz.utc), color='gray', alpha=0.5)
 
             plt.gca().xaxis.set_major_formatter(date_format)
@@ -176,6 +176,9 @@ def get_args():
     parser.add_argument("--force_ska", help="Trick the code pull from Ska/CXC instead of MAUDE with a switch to fetch.data_source.set() ",
                         action="store_true")
 
+    parser.add_argument("--report_errors", help="Print MAUDE exceptions (which are common) to the command line",
+                        action="store_true")
+
     args = parser.parse_args()
     return args
 
@@ -214,6 +217,7 @@ def main():
                 verbose=False, cadence=2, fake_comm=fake_comm)
 
             if not in_comm:
+
                 if recently_in_comm:
                     # Then generate the long term trending plots
                     fetch.data_source.set('cxc')
@@ -248,6 +252,8 @@ def main():
                         fig_save_directory), end="\r", flush=True)
                     # Clear the command line manually
                     sys.stdout.write("\033[K")
+
+                    plt.close('all')
 
                 recently_in_comm = False
                 in_comm_counter = 0
@@ -289,10 +295,14 @@ def main():
                     time.sleep(1)  # sleep for 1 second per iteration
 
         except Exception as e:
-            print("ERROR on Iteration {}: {}".format(iteration_counter, e))
-            print("Heres the traceback:")
-            print(traceback.format_exc())
-            print("Pressing on...")
+            if args.report_errors is True:
+                print("ERROR on Iteration {}: {}".format(iteration_counter, e))
+                print("Heres the traceback:")
+                print(traceback.format_exc())
+                print("Pressing on...")
+            elif args.report_errors is False:
+                print(
+                    f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) MAUDE Error =(                             ', end='\r\r\r')
             continue
 
 
