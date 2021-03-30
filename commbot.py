@@ -6,6 +6,7 @@ import json
 import traceback
 import argparse
 import socket
+import time
 
 from Ska.engarchive import fetch
 
@@ -19,6 +20,11 @@ from chandratime import convert_chandra_time, convert_to_doy
 import astropy.units as u
 
 from heartbeat import are_we_in_comm
+
+
+def audit_telemetry():
+    # Want to implement this!!!
+    pass
 
 
 def send_slack_message(message, channel='#comm_passes', blocks=None):
@@ -127,6 +133,7 @@ def main():
 
     args = get_args()
     fake_comm = args.fake_comm
+    chatty = args.report_errors  # Will be True if user set --report_errors
 
     if fake_comm:
         bot_slack_channel = '#bot-testing'
@@ -146,7 +153,13 @@ def main():
 
             if not in_comm:
                 if recently_in_comm:
-                    # then we've JUST been in comm and we need to report its end.
+                    # We might have just had a loss in telemetry. Try again after waiting for a minute
+                    time.sleep(60)
+                    in_comm = are_we_in_comm(verbose=False, cadence=2)
+                    if in_comm:
+                        continue
+
+                    # Assuming the end of comm is real, then comm has recently ended and we need to report that.
                     telem = grab_critical_telemetry(
                         start=CxoTime.now() - 1800 * u.s)
                     message = f"It appears that COMM has ended as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}` \n\n Last telemetry was in `{telem['Format']}` \n\n *Shields were {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n\n *HRC-I* Voltage Steps were (Top/Bottom) = `{telem['HRC-I Voltage Steps'][0]}/{telem['HRC-I Voltage Steps'][1]}` \n *HRC-S* Voltage Steps were (Top/Bottom) = `{telem['HRC-S Voltage Steps'][0]}/{telem['HRC-S Voltage Steps'][1]}`  \n\n *Bus Current* was `{telem['Bus Current (DN)']} DN` (`{telem['Bus Current (A)']} A`)  \n\n *FEA Temperature* was `{telem['FEA Temp']} C`"
@@ -188,13 +201,13 @@ def main():
             # MAUDE queries fail regularly as TM is streaming in (mismatched array sizes as data is being populated), 404s, etc.
             # The solution is almost always to simply try again. Therefore this script just presses on in the event of an Exception.
 
-            if args.report_errors is True:
+            if chatty:
                 # Then we want a verbose error message, because we're obviously in testing mode
                 print(f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) ERROR: {e}')
                 print("Heres the traceback:")
                 print(traceback.format_exc())
                 print("Pressing on...")
-            elif args.report_errors is False:
+            elif not chatty:
                 # Then we're likely in operational mode. Ignore the errors on the command line.
                 print(
                     f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) MAUDE Error =(                             ', end='\r\r\r')

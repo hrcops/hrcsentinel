@@ -164,6 +164,30 @@ def update_plot(counter, plot_start=dt.datetime(2020, 8, 31, 00), plot_end=dt.da
     plt.close()
 
 
+def comm_status_stamp(comm_status, fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/'):
+
+    if comm_status is True:
+        commreport = f'In Comm!'
+        subtext = f'Comm appears to have started at {dt.datetime.now().strftime("%H:%M:%S")}'
+        textcolor = 'steelblue'
+    elif comm_status is False:
+        commreport = 'Not in Comm'
+        subtext = f'Out of Comm since {dt.datetime.now().strftime("%H:%M:%S")}'
+        textcolor = 'slategray'
+
+    fig = plt.figure(figsize=(5, 1))
+    plt.axis('off')
+    plt.tight_layout()
+    fig.patch.set_facecolor('white')
+
+    text = plt.text(0.001, 0.2, commreport, color=textcolor, fontsize=50)
+    subtext = plt.text(
+        0.004, 0.001, subtext, color=textcolor, fontsize=9)
+
+    plt.savefig(fig_save_directory + 'comm_status.png', dpi=300)
+    plt.close()
+
+
 def get_args():
     '''Fetch command line args, if given'''
 
@@ -218,7 +242,17 @@ def main():
 
             if not in_comm:
 
+                if iteration_counter == 0:
+                    # Then update the text stamp
+                    comm_status_stamp(comm_status=False,
+                                      fig_save_directory=fig_save_directory)
+
                 if recently_in_comm:
+
+                    # Then update the text stamp
+                    comm_status_stamp(comm_status=False,
+                                      fig_save_directory=fig_save_directory)
+
                     # Then generate the long term trending plots
                     fetch.data_source.set('cxc')
                     update_plot(iteration_counter, fig_save_directory=fig_save_directory, plot_start=dt.datetime(
@@ -264,6 +298,11 @@ def main():
 
                 recently_in_comm = True
                 in_comm_counter += 1
+
+                if in_comm_counter == 1:
+                    # Then update the text stamp
+                    comm_status_stamp(comm_status=True,
+                                      fig_save_directory=fig_save_directory)
 
                 # Explicitly set each time. This is obviously redundant but I'm paranoid
                 fetch.data_source.set('maude allow_subset=False')
