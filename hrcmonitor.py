@@ -7,9 +7,7 @@ import sys
 import os
 import argparse
 
-import matplotlib.pyplot as plt
-from matplotlib import gridspec
-import matplotlib.dates as mdate
+import matplotlib
 import datetime as dt
 import Chandra.Time
 import Ska.engarchive.fetch as fetch
@@ -32,9 +30,6 @@ from cxotime import CxoTime
 
 from heartbeat import are_we_in_comm
 
-plt.switch_backend('agg')
-
-
 plt.style.use('ggplot')
 labelsizes = 8
 # plt.rcParams['font.sans-serif'] = 'Arial'
@@ -49,7 +44,7 @@ plt.rcParams['ytick.labelsize'] = labelsizes - 2
 # plt.rcParams['figure.constrained_layout.use'] = True
 
 
-def update_plot(counter, plot_start=dt.datetime(2020, 8, 31, 00), plot_end=dt.date.today() + dt.timedelta(days=2), sampling='full', current_hline=False, date_format=mdate.DateFormatter('%d %H'), force_limits=False, missionwide=False, fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/'):
+def update_plot(counter, plot_start=dt.datetime(2020, 8, 31, 00), plot_end=dt.date.today() + dt.timedelta(days=2), sampling='full', current_hline=False, date_format=mdate.DateFormatter('%d %H'), force_limits=False, missionwide=False, fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/', show_in_gui=False):
     plotnum = -1
 
     fig = plt.figure(figsize=(16, 6), constrained_layout=True)
@@ -161,6 +156,9 @@ def update_plot(counter, plot_start=dt.datetime(2020, 8, 31, 00), plot_end=dt.da
         plt.savefig(fig_save_directory + 'status_wide.pdf',
                     dpi=300, rasterized=True)
 
+    if show_in_gui:
+        plt.show()
+
     plt.close()
 
 
@@ -203,6 +201,9 @@ def get_args():
     parser.add_argument("--report_errors", help="Print MAUDE exceptions (which are common) to the command line",
                         action="store_true")
 
+    parser.add_argument("--show_in_gui", help="Show plots with plt.show()",
+                        action="store_true")    
+
     args = parser.parse_args()
     return args
 
@@ -226,6 +227,18 @@ def main():
 
     args = get_args()
     fake_comm = args.fake_comm
+
+    if args.show_in_gui is False:
+        # Then we're on a headless machine and you should use agg
+        backend = 'agg'
+    elif args.show_in_gui is True:
+        backend = 'MacOSX'
+    matplotlib.use(backend,force=True)
+
+    from matplotlib import gridspec
+    import matplotlib.dates as mdate
+    import matplotlib.pyplot as plt
+    print("Using Matplotlib backend:",matplotlib.get_backend())
 
     # Initial settings
     recently_in_comm = False
@@ -316,7 +329,7 @@ def main():
                 two_days_hence = dt.date.today() + dt.timedelta(days=2)
 
                 update_plot(iteration_counter, plot_start=five_days_ago, fig_save_directory=fig_save_directory,
-                            plot_end=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'), force_limits=True)
+                            plot_end=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'), force_limits=True, show_in_gui=args.show_in_gui)
 
                 print('Saved Current Status Plots to {}'.format(
                     fig_save_directory), end="\r", flush=True)
