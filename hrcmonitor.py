@@ -173,7 +173,7 @@ def comm_status_stamp(comm_status, fig_save_directory='/proj/web-icxc/htdocs/hrc
         subtext = f'Out of Comm since {dt.datetime.now().strftime("%H:%M:%S")}'
         textcolor = 'slategray'
 
-    fig = plt.figure(figsize=(5, 1))
+    fig = plt.figure(figsize=(8, 2))
     plt.axis('off')
     plt.tight_layout()
     fig.patch.set_facecolor('white')
@@ -202,7 +202,7 @@ def get_args():
                         action="store_true")
 
     parser.add_argument("--show_in_gui", help="Show plots with plt.show()",
-                        action="store_true")    
+                        action="store_true")
 
     args = parser.parse_args()
     return args
@@ -233,12 +233,12 @@ def main():
         backend = 'agg'
     elif args.show_in_gui is True:
         backend = 'MacOSX'
-    matplotlib.use(backend,force=True)
+    matplotlib.use(backend, force=True)
 
     from matplotlib import gridspec
     import matplotlib.dates as mdate
     import matplotlib.pyplot as plt
-    print("Using Matplotlib backend:",matplotlib.get_backend())
+    print("Using Matplotlib backend:", matplotlib.get_backend())
 
     # Initial settings
     recently_in_comm = False
