@@ -380,7 +380,6 @@ def main():
 
                 plt.close('all')
 
-
                 sleep_period_seconds = 3
 
                 for i in range(0, sleep_period_seconds):
