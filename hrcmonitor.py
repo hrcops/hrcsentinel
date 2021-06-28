@@ -184,7 +184,7 @@ def comm_status_stamp(comm_status, code_start_time, hostname, fig_save_directory
     subtext = plt.text(
         0.004, 0.1, subtext, color=textcolor, fontsize=9)
     uptime_text = plt.text(
-        0.004, 0.001, 'HRCMonitor has been running on {} since {} ({} days)'.format(hostname,code_start_time.strftime("%Y %b %d %H:%M:%S"), code_uptime.days), color='slategray', fontsize=6)
+        0.004, 0.001, 'HRCMonitor has been running on {} since {} ({} days)'.format(hostname,code_start_time.strftime("%Y %b %d %H:%M:%S"), code_uptime.days), color='slategray', fontsize=9)
 
     plt.savefig(fig_save_directory + 'comm_status.png', dpi=300)
     plt.close()
