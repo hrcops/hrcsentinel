@@ -162,7 +162,7 @@ def make_realtime_plot(counter, plot_start=dt.datetime(2020, 8, 31, 00), plot_en
     plt.close()
 
 
-def comm_status_stamp(comm_status, fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/'):
+def comm_status_stamp(comm_status, code_start_time, hostname, fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/'):
 
     if comm_status is True:
         commreport = f'In Comm!'
@@ -173,6 +173,8 @@ def comm_status_stamp(comm_status, fig_save_directory='/proj/web-icxc/htdocs/hrc
         subtext = f'Out of Comm since {dt.datetime.now().strftime("%H:%M:%S")}'
         textcolor = 'slategray'
 
+    code_uptime = dt.datetime.now() - code_start_time
+
     fig = plt.figure(figsize=(8, 2))
     plt.axis('off')
     plt.tight_layout()
@@ -180,7 +182,9 @@ def comm_status_stamp(comm_status, fig_save_directory='/proj/web-icxc/htdocs/hrc
 
     text = plt.text(0.001, 0.2, commreport, color=textcolor, fontsize=50)
     subtext = plt.text(
-        0.004, 0.001, subtext, color=textcolor, fontsize=9)
+        0.004, 0.1, subtext, color=textcolor, fontsize=9)
+    uptime_text = plt.text(
+        0.004, 0.001, 'HRCMonitor has been running on {} since {} ({} days)'.format(hostname,code_start_time.strftime("%Y %b %d %H:%M:%S"), code_uptime.days), color='slategray', fontsize=6)
 
     plt.savefig(fig_save_directory + 'comm_status.png', dpi=300)
     plt.close()
@@ -256,15 +260,17 @@ def main():
     minutes of sleep to avoid overwhelming MAUDE and wasting cycles.
     '''
 
-    if socket.gethostname() == 'han-v.cfa.harvard.edu':
-        print('Recognized host: {}'.format(socket.gethostname()))
+    hostname = socket.gethostname()
+
+    if hostname == 'han-v.cfa.harvard.edu':
+        print('Recognized host: {}'.format(hostname))
         fig_save_directory = '/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/'
-    elif socket.gethostname() == 'symmetry.local':
-        print('Recognized host: {}'.format(socket.gethostname()))
+    elif hostname == 'symmetry.local':
+        print('Recognized host: {}'.format(hostname))
         fig_save_directory = '/Users/grant/Desktop/'
     else:
         sys.exit('I do not recognize the hostname {}. Exiting.'.format(
-            socket.gethostname()))
+            hostname))
 
     args = get_args()
     fake_comm = args.fake_comm
@@ -295,18 +301,17 @@ def main():
             in_comm = are_we_in_comm(
                 verbose=False, cadence=2, fake_comm=fake_comm)
 
+            # Generate the first comm status stamp and create code start date
+            if iteration_counter == 0:
+                code_start_time = dt.datetime.now()
+                comm_status_stamp(comm_status=in_comm, fig_save_directory=fig_save_directory, code_start_time=code_start_time, hostname=hostname)
+
             if not in_comm:
 
-                if iteration_counter == 0:
-                    # Then update the text stamp
-                    comm_status_stamp(comm_status=False,
-                                      fig_save_directory=fig_save_directory)
-
                 if recently_in_comm:
-
                     # Then update the text stamp
-                    comm_status_stamp(comm_status=False,
-                                      fig_save_directory=fig_save_directory)
+                    comm_status_stamp(comm_status=in_comm, code_start_time=code_start_time,
+                                      fig_save_directory=fig_save_directory, hostname=hostname)
 
                     update_ancillary_plots(iteration_counter, fig_save_directory)
 
@@ -344,8 +349,8 @@ def main():
 
                 if in_comm_counter == 1:
                     # Then update the text stamp
-                    comm_status_stamp(comm_status=True,
-                                      fig_save_directory=fig_save_directory)
+                    comm_status_stamp(comm_status=in_comm, code_start_time=code_start_time,
+                                      fig_save_directory=fig_save_directory, hostname=hostname)
 
 
                 if in_comm_counter == 5:
@@ -376,7 +381,6 @@ def main():
                 plt.close('all')
 
 
-                iteration_counter += 1
                 sleep_period_seconds = 3
 
                 for i in range(0, sleep_period_seconds):
@@ -384,6 +388,8 @@ def main():
                     print('Refreshing plots in {} seconds...'.format(
                         sleep_period_seconds-i), end="\r", flush=True)
                     time.sleep(1)  # sleep for 1 second per iteration
+
+            iteration_counter += 1
 
         except Exception as e:
             if args.report_errors is True:
