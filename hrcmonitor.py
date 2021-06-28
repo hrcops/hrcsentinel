@@ -44,7 +44,7 @@ plt.rcParams['ytick.labelsize'] = labelsizes - 2
 # plt.rcParams['figure.constrained_layout.use'] = True
 
 
-def update_plot(counter, plot_start=dt.datetime(2020, 8, 31, 00), plot_end=dt.date.today() + dt.timedelta(days=2), sampling='full', current_hline=False, date_format=mdate.DateFormatter('%d %H'), force_limits=False, missionwide=False, fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/', show_in_gui=False):
+def make_realtime_plot(counter, plot_start=dt.datetime(2020, 8, 31, 00), plot_end=dt.date.today() + dt.timedelta(days=2), sampling='full', current_hline=False, date_format=mdate.DateFormatter('%d %H'), force_limits=False, missionwide=False, fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/', show_in_gui=False):
     plotnum = -1
 
     fig = plt.figure(figsize=(16, 6), constrained_layout=True)
@@ -129,7 +129,7 @@ def update_plot(counter, plot_start=dt.datetime(2020, 8, 31, 00), plot_end=dt.da
                     ax.axvline(time_of_cap_1543, color='gray', alpha=0.5)
             else:
                 ax.text(dt.datetime.now(pytz.utc), ax.get_ylim()[1],
-                        'Latest', fontsize=6, color='slategray')
+                        'Now', fontsize=6, color='slategray')
                 ax.axvline(dt.datetime.now(pytz.utc), color='gray', alpha=0.5)
 
             plt.gca().xaxis.set_major_formatter(date_format)
@@ -185,6 +185,47 @@ def comm_status_stamp(comm_status, fig_save_directory='/proj/web-icxc/htdocs/hrc
     plt.savefig(fig_save_directory + 'comm_status.png', dpi=300)
     plt.close()
 
+
+def update_ancillary_plots(iteration_counter, fig_save_directory):
+
+    five_days_ago = dt.date.today() - dt.timedelta(days=5)
+    two_days_hence = dt.date.today() + dt.timedelta(days=2)
+
+
+    fetch.data_source.set('cxc')
+    make_realtime_plot(iteration_counter, fig_save_directory=fig_save_directory, plot_start=dt.datetime(
+        2000, 1, 4), plot_end=None, sampling='daily', date_format=mdate.DateFormatter('%Y'), current_hline=True, missionwide=True, force_limits=True)
+
+    print('Saved Mission-Wide Plots to {}'.format(
+        fig_save_directory), end="\r", flush=True)
+    # Clear the command line manually
+    sys.stdout.write("\033[K")
+
+    print('Updating Motor Plots', end="\r", flush=True)
+    make_motor_plots(iteration_counter, fig_save_directory=fig_save_directory, plot_start=five_days_ago,
+                        plot_end=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'))
+    print('Done', end="\r", flush=True)
+    # Clear the command line manually
+    sys.stdout.write("\033[K")
+
+    print('Saved Motor Plots to {}'.format(
+        fig_save_directory), end="\r", flush=True)
+    # Clear the command line manually
+    sys.stdout.write("\033[K")
+
+    print('Updating Thermal Plots', end="\r", flush=True)
+    make_thermal_plots(
+        iteration_counter, fig_save_directory=fig_save_directory)
+    print('Done', end="\r", flush=True)
+    # Clear the command line manually
+    sys.stdout.write("\033[K")
+
+    print('Saved Thermal Plots to {}'.format(
+        fig_save_directory), end="\r", flush=True)
+    # Clear the command line manually
+    sys.stdout.write("\033[K")
+
+    plt.close('all')
 
 def get_args():
     '''Fetch command line args, if given'''
@@ -243,6 +284,7 @@ def main():
     # Initial settings
     recently_in_comm = False
     in_comm_counter = 0
+    out_of_comm_refresh_counter = 0
     iteration_counter = 0
 
     # Loop infinitely :)
@@ -266,47 +308,35 @@ def main():
                     comm_status_stamp(comm_status=False,
                                       fig_save_directory=fig_save_directory)
 
-                    # Then generate the long term trending plots
-                    fetch.data_source.set('cxc')
-                    update_plot(iteration_counter, fig_save_directory=fig_save_directory, plot_start=dt.datetime(
-                        2000, 1, 4), plot_end=None, sampling='daily', date_format=mdate.DateFormatter('%Y'), current_hline=True, missionwide=True, force_limits=True)
-
-                    print('Saved Mission-Wide Plots to {}'.format(
-                        fig_save_directory), end="\r", flush=True)
-                    # Clear the command line manually
-                    sys.stdout.write("\033[K")
-
-                    print('Updating Motor Plots', end="\r", flush=True)
-                    make_motor_plots(iteration_counter, fig_save_directory=fig_save_directory, plot_start=five_days_ago,
-                                     plot_end=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'))
-                    print('Done', end="\r", flush=True)
-                    # Clear the command line manually
-                    sys.stdout.write("\033[K")
-
-                    print('Saved Motor Plots to {}'.format(
-                        fig_save_directory), end="\r", flush=True)
-                    # Clear the command line manually
-                    sys.stdout.write("\033[K")
-
-                    print('Updating Thermal Plots', end="\r", flush=True)
-                    make_thermal_plots(
-                        iteration_counter, fig_save_directory=fig_save_directory)
-                    print('Done', end="\r", flush=True)
-                    # Clear the command line manually
-                    sys.stdout.write("\033[K")
-
-                    print('Saved Thermal Plots to {}'.format(
-                        fig_save_directory), end="\r", flush=True)
-                    # Clear the command line manually
-                    sys.stdout.write("\033[K")
+                    update_ancillary_plots(iteration_counter, fig_save_directory)
 
                     plt.close('all')
 
                 recently_in_comm = False
                 in_comm_counter = 0
-
+                out_of_comm_refresh_counter += 1
                 print(
                     f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) Not in Comm.                                 ', end='\r\r\r')
+
+                if out_of_comm_refresh_counter == 20:
+                    # Refresh the plots every 20th iteration out-of-comm
+                    print("Performing out-of-comm plot refresh at {}".format(dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), flush=True)
+
+                    five_days_ago = dt.date.today() - dt.timedelta(days=5)
+                    two_days_hence = dt.date.today() + dt.timedelta(days=2)
+
+                    make_realtime_plot(iteration_counter, plot_start=five_days_ago, fig_save_directory=fig_save_directory,
+                                plot_end=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'), force_limits=True, show_in_gui=args.show_in_gui)
+
+                    update_ancillary_plots(iteration_counter, fig_save_directory)
+                    plt.close('all')
+
+                    # Reset the refresh counter
+                    out_of_comm_refresh_counter = 0
+
+
+
+
             if in_comm:
 
                 recently_in_comm = True
@@ -317,7 +347,14 @@ def main():
                     comm_status_stamp(comm_status=True,
                                       fig_save_directory=fig_save_directory)
 
-                # Explicitly set each time. This is obviously redundant but I'm paranoid
+
+                if in_comm_counter == 5:
+                    # Then create the mission-wide status plots
+                    print("Refreshing Long Term Plots (Iteration {}) at {}".format(iteration_counter, dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), flush=True)
+                    update_ancillary_plots(iteration_counter, fig_save_directory)
+                    plt.close('all')
+
+                # Explicitly set maude each time, because ancillary plots use CXC
                 fetch.data_source.set('maude allow_subset=False')
                 if args.force_ska:
                     fetch.data_source.set('cxc')
@@ -328,7 +365,7 @@ def main():
                 five_days_ago = dt.date.today() - dt.timedelta(days=5)
                 two_days_hence = dt.date.today() + dt.timedelta(days=2)
 
-                update_plot(iteration_counter, plot_start=five_days_ago, fig_save_directory=fig_save_directory,
+                make_realtime_plot(iteration_counter, plot_start=five_days_ago, fig_save_directory=fig_save_directory,
                             plot_end=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'), force_limits=True, show_in_gui=args.show_in_gui)
 
                 print('Saved Current Status Plots to {}'.format(
@@ -338,8 +375,10 @@ def main():
 
                 plt.close('all')
 
+
                 iteration_counter += 1
                 sleep_period_seconds = 3
+
                 for i in range(0, sleep_period_seconds):
                     # you need to flush this print statement
                     print('Refreshing plots in {} seconds...'.format(
