@@ -325,8 +325,8 @@ def main():
 
                 if out_of_comm_refresh_counter == 20:
                     # Refresh the plots every 20th iteration out-of-comm
-                    print("Performing out-of-comm plot refresh at {}".format(dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), flush=True)
-
+                    print("Performing out-of-comm plot refresh at {}".format(dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), end='\r', flush=True)
+                    sys.stdout.write("\033[K")
                     five_days_ago = dt.date.today() - dt.timedelta(days=5)
                     two_days_hence = dt.date.today() + dt.timedelta(days=2)
 
