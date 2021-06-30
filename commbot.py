@@ -78,17 +78,46 @@ def grab_critical_telemetry(start=CxoTime.now() - 60 * u.s):
     hrc_i_voltage = (
         critical_msids['2IMTPAST'].vals[-1], critical_msids['2IMBPAST'].vals[-1])
     # HALF voltage for HRC-I is 42/53
-    # FULL voltage for HRC-S is 77/89
+    # FULL voltage for HRC-S is 79/91
     hrc_s_voltage = (
         critical_msids['2SPTPAST'].vals[-1], critical_msids['2SPBPAST'].vals[-1])
     # HALF voltage for HRC-S is 43/54 (top/bottom)
-    # FULL voltage is 93/105 (top/bottom)
+    # FULL voltage is 95/107 (top/bottom)
+
+
+    # Set statuses
+
+    if tm_format == 'FMT1':
+        hrc_observing_status = 'OBSERVING'
+    else:
+        hrc_observing_status = 'NOT observing'
+
+
+    expected_hrc_i_states = [(0, 0), (42, 53), (79, 91)] # in order of off, half, full
+    expected_hrc_s_states = [(0, 0), (43, 54), (95, 107)] # in order of off, half, full
+
+    expected_status = ['OFF', 'at HALF voltage', 'at FULL voltage']
+
+    hrc_telem_status = None
+    hrc_i_status = None
+    hrc_s_status = None
+
+    try:
+        hrc_i_status = expected_status[expected_hrc_i_states.index(hrc_i_voltage)]
+    except ValueError:
+        hrc_i_status = 'in a POTENTIALLY UNEXPECTED state ({}). CHECK THIS!'.format(hrc_i_voltage)
+
+    try:
+        hrc_s_status = expected_status[expected_hrc_s_states.index(hrc_s_voltage)]
+    except ValueError:
+        hrc_s_status = 'in a POTENTIALLY UNEXPECTED state ({}). CHECK THIS!'.format(hrc_s_voltage)
+
 
     te_rate = critical_msids['2TLEV1RT'].vals[-1]
     ve_rate = critical_msids['2VLEV1RT'].vals[-1]
 
-    telem = {'Format': tm_format, 'Shield Rate': shield_rate, 'Shield State': shield_state,
-             'Bus Current (DN)': bus_current_in_dn, 'Bus Current (A)': bus_current_in_amps, 'FEA Temp': fea_temp, 'HRC-I Voltage Steps': hrc_i_voltage, 'HRC-S Voltage Steps': hrc_s_voltage, 'TE Rate': te_rate, 'VE Rate': ve_rate}
+    telem = {'HRC observing status':hrc_observing_status, 'Format': tm_format, 'Shield Rate': shield_rate, 'Shield State': shield_state,
+             'Bus Current (DN)': bus_current_in_dn, 'Bus Current (A)': bus_current_in_amps, 'FEA Temp': fea_temp, 'HRC-I Voltage Steps': hrc_i_voltage,'HRC-I Status':hrc_i_status, 'HRC-S Voltage Steps': hrc_s_voltage, 'HRC-S Status':hrc_s_status, 'TE Rate': te_rate, 'VE Rate': ve_rate}
 
     return telem
 
@@ -162,7 +191,7 @@ def main():
                     # Assuming the end of comm is real, then comm has recently ended and we need to report that.
                     telem = grab_critical_telemetry(
                         start=CxoTime.now() - 1800 * u.s)
-                    message = f"It appears that COMM has ended as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}` \n\n Last telemetry was in `{telem['Format']}` \n\n *Shields were {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n\n *HRC-I* Voltage Steps were (Top/Bottom) = `{telem['HRC-I Voltage Steps'][0]}/{telem['HRC-I Voltage Steps'][1]}` \n *HRC-S* Voltage Steps were (Top/Bottom) = `{telem['HRC-S Voltage Steps'][0]}/{telem['HRC-S Voltage Steps'][1]}`  \n\n *Bus Current* was `{telem['Bus Current (DN)']} DN` (`{telem['Bus Current (A)']} A`)  \n\n *FEA Temperature* was `{telem['FEA Temp']} C`"
+                    message = f"It appears that COMM has ended as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}` \n\n HRC was *{telem['HRC observing status']}* \n Last telemetry was in `{telem['Format']}` \n\n *HRC-I* was at {telem['HRC-I Status']} \n *HRC-S* was at {telem['HRC-S Status']} \n\n *Shields were {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n\n *HRC-I* Voltage Steps were (Top/Bottom) = `{telem['HRC-I Voltage Steps'][0]}/{telem['HRC-I Voltage Steps'][1]}` \n *HRC-S* Voltage Steps were (Top/Bottom) = `{telem['HRC-S Voltage Steps'][0]}/{telem['HRC-S Voltage Steps'][1]}`  \n\n *Bus Current* was `{telem['Bus Current (DN)']} DN` (`{telem['Bus Current (A)']} A`)  \n\n *FEA Temperature* was `{telem['FEA Temp']} C`"
                     send_slack_message(message, channel=bot_slack_channel)
 
                 recently_in_comm = False
@@ -193,7 +222,7 @@ def main():
                         start=CxoTime.now() - 8 * u.h)
 
                     # Craft a message string using this latest elemetry
-                    message = f"We are now *IN COMM* as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}` (_Chandra_ time). \n \n Telemetry Format = `{telem['Format']}` \n *HRC-I* Voltage Steps (Top/Bottom) = `{telem['HRC-I Voltage Steps'][0]}/{telem['HRC-I Voltage Steps'][1]}` \n *HRC-S* Voltage Steps (Top/Bottom) = `{telem['HRC-S Voltage Steps'][0]}/{telem['HRC-S Voltage Steps'][1]}`  \n \n *Total Event* Rate = `{telem['TE Rate']} cps`   \n *Valid Event* Rate = `{telem['VE Rate']} cps`  \n *Shields are {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n \n *Bus Current* is `{telem['Bus Current (DN)']} DN` (`{telem['Bus Current (A)']} A`) \n \n *FEA Temperature* is `{telem['FEA Temp']} C`"
+                    message = f"We are now *IN COMM* as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}` (_Chandra_ time). \n\n HRC is *{telem['HRC observing status']}*  \n Telemetry Format = `{telem['Format']}` \n\n *HRC-I* is at {telem['HRC-I Status']} \n *HRC-S* is {telem['HRC-S Status']} \n\n *Shields are {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n\n *HRC-I* Voltage Steps (Top/Bottom) = `{telem['HRC-I Voltage Steps'][0]}/{telem['HRC-I Voltage Steps'][1]}` \n *HRC-S* Voltage Steps (Top/Bottom) = `{telem['HRC-S Voltage Steps'][0]}/{telem['HRC-S Voltage Steps'][1]}`  \n \n *Total Event* Rate = `{telem['TE Rate']} cps`   \n *Valid Event* Rate = `{telem['VE Rate']} cps`  \n \n *Bus Current* is `{telem['Bus Current (DN)']} DN` (`{telem['Bus Current (A)']} A`) \n \n *FEA Temperature* is `{telem['FEA Temp']} C`"
                     # Send the message using our slack bot
                     send_slack_message(message, channel=bot_slack_channel)
 
