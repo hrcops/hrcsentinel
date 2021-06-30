@@ -123,8 +123,7 @@ def make_thermal_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/h
     # ax.set_xlim(dt.date(2018, 10, 6), dt.date(2018, 10, 30))
 
     if counter is not None:
-        ax.set_title('HRC Thermistor MSIDs (Daily Means) | Iteration {} | Updated as of {} EST'.format(
-            counter, dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), color='slategray', size=10)
+        ax.set_title('HRC Thermistor MSIDs (Daily Means) | Updated as of {} EST'.format(dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), color='slategray', size=10)
     else:
         ax.set_title(
             "HRC Thermistor Temperatures (Daily Averages) Over the Mission Lifetime", color='slategray', size=6)
@@ -181,8 +180,7 @@ def make_thermal_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/h
     # plt.legend(title='title', bbox_to_anchor=(1.05, 1), loc='upper left')
 
     if counter is not None:
-        ax.set_title('Moving Average Thermal Trends | Iteration {} | Updated as of {} EST'.format(
-            counter, dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), color='slategray', size=10)
+        ax.set_title('Moving Average Thermal Trends | Updated as of {} EST'.format(dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), color='slategray', size=10)
     else:
         ax.set_title(
             "HRC Thermistor Temperatures (Moving Averages) Over the Mission Lifetime", color='slategray', size=6)

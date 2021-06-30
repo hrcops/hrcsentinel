@@ -89,7 +89,7 @@ def make_motor_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/hrc
                 motor_dashboard_tiles[plotnum]), color='slategray', loc='center')
 
     if counter is not None:
-        plt.suptitle(t='Iteration {} | Updated as of {} EST'.format(counter, dt.datetime.now(
+        plt.suptitle(t='Updated as of {} EST'.format(dt.datetime.now(
         ).strftime("%Y-%b-%d %H:%M:%S")), color='slategray', size=6)
 
     fig.savefig(fig_save_directory + 'motors.png',

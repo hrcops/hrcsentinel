@@ -29,6 +29,7 @@ from chandratime import convert_chandra_time, convert_to_doy
 from cxotime import CxoTime
 
 from heartbeat import are_we_in_comm
+from commbot import convert_bus_current_to_dn
 
 plt.style.use('ggplot')
 labelsizes = 8
@@ -141,11 +142,10 @@ def make_realtime_plot(counter, plot_start=dt.datetime(2020, 8, 31, 00), plot_en
                 dashboard_tiles[plotnum]), color='slategray', loc='center')
 
     if missionwide is False:
-        plt.suptitle(t='Latest Bus Current: {} A\nIteration {} | Updated as of {} EST'.format(np.round(
-            latest_bus_current, 2), counter, dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), color='slategray', size=6)
+        plt.suptitle(t='Latest Bus Current: {} DN ({} A) | Updated as of {} EST'.format(convert_bus_current_to_dn(latest_bus_current), np.round(
+            latest_bus_current, 2),  dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), color='slategray', size=6)
     elif missionwide is True:
-        plt.suptitle(t='Iteration {} | Updated as of {} EST'.format(
-            counter, dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), color='slategray', size=6)
+        plt.suptitle(t='Updated as of {} EST'.format(dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), color='slategray', size=6)
 
     if missionwide is False:
         plt.savefig(fig_save_directory + 'status.png', dpi=300)
