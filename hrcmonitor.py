@@ -355,7 +355,7 @@ def main():
 
                 if in_comm_counter == 5:
                     # Then create the mission-wide status plots
-                    print("Refreshing long term Plots at {}".format(iteration_counter, dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), flush=True)
+                    print("Refreshing longviews (Iteration {})".format(iteration_counter, dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), flush=True)
                     update_ancillary_plots(iteration_counter, fig_save_directory)
                     plt.close('all')
 
