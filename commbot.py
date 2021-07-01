@@ -22,10 +22,9 @@ import astropy.units as u
 from heartbeat import are_we_in_comm
 
 
-def audit_telemetry():
+def audit_telemetry(start=CxoTime.now() - 60 * u.s, channel=None):
     # Want to implement this!!!
     pass
-
 
 def send_slack_message(message, channel='#comm_passes', blocks=None):
 
@@ -172,6 +171,7 @@ def main():
     # Initial settings
     recently_in_comm = False
     in_comm_counter = 0
+    audit_telemetry_counter = 0
 
     # Loop infinitely :)
     while True:
@@ -191,7 +191,7 @@ def main():
                     # Assuming the end of comm is real, then comm has recently ended and we need to report that.
                     telem = grab_critical_telemetry(
                         start=CxoTime.now() - 1800 * u.s)
-                    message = f"It appears that COMM has ended as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}` \n\n HRC was *{telem['HRC observing status']}* \n Last telemetry was in `{telem['Format']}` \n\n *HRC-I* was at {telem['HRC-I Status']} \n *HRC-S* was at {telem['HRC-S Status']} \n\n *Shields were {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n\n *HRC-I* Voltage Steps were (Top/Bottom) = `{telem['HRC-I Voltage Steps'][0]}/{telem['HRC-I Voltage Steps'][1]}` \n *HRC-S* Voltage Steps were (Top/Bottom) = `{telem['HRC-S Voltage Steps'][0]}/{telem['HRC-S Voltage Steps'][1]}`  \n\n *Bus Current* was `{telem['Bus Current (DN)']} DN` (`{telem['Bus Current (A)']} A`)  \n\n *FEA Temperature* was `{telem['FEA Temp']} C`"
+                    message = f"It appears that COMM has ended as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}` \n\n HRC was *{telem['HRC observing status']}* \n Last telemetry was in `{telem['Format']}` \n\n *HRC-I* was {telem['HRC-I Status']} \n *HRC-S* was {telem['HRC-S Status']} \n\n *Shields were {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n\n *HRC-I* Voltage Steps were (Top/Bottom) = `{telem['HRC-I Voltage Steps'][0]}/{telem['HRC-I Voltage Steps'][1]}` \n *HRC-S* Voltage Steps were (Top/Bottom) = `{telem['HRC-S Voltage Steps'][0]}/{telem['HRC-S Voltage Steps'][1]}`  \n\n *Bus Current* was `{telem['Bus Current (DN)']} DN` (`{telem['Bus Current (A)']} A`)  \n\n *FEA Temperature* was `{telem['FEA Temp']} C`"
                     send_slack_message(message, channel=bot_slack_channel)
 
                 recently_in_comm = False
@@ -208,6 +208,7 @@ def main():
 
                 recently_in_comm = True
                 in_comm_counter += 1
+                audit_telemetry_counter += 1
 
                 time.sleep(5)  # Wait a few seconds for MAUDE to refresh
                 latest_vcdu = fetch.Msid(
@@ -222,9 +223,16 @@ def main():
                         start=CxoTime.now() - 8 * u.h)
 
                     # Craft a message string using this latest elemetry
-                    message = f"We are now *IN COMM* as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}` (_Chandra_ time). \n\n HRC is *{telem['HRC observing status']}*  \n Telemetry Format = `{telem['Format']}` \n\n *HRC-I* is at {telem['HRC-I Status']} \n *HRC-S* is {telem['HRC-S Status']} \n\n *Shields are {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n\n *HRC-I* Voltage Steps (Top/Bottom) = `{telem['HRC-I Voltage Steps'][0]}/{telem['HRC-I Voltage Steps'][1]}` \n *HRC-S* Voltage Steps (Top/Bottom) = `{telem['HRC-S Voltage Steps'][0]}/{telem['HRC-S Voltage Steps'][1]}`  \n \n *Total Event* Rate = `{telem['TE Rate']} cps`   \n *Valid Event* Rate = `{telem['VE Rate']} cps`  \n \n *Bus Current* is `{telem['Bus Current (DN)']} DN` (`{telem['Bus Current (A)']} A`) \n \n *FEA Temperature* is `{telem['FEA Temp']} C`"
+                    message = f"We are now *IN COMM* as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}` (_Chandra_ time). \n\n HRC is *{telem['HRC observing status']}*  \n Telemetry Format = `{telem['Format']}` \n\n *HRC-I* is {telem['HRC-I Status']} \n *HRC-S* is {telem['HRC-S Status']} \n\n *Shields are {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n\n *HRC-I* Voltage Steps (Top/Bottom) = `{telem['HRC-I Voltage Steps'][0]}/{telem['HRC-I Voltage Steps'][1]}` \n *HRC-S* Voltage Steps (Top/Bottom) = `{telem['HRC-S Voltage Steps'][0]}/{telem['HRC-S Voltage Steps'][1]}`  \n \n *Total Event* Rate = `{telem['TE Rate']} cps`   \n *Valid Event* Rate = `{telem['VE Rate']} cps`  \n \n *Bus Current* is `{telem['Bus Current (DN)']} DN` (`{telem['Bus Current (A)']} A`) \n \n *FEA Temperature* is `{telem['FEA Temp']} C`"
                     # Send the message using our slack bot
                     send_slack_message(message, channel=bot_slack_channel)
+                    # do a first audit of the telemetry upon announcement
+                    audit_telemetry(start = CxoTime.now() - 60 * u.s, channel=bot_slack_channel)
+
+                if audit_telemetry_counter == 20:
+                    audit_telemetry(start = CxoTime.now() - 5 * u.min, channel=bot_slack_channel)
+                    # then reset the counter
+                    audit_telemetry_counter = 0
 
         except Exception as e:
             # MAUDE queries fail regularly as TM is streaming in (mismatched array sizes as data is being populated), 404s, etc.
@@ -239,7 +247,7 @@ def main():
             elif not chatty:
                 # Then we're likely in operational mode. Ignore the errors on the command line.
                 print(
-                    f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) MAUDE Error =(                             ', end='\r\r\r')
+                    f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) MAUDE Error!                             ', end='\r\r\r')
             if in_comm_counter > 0:
                 # Reset the comm counter to make the error "not count"
                 in_comm_counter -= 1
