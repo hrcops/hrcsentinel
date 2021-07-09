@@ -1,4 +1,7 @@
-### HRCMonitor
+
+![HRC Sentinel Logo](misc/hrcsentinel_logo.png)
+
+### HRCSentinel
 
 This code will run either on `han-v@cfa.haarvard.edu`
 
