@@ -1,20 +1,26 @@
 
 ![HRC Sentinel Logo](misc/hrcsentinel_logo.png)
 
-### HRCSentinel
+# HRCSentinel
+__Real-time trending, telemetry auditing, and comm alerts for the *Chandra* High Resolution Camera__
 
-This code will run either on `han-v@cfa.haarvard.edu`
+While I've happily made this code public, it will unfortunately only work on *Chandra* [Operations Control Center](https://www.si.edu/newsdesk/releases/virtual-behind-scenes-tour-chandra-operations-control-center-now-available) EGSE machines and the [Center for Astrophysics](www.cfa.harvard.edu) LAN. This is because it heavily relies on *Chandra*-internal packages/tools, namely `MAUDE` (for real-time processed telemetry) and the `ska/cheta` archives (for long-term monitoring). *This code will therefore probably not work on your machine!*. If you are a *Chandra* Flight Operations Team member and you would like help adapting this code for your use, please contact [Grant Tremblay](www.granttremblay.com).  
 
+`HRCSentinel` is composed of two main components: 
 
+* `HRCMonitor`, which continually updates an instrument status dashboard which is (privately) hosted [here](https://icxc.cfa.harvard.edu/hrcops/hrcmonitor/) (SAO VPN required). 
+
+* `HRCCommBot`, a Slack Bot that provides real-time DSN comm pass alerts with telemetry auditing. 
+
+See the screenshots below for the output from these two codes: 
 ![Screenshots](misc/screenshots.png)
 
-__This code must be run in a Ska Environment!__
 
+## How to run `HRCSentinel`
 
-It talks to both `maude` (for real-time telemetry) and the `ska/cheta` arvhive (for long-term monitoring).
+I run both codes on `han-v`, a CfA internal (virtual) machine. 
 
-I do this on `han-v` by first
-
+1. Initialize the `ska` Flight environment: 
 `source /proj/sot/ska3/flight/bin/ska_envs.sh`
 then,
 
