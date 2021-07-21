@@ -4,25 +4,40 @@
 # HRCSentinel
 __Real-time trending, telemetry auditing, and comm alerts for the *Chandra* High Resolution Camera__
 
-While I've happily made this code public, it will unfortunately only work on *Chandra* [Operations Control Center](https://www.si.edu/newsdesk/releases/virtual-behind-scenes-tour-chandra-operations-control-center-now-available) EGSE machines and the [Center for Astrophysics](www.cfa.harvard.edu) LAN. This is because it heavily relies on *Chandra*-internal packages/tools, namely `MAUDE` (for real-time processed telemetry) and the `ska/cheta` archives (for long-term monitoring). *This code will therefore probably not work on your machine!*. If you are a *Chandra* Flight Operations Team member and you would like help adapting this code for your use, please contact [Grant Tremblay](www.granttremblay.com).
+
 
 `HRCSentinel` is composed of two main components:
 
-* `HRCMonitor`, which continually updates an instrument status dashboard which is (privately) hosted [here](https://icxc.cfa.harvard.edu/hrcops/hrcmonitor/) (SAO VPN required).
+* `HRCMonitor`, which continually updates an instrument status dashboard. At this time, we host that dashboard [here](https://icxc.cfa.harvard.edu/hrcops/hrcmonitor/) (SAO VPN required).
 
 * `HRCCommBot`, a Slack Bot that provides real-time DSN comm pass alerts with telemetry auditing.
 
 See the screenshots below for the output from these two codes:
 ![Screenshots](misc/screenshots.png)
 
+While I've happily made this code public, it will unfortunately only work on *Chandra* [Operations Control Center](https://www.si.edu/newsdesk/releases/virtual-behind-scenes-tour-chandra-operations-control-center-now-available) EGSE machines and the [Center for Astrophysics](www.cfa.harvard.edu) LAN. This is because it heavily relies on *Chandra*-internal packages/tools, namely `MAUDE` (for real-time processed telemetry) and the `ska/cheta` archives (for long-term monitoring). *This code will therefore probably not work on your machine!*. If you are a *Chandra* Flight Operations Team member and you would like help adapting this code for your use, please contact [Grant Tremblay](www.granttremblay.com).
 
 ## How to run `HRCSentinel`
 
-I run both codes on `han-v`, a CfA internal (virtual) machine.
+#### tl;dr
+On a HEAD LAN machine such as `han-v.cfa.harvard.edu`, run
+```shell
+./hrcsentinel_masterstart
+```
+(or `sh hrcsentinel_masterstart`). This will launch a GNU `screen` session with two split panes that run `hrcmonitor` and `commbot` (the two primary components of `HRCSentinel`) independently and in parallel (as intended). The split `screen` looks like this (`hrcmonitor` is on the top, `commbot` is on the bottom):
+![What HRCSentinel looks like on an EGSE machine](misc/screen_example.png)
+
+
+
+`hrcsentinel` is primarily comprised of two separate codes, `hrcmonitor.py` and `commbot.py`, which I run independently on `han-v`, a CfA internal (virtual) machine.
+
+Starting both codes should be as simple as:
+
+`./hrc_masterstart` (or `sh hrc_masterstart`)
+
 
 1. Initialize the `ska` Flight environment:
-`source /proj/sot/ska3/flight/bin/ska_envs.sh`
-then,
+`source /proj/sot/ska3/flight/bin/ska_envs.sh` (I use an alias for this), then:
 
 `python hrcmonitor.py`
 

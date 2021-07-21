@@ -82,20 +82,21 @@ def main():
     minutes of sleep to avoid overwhelming MAUDE and wasting cycles.
     '''
 
-    hostname = socket.gethostname()
+    hostname = socket.gethostname().split('.')[0] # split is to get rid of .local or .cfa.harvard.edu
 
-    if hostname == 'han-v.cfa.harvard.edu':
+    args = get_args()
+    fake_comm = args.fake_comm
+
+    if hostname == 'han-v':
         print('Recognized host: {}'.format(hostname))
         fig_save_directory = '/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/'
-    elif hostname == 'symmetry.local':
-        print('Recognized host: {}'.format(hostname))
+    elif hostname == 'symmetry':
+        if args.report_errors is True:
+            print('Recognized host: {}'.format(hostname))
         fig_save_directory = '/Users/grant/Desktop/'
     else:
         sys.exit('Hostname {} is not recognized. Exiting.'.format(
             hostname))
-
-    args = get_args()
-    fake_comm = args.fake_comm
 
     if args.show_in_gui is False:
         # Then we're on a headless machine and you should use agg
@@ -107,7 +108,8 @@ def main():
     from matplotlib import gridspec
     import matplotlib.dates as mdate
     import matplotlib.pyplot as plt
-    print("Using Matplotlib backend:", matplotlib.get_backend())
+    if args.report_errors is True:
+        print("Using Matplotlib backend:", matplotlib.get_backend())
 
     # Initial settings
     recently_in_comm = False

@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# I use dotfiles in my home directory to ID the machine type i'm on.
+if [ -f "/Users/grant/.symmetry" ]; then
+  skainit='conda activate ska3; export PS1="ska3-$PS1"'
+fi
+
+if [ -f "/Users/grant/.headlan" ]; then
+  skainit='source /proj/sot/ska3/flight/bin/ska_envs.sh'
+fi
+
+# Initialize the ska environment. Screen will inherit it
+skainit
+# Launch my screen script that will run both HRCSentinel processes in split windows
+screen -c hrcsentinel_screensetup.rc
+
+# more about navigating split screen windows here: https://tomlee.co/2011/10/gnu-screen-splitting/
