@@ -5,7 +5,7 @@ if [ -f "/Users/grant/.symmetry" ]; then
   skainit='conda activate ska3; export PS1="ska3-$PS1"'
 fi
 
-if [ -f "/Users/grant/.headlan" ]; then
+if [ -f "/home/tremblay/.headlan" ]; then
   skainit='source /proj/sot/ska3/flight/bin/ska_envs.sh'
 fi
 
