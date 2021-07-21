@@ -10,7 +10,7 @@ if [ -f "/home/tremblay/.headlan" ]; then
 fi
 
 # Initialize the ska environment. Screen will inherit it
-skainit
+$skainit
 # Launch my screen script that will run both HRCSentinel processes in split windows
 screen -c hrcsentinel_screensetup.rc
 
