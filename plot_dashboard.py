@@ -8,6 +8,11 @@ import os
 import argparse
 
 import matplotlib
+from matplotlib import gridspec
+import matplotlib.dates as mdate
+import matplotlib.pyplot as plt
+
+
 import datetime as dt
 import Chandra.Time
 import Ska.engarchive.fetch as fetch
@@ -18,9 +23,8 @@ import pytz
 import numpy as np
 import pandas as pd
 
-from msidlists import *
-from event_times import *
-from plot_stylers import *
+import plot_stylers
+import msidlists
 
 from plot_thermals import make_thermal_plots
 from plot_motors import make_motor_plots
@@ -31,7 +35,8 @@ from chandratime import convert_chandra_time, convert_to_doy
 from commbot import convert_bus_current_to_dn
 
 
-def make_realtime_plot(counter, plot_start=dt.datetime(2020, 8, 31, 00), plot_end=dt.date.today() + dt.timedelta(days=2), sampling='full', current_hline=False, date_format=mdate.DateFormatter('%d %H'), force_limits=False, missionwide=False, fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/', show_in_gui=False):
+
+def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), plot_stop=dt.date.today() + dt.timedelta(days=2), sampling='full', current_hline=False, date_format=mdate.DateFormatter('%d %H'), force_limits=False, missionwide=False, fig_save_directory=None, show_in_gui=False):
     plotnum = -1
 
     fig = plt.figure(figsize=(16, 6), constrained_layout=True)
@@ -39,16 +44,16 @@ def make_realtime_plot(counter, plot_start=dt.datetime(2020, 8, 31, 00), plot_en
 
     if missionwide is False:
         # Then override the existing dashboard_msid* with the missionwide one
-        dashboard_msids = dashboard_msids_latest
-        dashboard_tiles = dashboard_tiles_latest
-        dashboard_limits = dashboard_limits_latest
-        dashboard_units = dashboard_units_latest
+        dashboard_msids = msidlists.dashboard_msids_latest
+        dashboard_tiles = msidlists.dashboard_tiles_latest
+        dashboard_limits = msidlists.dashboard_limits_latest
+        dashboard_units = msidlists.dashboard_units_latest
     elif missionwide is True:
         # Then override the existing dashboard_msid* with the missionwide one
-        dashboard_msids = dashboard_msids_missionwide
-        dashboard_tiles = dashboard_tiles_missionwide
-        dashboard_limits = dashboard_limits_missionwide
-        dashboard_units = dashboard_units_missionwide
+        dashboard_msids = msidlists.dashboard_msids_missionwide
+        dashboard_tiles = msidlists.dashboard_tiles_missionwide
+        dashboard_limits = msidlists.dashboard_limits_missionwide
+        dashboard_units = msidlists.dashboard_units_missionwide
 
     for i in range(3):
         for j in range(4):
@@ -85,14 +90,14 @@ def make_realtime_plot(counter, plot_start=dt.datetime(2020, 8, 31, 00), plot_en
                                 latest_data = fetch.get_telem(
                                     msid, start=convert_to_doy(yesterday), quiet=True)
                             ax.axhline(
-                                latest_data[msid].vals[-1], color=yellow, zorder=2)
+                                latest_data[msid].vals[-1], color=plot_stylers.yellow, zorder=2)
                 if force_limits is True:
                     ax.set_ylim(dashboard_limits[plotnum])
 
             if plotnum == 2:
                 # Then this is the Bus Current plot. Overplot the CAUTION and WARNING limits
-                ax.axhspan(2.3, 2.5, facecolor=yellow, alpha=0.3)
-                ax.axhspan(2.5, 4.0, facecolor=red, alpha=0.3)
+                ax.axhspan(2.3, 2.5, facecolor=plot_stylers.yellow, alpha=0.3)
+                ax.axhspan(2.5, 4.0, facecolor=plot_stylers.red, alpha=0.3)
                 # Also, save the latest bus current value for the suptitle
                 latest_bus_current = data[msid].vals[-1]
 
@@ -103,7 +108,7 @@ def make_realtime_plot(counter, plot_start=dt.datetime(2020, 8, 31, 00), plot_en
                 if plotnum == 11:
                     ax.set_yscale('log')
 
-            ax.set_xlim(plot_start, plot_end)
+            ax.set_xlim(plot_start, plot_stop)
             ax.set_ylabel(dashboard_units[plotnum], color='slategray', size=8)
 
             if plotnum in range(8, 12):
@@ -133,14 +138,17 @@ def make_realtime_plot(counter, plot_start=dt.datetime(2020, 8, 31, 00), plot_en
     elif missionwide is True:
         plt.suptitle(t='Updated as of {} EST'.format(dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), color='slategray', size=6)
 
-    if missionwide is False:
-        plt.savefig(fig_save_directory + 'status.png', dpi=300)
-        plt.savefig(fig_save_directory + 'status.pdf',
-                    dpi=300, rasterized=True)
-    elif missionwide is True:
-        plt.savefig(fig_save_directory + 'status_wide.png', dpi=300)
-        plt.savefig(fig_save_directory + 'status_wide.pdf',
-                    dpi=300, rasterized=True)
+
+    if fig_save_directory is not None:
+    # Then the user wants to save the figure
+        if missionwide is False:
+            plt.savefig(fig_save_directory + 'status.png', dpi=300)
+            plt.savefig(fig_save_directory + 'status.pdf',
+                        dpi=300, rasterized=True)
+        elif missionwide is True:
+            plt.savefig(fig_save_directory + 'status_wide.png', dpi=300)
+            plt.savefig(fig_save_directory + 'status_wide.pdf',
+                        dpi=300, rasterized=True)
 
     if show_in_gui:
         plt.show()
@@ -149,15 +157,15 @@ def make_realtime_plot(counter, plot_start=dt.datetime(2020, 8, 31, 00), plot_en
 
 
 
-def make_ancillary_plots(iteration_counter, fig_save_directory):
+def make_ancillary_plots(fig_save_directory):
 
     five_days_ago = dt.date.today() - dt.timedelta(days=5)
     two_days_hence = dt.date.today() + dt.timedelta(days=2)
 
 
     fetch.data_source.set('cxc')
-    make_realtime_plot(iteration_counter, fig_save_directory=fig_save_directory, plot_start=dt.datetime(
-        2000, 1, 4), plot_end=None, sampling='daily', date_format=mdate.DateFormatter('%Y'), current_hline=True, missionwide=True, force_limits=True)
+    make_realtime_plot(fig_save_directory=fig_save_directory, plot_start=dt.datetime(
+        2000, 1, 4), plot_stop=None, sampling='daily', date_format=mdate.DateFormatter('%Y'), current_hline=True, missionwide=True, force_limits=True)
 
     print('Saved Mission-Wide Plots to {}'.format(
         fig_save_directory), end="\r", flush=True)
@@ -165,7 +173,7 @@ def make_ancillary_plots(iteration_counter, fig_save_directory):
     sys.stdout.write("\033[K")
 
     print('Updating Motor Plots', end="\r", flush=True)
-    make_motor_plots(iteration_counter, fig_save_directory=fig_save_directory, plot_start=five_days_ago,
+    make_motor_plots(fig_save_directory=fig_save_directory, plot_start=five_days_ago,
                         plot_end=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'))
     print('Done', end="\r", flush=True)
     # Clear the command line manually
@@ -177,8 +185,7 @@ def make_ancillary_plots(iteration_counter, fig_save_directory):
     sys.stdout.write("\033[K")
 
     print('Updating Thermal Plots', end="\r", flush=True)
-    make_thermal_plots(
-        iteration_counter, fig_save_directory=fig_save_directory)
+    make_thermal_plots(fig_save_directory=fig_save_directory)
     print('Done', end="\r", flush=True)
     # Clear the command line manually
     sys.stdout.write("\033[K")
@@ -189,3 +196,48 @@ def make_ancillary_plots(iteration_counter, fig_save_directory):
     sys.stdout.write("\033[K")
 
     plt.close('all')
+
+
+def valid_date(s):
+    try:
+        return dt.datetime.strptime(s, "%Y-%m-%d")
+    except ValueError:
+        msg = "Not a valid date: '{0}'.".format(s)
+        raise argparse.ArgumentTypeError(msg)
+
+def parse_args():
+    argparser = argparse.ArgumentParser()
+
+    argparser.add_argument('--start', dest="plot_start",  type=valid_date, required=False, help='The Start Date - format YYYY-MM-DD')
+    argparser.add_argument('--stop', dest="plot_stop", type=valid_date, required=False, help='The Start Date - format YYYY-MM-DD')
+    argparser.add_argument('--sampling', dest="custom_sampling",  choices=['full', '5min', 'daily'], required=False, help='Sampling to use instead of full resolution?')
+
+    args = argparser.parse_args()
+
+    return args
+
+def main():
+    # Enable this thing to run on the command line for on-demand plots with specific date ranges
+
+    # Force a gui backend
+
+    matplotlib.use('MacOSX', force=True)
+    plot_stylers.styleplots()
+
+    args = parse_args()
+    # Args will just be datetimes
+    if args.plot_start is not None:
+        plot_start = args.plot_start
+    elif args.plot_stop is None:
+        plot_start = dt.date.today() - dt.timedelta(days=5)
+
+    if args.plot_stop is not None:
+        plot_stop = args.plot_stop
+    elif args.plot_stop is None:
+        plot_stop = dt.date.today() + dt.timedelta(days=2)
+
+    make_realtime_plot(plot_start=plot_start, plot_stop=plot_stop,current_hline=False, force_limits=False, show_in_gui=True)
+
+
+if __name__ == '__main__':
+    main()

@@ -7,33 +7,19 @@ import argparse
 
 import matplotlib
 import datetime as dt
-# import Chandra.Time
 import Ska.engarchive.fetch as fetch
 import socket
 import traceback
 
-
-from msidlists import *
-from event_times import *
-from plot_stylers import *
-
+import plot_stylers
 from plot_dashboard import make_realtime_plot, make_ancillary_plots
 
-from chandratime import convert_chandra_time, convert_to_doy
 from cxotime import CxoTime
 
 from heartbeat import are_we_in_comm
-from commbot import convert_bus_current_to_dn
 
-plt.style.use('ggplot')
-labelsizes = 8
-# plt.rcParams['font.sans-serif'] = 'Arial'
-plt.rcParams['font.size'] = labelsizes
-
-plt.rcParams['axes.titlesize'] = labelsizes
-plt.rcParams['axes.labelsize'] = labelsizes
-plt.rcParams['xtick.labelsize'] = labelsizes - 2
-plt.rcParams['ytick.labelsize'] = labelsizes - 2
+import matplotlib.pyplot as plt
+plot_stylers.styleplots()
 
 # Use the new Matplotlib 3.X constrained_layout solver in lieu of tight_layout()
 # plt.rcParams['figure.constrained_layout.use'] = True
@@ -169,11 +155,10 @@ def main():
                     five_days_ago = dt.date.today() - dt.timedelta(days=5)
                     two_days_hence = dt.date.today() + dt.timedelta(days=2)
 
-                    make_realtime_plot(iteration_counter, plot_start=five_days_ago, fig_save_directory=fig_save_directory,
-                                       plot_end=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'), force_limits=True, show_in_gui=args.show_in_gui)
+                    make_realtime_plot(plot_start=five_days_ago, fig_save_directory=fig_save_directory,
+                                       plot_stop=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'), force_limits=True, show_in_gui=args.show_in_gui)
 
-                    make_ancillary_plots(
-                        iteration_counter, fig_save_directory)
+                    make_ancillary_plots(fig_save_directory=fig_save_directory)
                     plt.close('all')
 
                     # Reset the refresh counter
@@ -208,8 +193,8 @@ def main():
                 five_days_ago = dt.date.today() - dt.timedelta(days=5)
                 two_days_hence = dt.date.today() + dt.timedelta(days=2)
 
-                make_realtime_plot(iteration_counter, plot_start=five_days_ago, fig_save_directory=fig_save_directory,
-                                   plot_end=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'), force_limits=True, show_in_gui=args.show_in_gui)
+                make_realtime_plot(plot_start=five_days_ago, fig_save_directory=fig_save_directory,
+                                   plot_stop=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'), force_limits=True, show_in_gui=args.show_in_gui)
 
                 print('Saved Current Status Plots to {}'.format(
                     fig_save_directory), end="\r", flush=True)
