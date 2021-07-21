@@ -4,23 +4,23 @@
 # HRCSentinel
 __Real-time trending, telemetry auditing, and comm alerts for the *Chandra* High Resolution Camera__
 
-While I've happily made this code public, it will unfortunately only work on *Chandra* [Operations Control Center](https://www.si.edu/newsdesk/releases/virtual-behind-scenes-tour-chandra-operations-control-center-now-available) EGSE machines and the [Center for Astrophysics](www.cfa.harvard.edu) LAN. This is because it heavily relies on *Chandra*-internal packages/tools, namely `MAUDE` (for real-time processed telemetry) and the `ska/cheta` archives (for long-term monitoring). *This code will therefore probably not work on your machine!*. If you are a *Chandra* Flight Operations Team member and you would like help adapting this code for your use, please contact [Grant Tremblay](www.granttremblay.com).  
+While I've happily made this code public, it will unfortunately only work on *Chandra* [Operations Control Center](https://www.si.edu/newsdesk/releases/virtual-behind-scenes-tour-chandra-operations-control-center-now-available) EGSE machines and the [Center for Astrophysics](www.cfa.harvard.edu) LAN. This is because it heavily relies on *Chandra*-internal packages/tools, namely `MAUDE` (for real-time processed telemetry) and the `ska/cheta` archives (for long-term monitoring). *This code will therefore probably not work on your machine!*. If you are a *Chandra* Flight Operations Team member and you would like help adapting this code for your use, please contact [Grant Tremblay](www.granttremblay.com).
 
-`HRCSentinel` is composed of two main components: 
+`HRCSentinel` is composed of two main components:
 
-* `HRCMonitor`, which continually updates an instrument status dashboard which is (privately) hosted [here](https://icxc.cfa.harvard.edu/hrcops/hrcmonitor/) (SAO VPN required). 
+* `HRCMonitor`, which continually updates an instrument status dashboard which is (privately) hosted [here](https://icxc.cfa.harvard.edu/hrcops/hrcmonitor/) (SAO VPN required).
 
-* `HRCCommBot`, a Slack Bot that provides real-time DSN comm pass alerts with telemetry auditing. 
+* `HRCCommBot`, a Slack Bot that provides real-time DSN comm pass alerts with telemetry auditing.
 
-See the screenshots below for the output from these two codes: 
+See the screenshots below for the output from these two codes:
 ![Screenshots](misc/screenshots.png)
 
 
 ## How to run `HRCSentinel`
 
-I run both codes on `han-v`, a CfA internal (virtual) machine. 
+I run both codes on `han-v`, a CfA internal (virtual) machine.
 
-1. Initialize the `ska` Flight environment: 
+1. Initialize the `ska` Flight environment:
 `source /proj/sot/ska3/flight/bin/ska_envs.sh`
 then,
 
@@ -28,7 +28,7 @@ then,
 
 You can get help with:
 
-```python
+```shell
 ❯ python hrcmonitor.py --help
 usage: hrcmonitor.py [-h] [--fake_comm] [--force_ska] [--report_errors] [--show_in_gui]
 
@@ -42,7 +42,7 @@ optional arguments:
   --show_in_gui    Show plots with plt.show()
 ```
 
-```python
+```shell
 ❯ python commbot.py --help
 usage: commbot.py [-h] [--fake_comm] [--report_errors]
 
@@ -57,3 +57,11 @@ optional arguments:
 
 ### CommBot
 
+### Other utilities
+
+You can also call `plot_dashboard.py` directly from the command line for a custom dashboard view with
+user-defined date ranges and data sampling. For example,
+
+```python
+python plot_dashboard.py --start 2001-07-17 --stop 2012-05-21 --sampling daily
+```

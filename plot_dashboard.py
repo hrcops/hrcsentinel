@@ -1,6 +1,5 @@
 #!/usr/bin/env conda run -n ska3 python
 
-
 import time
 import shutil
 import sys
@@ -33,7 +32,6 @@ from plot_motors import make_motor_plots
 from chandratime import convert_chandra_time, convert_to_doy
 
 from commbot import convert_bus_current_to_dn
-
 
 
 def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), plot_stop=dt.date.today() + dt.timedelta(days=2), sampling='full', current_hline=False, date_format=mdate.DateFormatter('%d %H'), force_limits=False, missionwide=False, fig_save_directory=None, show_in_gui=False):
@@ -97,7 +95,7 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
             if plotnum == 2:
                 # Then this is the Bus Current plot. Overplot the CAUTION and WARNING limits
                 ax.axhspan(2.3, 2.5, facecolor=plot_stylers.yellow, alpha=0.3)
-                ax.axhspan(2.5, 4.0, facecolor=plot_stylers.red, alpha=0.3)
+                ax.axhspan(2.5, 3.5, facecolor=plot_stylers.red, alpha=0.3)
                 # Also, save the latest bus current value for the suptitle
                 latest_bus_current = data[msid].vals[-1]
 
@@ -136,11 +134,11 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
         plt.suptitle(t='Latest Bus Current: {} DN ({} A) | Updated as of {} EST'.format(convert_bus_current_to_dn(latest_bus_current), np.round(
             latest_bus_current, 2),  dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), color='slategray', size=6)
     elif missionwide is True:
-        plt.suptitle(t='Updated as of {} EST'.format(dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), color='slategray', size=6)
-
+        plt.suptitle(t='Updated as of {} EST'.format(
+            dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), color='slategray', size=6)
 
     if fig_save_directory is not None:
-    # Then the user wants to save the figure
+        # Then the user wants to save the figure
         if missionwide is False:
             plt.savefig(fig_save_directory + 'status.png', dpi=300)
             plt.savefig(fig_save_directory + 'status.pdf',
@@ -156,12 +154,10 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
     plt.close()
 
 
-
 def make_ancillary_plots(fig_save_directory):
 
     five_days_ago = dt.date.today() - dt.timedelta(days=5)
     two_days_hence = dt.date.today() + dt.timedelta(days=2)
-
 
     fetch.data_source.set('cxc')
     make_realtime_plot(fig_save_directory=fig_save_directory, plot_start=dt.datetime(
@@ -174,7 +170,7 @@ def make_ancillary_plots(fig_save_directory):
 
     print('Updating Motor Plots', end="\r", flush=True)
     make_motor_plots(fig_save_directory=fig_save_directory, plot_start=five_days_ago,
-                        plot_end=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'))
+                     plot_end=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'))
     print('Done', end="\r", flush=True)
     # Clear the command line manually
     sys.stdout.write("\033[K")
@@ -205,16 +201,21 @@ def valid_date(s):
         msg = "Not a valid date: '{0}'.".format(s)
         raise argparse.ArgumentTypeError(msg)
 
+
 def parse_args():
     argparser = argparse.ArgumentParser()
 
-    argparser.add_argument('--start', dest="plot_start",  type=valid_date, required=False, help='The Start Date - format YYYY-MM-DD')
-    argparser.add_argument('--stop', dest="plot_stop", type=valid_date, required=False, help='The Start Date - format YYYY-MM-DD')
-    argparser.add_argument('--sampling', dest="custom_sampling",  choices=['full', '5min', 'daily'], required=False, help='Sampling to use instead of full resolution?')
+    argparser.add_argument('--start', dest="plot_start",  type=valid_date,
+                           required=False, help='The Start Date - format YYYY-MM-DD')
+    argparser.add_argument('--stop', dest="plot_stop", type=valid_date,
+                           required=False, help='The Start Date - format YYYY-MM-DD')
+    argparser.add_argument('--sampling', choices=[
+                           'full', '5min', 'daily'], required=False, default='full', help='Sampling to use instead of full resolution?')
 
     args = argparser.parse_args()
 
     return args
+
 
 def main():
     # Enable this thing to run on the command line for on-demand plots with specific date ranges
@@ -236,7 +237,8 @@ def main():
     elif args.plot_stop is None:
         plot_stop = dt.date.today() + dt.timedelta(days=2)
 
-    make_realtime_plot(plot_start=plot_start, plot_stop=plot_stop,current_hline=False, force_limits=False, show_in_gui=True)
+    make_realtime_plot(plot_start=plot_start, plot_stop=plot_stop,
+                       current_hline=False, sampling=args.sampling, force_limits=False, show_in_gui=True)
 
 
 if __name__ == '__main__':
