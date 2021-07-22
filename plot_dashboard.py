@@ -24,6 +24,7 @@ import pandas as pd
 
 import plot_stylers
 import msidlists
+from event_times import *
 
 from plot_thermals import make_thermal_plots
 from plot_motors import make_motor_plots
