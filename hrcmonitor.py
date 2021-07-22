@@ -138,8 +138,7 @@ def main():
                     comm_status_stamp(comm_status=in_comm, code_start_time=code_start_time,
                                       fig_save_directory=fig_save_directory, hostname=hostname)
 
-                    make_ancillary_plots(
-                        iteration_counter, fig_save_directory)
+                    make_ancillary_plots(fig_save_directory=fig_save_directory)
 
                     plt.close('all')
 
