@@ -24,7 +24,7 @@ import pandas as pd
 
 import plot_stylers
 import msidlists
-from event_times import *
+import event_times
 
 from plot_thermals import make_thermal_plots
 from plot_motors import make_motor_plots
@@ -115,9 +115,9 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
 
             if missionwide is True:
                 if plotnum == 0:
-                    ax.text(time_of_cap_1543, ax.get_ylim()[
+                    ax.text(event_times.time_of_cap_1543, ax.get_ylim()[
                             1], 'Side B Swap', fontsize=6, color='slategray')
-                    ax.axvline(time_of_cap_1543, color='gray', alpha=0.5)
+                    ax.axvline(event_times.time_of_cap_1543, color='gray', alpha=0.5)
             else:
                 ax.text(dt.datetime.now(pytz.utc), ax.get_ylim()[1],
                         'Now', fontsize=6, color='slategray')

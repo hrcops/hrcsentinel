@@ -7,14 +7,16 @@ import argparse
 
 import matplotlib
 import datetime as dt
-import Ska.engarchive.fetch as fetch
+
 import socket
 import traceback
 
 import plot_stylers
 from plot_dashboard import make_realtime_plot, make_ancillary_plots
 
-from cxotime import CxoTime
+
+import Ska.engarchive.fetch as fetch
+import cxotime.CxoTime as CxoTime
 
 from heartbeat import are_we_in_comm
 
@@ -82,7 +84,8 @@ def main():
     minutes of sleep to avoid overwhelming MAUDE and wasting cycles.
     '''
 
-    hostname = socket.gethostname().split('.')[0] # split is to get rid of .local or .cfa.harvard.edu
+    # split is to get rid of .local or .cfa.harvard.edu
+    hostname = socket.gethostname().split('.')[0]
 
     args = get_args()
     fake_comm = args.fake_comm
