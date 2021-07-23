@@ -16,7 +16,7 @@ from plot_dashboard import make_realtime_plot, make_ancillary_plots
 
 
 import Ska.engarchive.fetch as fetch
-import cxotime.CxoTime as CxoTime
+from cxotime import CxoTime
 
 from heartbeat import are_we_in_comm
 
