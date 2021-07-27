@@ -6,22 +6,24 @@ import sys
 import os
 import argparse
 
+# Third party modules
+import numpy as np
 import matplotlib
-from matplotlib import gridspec
 import matplotlib.dates as mdate
 import matplotlib.pyplot as plt
 
-
+# Time is the fire in which we burn
 import datetime as dt
-import Chandra.Time
-import Ska.engarchive.fetch as fetch
-import socket
-import traceback
 import pytz
 
-import numpy as np
-import pandas as pd
+# Ska / Cheta
+try:
+    from cheta import fetch
+except ImportError:
+    sys.exit("Failed to import cheta (aka ska). Make sure you're using the latest version of the ska runtime environment (and that you have the conda environment initialized!).")
 
+
+# HRCSentinel stuff
 import plot_stylers
 import msidlists
 import event_times
@@ -29,9 +31,7 @@ import event_times
 from plot_thermals import make_thermal_plots
 from plot_motors import make_motor_plots
 
-
 from chandratime import convert_chandra_time, convert_to_doy
-
 from commbot import convert_bus_current_to_dn
 
 
@@ -117,7 +117,8 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
                 if plotnum == 0:
                     ax.text(event_times.time_of_cap_1543, ax.get_ylim()[
                             1], 'Side B Swap', fontsize=6, color='slategray')
-                    ax.axvline(event_times.time_of_cap_1543, color='gray', alpha=0.5)
+                    ax.axvline(event_times.time_of_cap_1543,
+                               color='gray', alpha=0.5)
             else:
                 ax.text(dt.datetime.now(pytz.utc), ax.get_ylim()[1],
                         'Now', fontsize=6, color='slategray')

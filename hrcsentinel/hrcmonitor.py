@@ -1,6 +1,5 @@
 #!/usr/bin/env conda run -n ska3 python
 
-
 import time
 import sys
 import argparse
@@ -15,7 +14,7 @@ import plot_stylers
 from plot_dashboard import make_realtime_plot, make_ancillary_plots
 
 
-import Ska.engarchive.fetch as fetch
+from cheta import fetch
 from cxotime import CxoTime
 
 from heartbeat import are_we_in_comm
@@ -64,7 +63,7 @@ def get_args():
     parser.add_argument("--fake_comm", help="Trick the code to think it's in comm. Useful for testing. ",
                         action="store_true")
 
-    parser.add_argument("--force_ska", help="Trick the code pull from Ska/CXC instead of MAUDE with a switch to fetch.data_source.set() ",
+    parser.add_argument("--force_cheta", help="Trick the code pull from Ska/CXC instead of MAUDE with a switch to fetch.data_source.set() ",
                         action="store_true")
 
     parser.add_argument("--report_errors", help="Print MAUDE exceptions (which are common) to the command line",
@@ -182,13 +181,12 @@ def main():
                     # Then create the mission-wide status plots
                     print("Refreshing longviews (Iteration {}) at {}".format(
                         iteration_counter, dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), flush=True)
-                    make_ancillary_plots(
-                        iteration_counter, fig_save_directory)
+                    make_ancillary_plots(fig_save_directory)
                     plt.close('all')
 
                 # Explicitly set maude each time, because ancillary plots use CXC
                 fetch.data_source.set('maude allow_subset=False')
-                if args.force_ska:
+                if args.force_cheta:
                     fetch.data_source.set('cxc')
 
                 print("Refreshing dashboard (Iteration {}) at {}".format(

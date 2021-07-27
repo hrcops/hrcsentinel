@@ -11,7 +11,7 @@ import time
 import numpy as np
 import astropy.units as u
 
-from Ska.engarchive import fetch
+from cheta import fetch
 from cxotime import CxoTime
 
 
