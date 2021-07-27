@@ -158,7 +158,7 @@ def get_args():
     parser = argparse.ArgumentParser(
         description='Monitor the VCDU telemetry stream, and send a message to the HRC Ops Slack with critical HRC telemetry whenever we are in comm.')
 
-    parser.add_argument("--fake_comm", help="Trick the code to think it's in comm. Useful for testing. ",
+    parser.add_argument("--fake_comm", help="Trick the code to think we are in comm. Useful for testing. ",
                         action="store_true")
 
     parser.add_argument("--report_errors", help="Print MAUDE exceptions (which are common) to the command line",

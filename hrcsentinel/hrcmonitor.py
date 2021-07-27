@@ -60,7 +60,7 @@ def get_args():
     parser = argparse.ArgumentParser(
         description='Monitor the VCDU telemetry stream, and update critical status plots whenever we are in comm.')
 
-    parser.add_argument("--fake_comm", help="Trick the code to think it's in comm. Useful for testing. ",
+    parser.add_argument("--fake_comm", help="Trick the code to think we are in comm. Useful for testing. ",
                         action="store_true")
 
     parser.add_argument("--force_cheta", help="Trick the code pull from Ska/CXC instead of MAUDE with a switch to fetch.data_source.set() ",
@@ -88,12 +88,14 @@ def main():
 
     args = get_args()
     fake_comm = args.fake_comm
+    chatty = args.report_errors  # Will be True if user set --report_errors
 
     if hostname == 'han-v':
-        print('Recognized host: {}'.format(hostname))
+        if chatty:
+            print('Recognized host: {}'.format(hostname))
         fig_save_directory = '/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/'
     elif hostname == 'symmetry':
-        if args.report_errors is True:
+        if chatty:
             print('Recognized host: {}'.format(hostname))
         fig_save_directory = '/Users/grant/Desktop/'
     else:
@@ -110,7 +112,7 @@ def main():
     from matplotlib import gridspec
     import matplotlib.dates as mdate
     import matplotlib.pyplot as plt
-    if args.report_errors is True:
+    if chatty:
         print("Using Matplotlib backend:", matplotlib.get_backend())
 
     # Initial settings
@@ -216,12 +218,12 @@ def main():
             iteration_counter += 1
 
         except Exception as e:
-            if args.report_errors is True:
+            if chatty:
                 print("ERROR on Iteration {}: {}".format(iteration_counter, e))
                 print("Heres the traceback:")
                 print(traceback.format_exc())
                 print("Pressing on...")
-            elif args.report_errors is False:
+            elif not chatty:
                 print(
                     f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) ERROR encountered! Use --report_errors to display them.                              ', end='\r\r\r')
             continue
