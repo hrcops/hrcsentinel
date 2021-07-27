@@ -40,6 +40,7 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
 
     fig = plt.figure(figsize=(16, 6), constrained_layout=True)
     gs = fig.add_gridspec(3, 4)
+    # gridspec rocks
 
     if missionwide is False:
         # Then override the existing dashboard_msid* with the missionwide one
@@ -54,6 +55,7 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
         dashboard_limits = msidlists.dashboard_limits_missionwide
         dashboard_units = msidlists.dashboard_units_missionwide
 
+    # we're making a 4x3 plot using gridspec (see above)
     for i in range(3):
         for j in range(4):
             ax = fig.add_subplot(gs[i, j])
@@ -101,20 +103,24 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
                 latest_bus_current = data[msid].vals[-1]
 
             if plotnum == 10:
+                # then this is the shield/det event rate plot and it's better in log y
                 ax.set_yscale('log')
 
             if missionwide is True:
                 if plotnum == 11:
+                    # then we're plotting AntiCo shield rate, not pitch, so log it
                     ax.set_yscale('log')
 
             ax.set_xlim(plot_start, plot_stop)
             ax.set_ylabel(dashboard_units[plotnum], color='slategray', size=8)
 
             if plotnum in range(8, 12):
+                # Only label the x axes of the bottom row of plots
                 ax.set_xlabel('Date (UTC)', color='slategray', size=6)
 
             if missionwide is True:
                 if plotnum == 0:
+                    # Label the B-side swap (Aug 2020)
                     ax.text(event_times.time_of_cap_1543, ax.get_ylim()[
                             1], 'Side B Swap', fontsize=6, color='slategray')
                     ax.axvline(event_times.time_of_cap_1543,
@@ -124,6 +130,7 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
                         'Now', fontsize=6, color='slategray')
                 ax.axvline(dt.datetime.now(pytz.utc), color='gray', alpha=0.5)
 
+            # Set everything to our preferred date format
             plt.gca().xaxis.set_major_formatter(date_format)
 
             plt.xticks(rotation=0)
