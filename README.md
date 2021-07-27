@@ -43,7 +43,7 @@ Starting both codes should be as simple as:
 
 You can get help with:
 
-```shell
+```
 ❯ python hrcmonitor.py --help
 usage: hrcmonitor.py [-h] [--fake_comm] [--force_ska] [--report_errors] [--show_in_gui]
 
@@ -57,7 +57,7 @@ optional arguments:
   --show_in_gui    Show plots with plt.show()
 ```
 
-```shell
+```
 ❯ python commbot.py --help
 usage: commbot.py [-h] [--fake_comm] [--report_errors]
 
