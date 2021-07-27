@@ -51,7 +51,7 @@ Monitor the VCDU telemetry stream, and update critical status plots whenever we 
 
 optional arguments:
   -h, --help       show this help message and exit
-  --fake_comm      Trick the code to think it's in comm. Useful for testing.
+  --fake_comm      Trick the code to think we are in comm. Useful for testing.
   --force_ska      Trick the code pull from Ska/CXC instead of MAUDE with a switch to fetch.data_source.set()
   --report_errors  Print MAUDE exceptions (which are common) to the command line
   --show_in_gui    Show plots with plt.show()
@@ -65,7 +65,7 @@ Monitor the VCDU telemetry stream, and send a message to the HRC Ops Slack with 
 
 optional arguments:
   -h, --help       show this help message and exit
-  --fake_comm      Trick the code to think it's in comm. Useful for testing.
+  --fake_comm      Trick the code to think we are in comm. Useful for testing.
   --report_errors  Print MAUDE exceptions (which are common) to the command line
 ```
 
