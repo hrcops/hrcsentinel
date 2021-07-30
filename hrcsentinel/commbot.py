@@ -32,8 +32,8 @@ def audit_telemetry(start, channel=None):
     critical_msids = fetch.get_telem(
         list(critical_msidlist.keys()), start=start, quiet=True, unit_system='eng')
 
-#    for msid in critical_msids:
-#        print(f'{msid} with limits {critical_msidlist[msid]}')
+    for msid in critical_msids:
+       print(f'{msid} with limits {critical_msidlist[msid]}')
 
 
 def send_slack_message(message, channel='#comm_passes', blocks=None):
