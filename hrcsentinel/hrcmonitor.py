@@ -143,8 +143,10 @@ def main():
                                       fig_save_directory=fig_save_directory, hostname=hostname)
 
                     make_ancillary_plots(fig_save_directory=fig_save_directory)
-
                     plt.close('all')
+                    # Finally, reset the out-of-comm reset counter, because it can get into a state where it doesn't get below 20 again
+                    out_of_comm_refresh_counter = 0
+
 
                 recently_in_comm = False
                 in_comm_counter = 0
