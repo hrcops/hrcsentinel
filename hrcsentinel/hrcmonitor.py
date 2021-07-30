@@ -220,6 +220,8 @@ def main():
             iteration_counter += 1
 
         except Exception as e:
+            # Then reset the out_of_comm_refresh_counter because it might be higher than 20
+            out_of_comm_refresh_counter = 0
             if chatty:
                 print("ERROR on Iteration {}: {}".format(iteration_counter, e))
                 print("Heres the traceback:")
