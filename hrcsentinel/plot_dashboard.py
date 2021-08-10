@@ -42,6 +42,10 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
     gs = fig.add_gridspec(3, 4)
     # gridspec rocks
 
+    if sampling == 'full':
+        fetch.data_source.set('maude allow_subset=False')
+
+
     if missionwide is False:
         # Then override the existing dashboard_msid* with the missionwide one
         dashboard_msids = msidlists.dashboard_msids_latest

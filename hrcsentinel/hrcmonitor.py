@@ -155,6 +155,9 @@ def main():
                     f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) Not in Comm.                                 ', end='\r\r\r')
 
                 if out_of_comm_refresh_counter == 20:
+
+                    # Explicitly set maude each time, because ancillary plots use CXC
+                    fetch.data_source.set('maude allow_subset=False')
                     # Refresh the plots every 20th iteration out-of-comm
                     print("Performing out-of-comm plot refresh at {}".format(
                         dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), flush=True)
