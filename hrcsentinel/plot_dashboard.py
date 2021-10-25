@@ -35,14 +35,14 @@ from chandratime import convert_chandra_time, convert_to_doy
 from commbot import convert_bus_current_to_dn
 
 
-def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), plot_stop=dt.date.today() + dt.timedelta(days=2), sampling='full', current_hline=False, date_format=mdate.DateFormatter('%d %H'), force_limits=False, missionwide=False, fig_save_directory=None, show_in_gui=False):
+def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), plot_stop=dt.date.today() + dt.timedelta(days=2), sampling='full', current_hline=False, date_format=mdate.DateFormatter('%d %H'), force_limits=False, missionwide=False, fig_save_directory=None, show_in_gui=False, use_cheta=False):
     plotnum = -1
 
     fig = plt.figure(figsize=(16, 6), constrained_layout=True)
     gs = fig.add_gridspec(3, 4)
     # gridspec rocks
 
-    if sampling == 'full':
+    if (sampling == 'full') and (use_cheta is False):
         fetch.data_source.set('maude allow_subset=False')
 
 
@@ -99,6 +99,39 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
                 if force_limits is True:
                     ax.set_ylim(dashboard_limits[plotnum])
 
+            if missionwide is False:
+                # Then add labels
+                ax.text(dt.datetime.now(pytz.utc), ax.get_ylim()[1],
+                        'Now', fontsize=6, color='slategray', zorder=3)
+                ax.axvline(dt.datetime.now(pytz.utc), color='gray', alpha=0.5)
+
+                if plotnum == 0:
+                    # then this is the Bus Voltage plot. I want to *underplot* FIFO resets
+                    fifo_resets = fetch.get_telem('2FIFOAVR', start=convert_to_doy(plot_start), sampling=sampling, max_fetch_Mb=100000, max_output_Mb=100000, quiet=True)
+                    format_changes = fetch.get_telem('CCSDSTMF', start=convert_to_doy(plot_start), sampling=sampling, max_fetch_Mb=100000, max_output_Mb=100000, quiet=True)
+                    ax_resets = ax.twinx()
+                    ax_resets.plot_date(convert_chandra_time(
+                        fifo_resets['2FIFOAVR'].times), fifo_resets['2FIFOAVR'].vals, linestyle='solid', linewidth=0.5, marker=None, alpha=0.7,  color=plot_stylers.blue, label='FIFO Reset', zorder=0, rasterized=True)
+                    ax_resets.plot_date(convert_chandra_time(format_changes['CCSDSTMF'].times), format_changes['CCSDSTMF'].vals, linestyle='solid', linewidth=0.5, marker=None, alpha=0.7,  color=plot_stylers.purple, label='Format Changes', zorder=0, rasterized=True)
+                    ax_resets.tick_params(labelright='off')
+                    ax_resets.set_yticks([])
+                    ax_resets.legend(prop={'size': 8}, loc=3)
+                    ax.legend(prop={'size': 5}, loc=2) # make a really tiny main legend
+
+            # Do mission-wide tweaking
+            elif missionwide is True:
+                if plotnum == 0:
+                    # Label the B-side swap (Aug 2020)
+                    ax.text(event_times.time_of_cap_1543, ax.get_ylim()[
+                            1], 'Side B Swap', fontsize=6, color='slategray')
+                    ax.axvline(event_times.time_of_cap_1543,
+                               color='gray', alpha=0.5)
+
+                if plotnum == 11:
+                    # then we're plotting AntiCo shield rate, not pitch, so log it
+                    ax.set_yscale('log')
+
+
             if plotnum == 2:
                 # Then this is the Bus Current plot. Overplot the CAUTION and WARNING limits
                 ax.axhspan(2.3, 2.5, facecolor=plot_stylers.yellow, alpha=0.3)
@@ -110,11 +143,7 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
                 # then this is the shield/det event rate plot and it's better in log y
                 ax.set_yscale('log')
 
-            if missionwide is True:
-                if plotnum == 11:
-                    # then we're plotting AntiCo shield rate, not pitch, so log it
-                    ax.set_yscale('log')
-
+            # Set all limits
             ax.set_xlim(plot_start, plot_stop)
             ax.set_ylabel(dashboard_units[plotnum], color='slategray', size=8)
 
@@ -122,27 +151,18 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
                 # Only label the x axes of the bottom row of plots
                 ax.set_xlabel('Date (UTC)', color='slategray', size=6)
 
-            if missionwide is True:
-                if plotnum == 0:
-                    # Label the B-side swap (Aug 2020)
-                    ax.text(event_times.time_of_cap_1543, ax.get_ylim()[
-                            1], 'Side B Swap', fontsize=6, color='slategray')
-                    ax.axvline(event_times.time_of_cap_1543,
-                               color='gray', alpha=0.5)
-            else:
-                ax.text(dt.datetime.now(pytz.utc), ax.get_ylim()[1],
-                        'Now', fontsize=6, color='slategray')
-                ax.axvline(dt.datetime.now(pytz.utc), color='gray', alpha=0.5)
-
             # Set everything to our preferred date format
             plt.gca().xaxis.set_major_formatter(date_format)
 
             plt.xticks(rotation=0)
 
-            ax.legend(prop={'size': 8}, loc=3)
+            if plotnum != 0:
+                # Legend gets too busy on the Bus Voltage plot
+                ax.legend(prop={'size': 8}, loc=2)
             ax.set_title('{}'.format(
                 dashboard_tiles[plotnum]), color='slategray', loc='center')
 
+    # Title the top of the figure
     if missionwide is False:
         plt.suptitle(t='Latest Bus Current: {} DN ({} A) | Updated as of {} EST'.format(convert_bus_current_to_dn(latest_bus_current), np.round(
             latest_bus_current, 2),  dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), color='slategray', size=6)
@@ -225,6 +245,10 @@ def parse_args():
     argparser.add_argument('--sampling', choices=[
                            'full', '5min', 'daily'], required=False, default='full', help='Sampling to use instead of full resolution?')
 
+    argparser.add_argument('--use_cheta', action='store_true')
+
+    argparser.add_argument('--force_limits', action='store_true')
+
     args = argparser.parse_args()
 
     return args
@@ -250,8 +274,11 @@ def main():
     elif args.plot_stop is None:
         plot_stop = dt.date.today() + dt.timedelta(days=2)
 
+    if args.use_cheta:
+        fetch.data_source.set('cxc')
+
     make_realtime_plot(plot_start=plot_start, plot_stop=plot_stop,
-                       current_hline=False, sampling=args.sampling, force_limits=False, show_in_gui=True)
+                       current_hline=False, sampling=args.sampling, force_limits=args.force_limits, show_in_gui=True, use_cheta=args.use_cheta)
 
 
 if __name__ == '__main__':

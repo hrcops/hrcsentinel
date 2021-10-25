@@ -1,5 +1,6 @@
 #!/usr/bin/env conda run -n ska3 python
 
+import os
 import time
 import sys
 import argparse
@@ -95,6 +96,10 @@ def main():
             print('Recognized host: {}'.format(hostname))
         fig_save_directory = '/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/'
     elif hostname == 'symmetry':
+        if chatty:
+            print('Recognized host: {}'.format(hostname))
+        fig_save_directory = '/Users/grant/Desktop/'
+    elif os.path.isfile('/Users/grant/.symmetry'):
         if chatty:
             print('Recognized host: {}'.format(hostname))
         fig_save_directory = '/Users/grant/Desktop/'

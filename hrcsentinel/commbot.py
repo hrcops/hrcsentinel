@@ -23,17 +23,23 @@ from heartbeat import are_we_in_comm
 def audit_telemetry(start, channel=None):
     # Want to implement this!!!
 
+    print(f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) TELEMETRY AUDIT', end='\r')
+
+
     critical_msidlist = {'2C05PALV': (4.9, 5.1),
                          '2C15PALV': (14.9, 15.1),
                          '2C15NALV': (-14.8, -14.6),
                          '2C24PALV': (24.1, 24.3),
                          }
 
-    critical_msids = fetch.get_telem(
+    values_since_comm_start = fetch.get_telem(
         list(critical_msidlist.keys()), start=start, quiet=True, unit_system='eng')
 
-    for msid in critical_msids:
-       print(f'{msid} with limits {critical_msidlist[msid]}')
+    for msid in list(critical_msidlist.keys()):
+        out_of_limit_mask = (values_since_comm_start[msid].vals < critical_msidlist[msid][0]) or (values_since_comm_start[msid].vals > critical_msidlist[msid][1])
+        if sum(out_of_limit_mask) > 3:
+            send_slack_message(f'{msid} shows out-of-green-range values: {values_since_comm_start[out_of_limit_mask][0]}. This is beyond CAUTION/WARN limit of {critical_msidlist[msid]}', channel=channel)
+
 
 
 def send_slack_message(message, channel='#comm_passes', blocks=None):
@@ -184,6 +190,7 @@ def main():
     # Initial settings
     recently_in_comm = False
     in_comm_counter = 0
+    telemetry_audit_counter = 0
 
     # Loop infinitely :)
     while True:
@@ -224,6 +231,7 @@ def main():
 
                 recently_in_comm = True
                 in_comm_counter += 1
+                telemetry_audit_counter += 1
 
                 time.sleep(5)  # Wait a few seconds for MAUDE to refresh
                 latest_vcdu = fetch.Msid(
@@ -243,10 +251,15 @@ def main():
                     send_slack_message(message, channel=bot_slack_channel)
                     # do a first audit of the telemetry upon announcement
 
-                if in_comm_counter == 10:
+                if telemetry_audit_counter == 10:
+                    # Reset the audit counter
+                    telemetry_audit_counter = 0
                     # Now we've waited a minute. Let's audit the telemetry and send amessage.
+                    # Check starting from the beginning of comm. We always check an ever-expanding
+                    # chunk of telemetry. This is a BIT redundant, but not bad.
                     audit_telemetry(start=comm_start_timestamp,
                                     channel=bot_slack_channel)
+
 
         except Exception as e:
             # MAUDE queries fail regularly as TM is streaming in (mismatched array sizes as data is being populated), 404s, etc.
@@ -257,7 +270,7 @@ def main():
                 print(f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) ERROR: {e}')
                 print("Heres the traceback:")
                 print(traceback.format_exc())
-                print("Pressing on...")
+                print(f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) Pressing on ...')
             elif not chatty:
                 # Then we're likely in operational mode. Ignore the errors on the command line.
                 print(
