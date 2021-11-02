@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-voltage_msids = ['2P24VAVL',  # 24 V bus EED voltage,
+voltage_msids_a = ['2P24VAVL',  # 24 V bus EED voltage,
                  '2P15VAVL',  # +15 V bus EED voltage
                  '2P05VAVL',  # +05 V bus EED voltage
                  '2N15VAVL'  # +15 V bus EED voltage

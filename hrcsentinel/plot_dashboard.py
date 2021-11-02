@@ -66,8 +66,7 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
             plotnum += 1
             for msid in dashboard_msids[plotnum]:
 
-                data = fetch.get_telem(
-                    msid, start=convert_to_doy(plot_start), sampling=sampling, max_fetch_Mb=100000, max_output_Mb=100000, quiet=True)
+                data = fetch.get_telem(msid, start=convert_to_doy(plot_start), sampling=sampling, max_fetch_Mb=100000, max_output_Mb=100000, quiet=True)
 
                 print('Fetching from {} at {} resolution: {}'.format(
                     convert_to_doy(plot_start), sampling, msid), end='\r', flush=True)
@@ -121,6 +120,16 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
             # Do mission-wide tweaking
             elif missionwide is True:
                 if plotnum == 0:
+                    # Fetch the Side A Bus Data, anomaly and all :(
+                    voltage_msids_a = ['2P24VAVL',  # 24 V bus EED voltage,
+                                       '2P15VAVL',  # +15 V bus EED voltage
+                                       '2P05VAVL',  # +05 V bus EED voltage
+                                       '2N15VAVL'  # +15 V bus EED voltage
+                                       ]
+                    for msid in voltage_msids_a:
+                        a_side_voltages = fetch.get_telem(msid, start=convert_to_doy(plot_start), stop=convert_to_doy(event_times.time_of_cap_1543), sampling=sampling, max_fetch_Mb=100000, max_output_Mb=100000, quiet=True)
+                        ax.plot_date(convert_chandra_time(a_side_voltages[msid].times), a_side_voltages[msid].means, color=plot_stylers.yellow, markersize=0.3, alpha=0.3, label=msid, zorder=1, rasterized=True)
+
                     # Label the B-side swap (Aug 2020)
                     ax.text(event_times.time_of_cap_1543, ax.get_ylim()[
                             1], 'Side B Swap', fontsize=6, color='slategray')
