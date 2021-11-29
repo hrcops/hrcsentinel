@@ -72,6 +72,12 @@ optional arguments:
 
 ### CommBot
 
+```commbot.py``` calls ```heartbeat.py``` to monitor the VCDU counter MSID in MAUDE and look for increments, indicating that we are currently in DSN comm with Chandra. When these VCDU increments are first detected, ```commbot``` sends a Slack message to a dedicated channel in our private HRCOps Slack Workspace.
+
+```python
+python commbot.py --report_errors
+```
+
 ### Other utilities
 
 You can also call `plot_dashboard.py` directly from the command line for a custom dashboard view with
@@ -79,4 +85,15 @@ user-defined date ranges and data sampling. For example,
 
 ```python
 python plot_dashboard.py --start 2001-07-17 --stop 2012-05-21 --sampling daily
+```
+
+### Testing, faking a comm pass, etc.
+
+Both ```hrcmonitor``` and ```commbot``` accept the ```--fake_comm``` flag, which tricks the code into thinking that we are currently in comm. This allows for convenient testing of code functions that are specific to comm passes (sending Slack messages, refreshing plots at higher cadence, etc.)
+
+Example:
+
+```python
+python hrcmonitor.py --fake_comm # Be constantly in a state of (fake) comm
+python commbot.py --fake_comm    # same
 ```
