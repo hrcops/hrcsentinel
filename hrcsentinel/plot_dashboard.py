@@ -104,7 +104,7 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
                         'Now', fontsize=6, color='slategray', zorder=3)
                 ax.axvline(dt.datetime.now(pytz.utc), color='gray', alpha=0.5)
 
-                if plotnum == 0:
+                if plotnum == 11:
                     # then this is the Bus Voltage plot. I want to *underplot* FIFO resets
                     fifo_resets = fetch.get_telem('2FIFOAVR', start=convert_to_doy(plot_start), sampling=sampling, max_fetch_Mb=100000, max_output_Mb=100000, quiet=True)
                     format_changes = fetch.get_telem('CCSDSTMF', start=convert_to_doy(plot_start), sampling=sampling, max_fetch_Mb=100000, max_output_Mb=100000, quiet=True)
@@ -115,7 +115,7 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
                     ax_resets.tick_params(labelright='off')
                     ax_resets.set_yticks([])
                     ax_resets.legend(prop={'size': 8}, loc=3)
-                    ax.legend(prop={'size': 5}, loc=2) # make a really tiny main legend
+                    # ax.legend(prop={'size': 5}, loc=2) # make a really tiny main legend
 
             # Do mission-wide tweaking
             elif missionwide is True:
@@ -128,7 +128,7 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
                                        ]
                     for msid in voltage_msids_a:
                         a_side_voltages = fetch.get_telem(msid, start=convert_to_doy(plot_start), stop=convert_to_doy(event_times.time_of_cap_1543), sampling=sampling, max_fetch_Mb=100000, max_output_Mb=100000, quiet=True)
-                        ax.plot_date(convert_chandra_time(a_side_voltages[msid].times), a_side_voltages[msid].means, color=plot_stylers.yellow, markersize=0.3, alpha=0.3, label=msid, zorder=1, rasterized=True)
+                        ax.plot_date(convert_chandra_time(a_side_voltages[msid].times), a_side_voltages[msid].means, color=plot_stylers.green, markersize=0.3, alpha=0.3, label=msid, zorder=1, rasterized=True)
 
                     # Label the B-side swap (Aug 2020)
                     ax.text(event_times.time_of_cap_1543, ax.get_ylim()[

@@ -228,7 +228,7 @@ dashboard_tiles_latest = ["Bus Voltages",
                           "LVPS Plate Temp",
                           "Spec & Im HVPS Temps",
                           "Shield & Event Rates",
-                          "Spacecraft Pitch (Solar Array Angle)"]
+                          "Spacecraft Pitch, FIFO Resets, & FMT Changes"]
 
 dashboard_units_latest = ["Voltage (V)",
                           "Voltage (V)",
