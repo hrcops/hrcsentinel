@@ -43,7 +43,7 @@ Starting both codes should be as simple as:
 
 You can get help with:
 
-```shell
+```
 ❯ python hrcmonitor.py --help
 usage: hrcmonitor.py [-h] [--fake_comm] [--force_ska] [--report_errors] [--show_in_gui]
 
@@ -51,13 +51,13 @@ Monitor the VCDU telemetry stream, and update critical status plots whenever we 
 
 optional arguments:
   -h, --help       show this help message and exit
-  --fake_comm      Trick the code to think it's in comm. Useful for testing.
+  --fake_comm      Trick the code to think we are in comm. Useful for testing.
   --force_ska      Trick the code pull from Ska/CXC instead of MAUDE with a switch to fetch.data_source.set()
   --report_errors  Print MAUDE exceptions (which are common) to the command line
   --show_in_gui    Show plots with plt.show()
 ```
 
-```shell
+```
 ❯ python commbot.py --help
 usage: commbot.py [-h] [--fake_comm] [--report_errors]
 
@@ -65,12 +65,18 @@ Monitor the VCDU telemetry stream, and send a message to the HRC Ops Slack with 
 
 optional arguments:
   -h, --help       show this help message and exit
-  --fake_comm      Trick the code to think it's in comm. Useful for testing.
+  --fake_comm      Trick the code to think we are in comm. Useful for testing.
   --report_errors  Print MAUDE exceptions (which are common) to the command line
 ```
 
 
 ### CommBot
+
+```commbot.py``` calls ```heartbeat.py``` to monitor the VCDU counter MSID in MAUDE and look for increments, indicating that we are currently in DSN comm with Chandra. When these VCDU increments are first detected, ```commbot``` sends a Slack message to a dedicated channel in our private HRCOps Slack Workspace.
+
+```python
+python commbot.py --report_errors
+```
 
 ### Other utilities
 
@@ -79,4 +85,15 @@ user-defined date ranges and data sampling. For example,
 
 ```python
 python plot_dashboard.py --start 2001-07-17 --stop 2012-05-21 --sampling daily
+```
+
+### Testing, faking a comm pass, etc.
+
+Both ```hrcmonitor``` and ```commbot``` accept the ```--fake_comm``` flag, which tricks the code into thinking that we are currently in comm. This allows for convenient testing of code functions that are specific to comm passes (sending Slack messages, refreshing plots at higher cadence, etc.)
+
+Example:
+
+```python
+python hrcmonitor.py --fake_comm # Be constantly in a state of (fake) comm
+python commbot.py --fake_comm    # same
 ```

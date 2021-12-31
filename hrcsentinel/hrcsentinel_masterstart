@@ -11,7 +11,8 @@ fi
 
 # Initialize the ska environment. Screen will inherit it
 $skainit
-# Launch my screen script that will run both HRCSentinel processes in split windows
-screen -c hrcsentinel_screensetup.rc
 
-# more about navigating split screen windows here: https://tomlee.co/2011/10/gnu-screen-splitting/
+screen -S commbot -d -m python commbot.py --report_errors
+echo "Starting commbot.py in a separate screen (use screen -r commbot) to attach to it" 
+screen -S hrcsentinel -d -m python hrcsentinel.py --report_errors
+echo "Starting hrcsentinel.py in a separate screen (use screen -r hrcsentinel) to attach to it"

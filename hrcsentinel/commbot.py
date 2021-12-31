@@ -8,22 +8,23 @@ import argparse
 import socket
 import time
 
-from Ska.engarchive import fetch
-
 import numpy as np
-
-import time
-from cxotime import CxoTime
-import datetime as dt
-from chandratime import convert_chandra_time, convert_to_doy
-
 import astropy.units as u
 
+from cheta import fetch
+from cxotime import CxoTime
+
+
+import datetime as dt
+from chandratime import convert_chandra_time, convert_to_doy
 from heartbeat import are_we_in_comm
 
 
 def audit_telemetry(start, channel=None):
     # Want to implement this!!!
+
+    print(f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) TELEMETRY AUDIT', end='\r')
+
 
     critical_msidlist = {'2C05PALV': (4.9, 5.1),
                          '2C15PALV': (14.9, 15.1),
@@ -31,11 +32,15 @@ def audit_telemetry(start, channel=None):
                          '2C24PALV': (24.1, 24.3),
                          }
 
-    critical_msids = fetch.get_telem(
+    values_since_comm_start = fetch.get_telem(
         list(critical_msidlist.keys()), start=start, quiet=True, unit_system='eng')
 
-#    for msid in critical_msids:
-#        print(f'{msid} with limits {critical_msidlist[msid]}')
+    for msid in list(critical_msidlist.keys()):
+        out_of_limit_mask = (values_since_comm_start[msid].vals < critical_msidlist[msid][0]) or (values_since_comm_start[msid].vals > critical_msidlist[msid][1])
+        if sum(out_of_limit_mask) > 3:
+            send_slack_message(f'{msid} shows out-of-green-range values: {values_since_comm_start[out_of_limit_mask][0]}. This is beyond CAUTION/WARN limit of {critical_msidlist[msid]}', channel=channel)
+
+
 
 def send_slack_message(message, channel='#comm_passes', blocks=None):
 
@@ -94,7 +99,6 @@ def grab_critical_telemetry(start=CxoTime.now() - 60 * u.s):
     # HALF voltage for HRC-S is 43/54 (top/bottom)
     # FULL voltage is 95/107 (top/bottom)
 
-
     # Set statuses
 
     if tm_format == 'FMT1':
@@ -102,9 +106,10 @@ def grab_critical_telemetry(start=CxoTime.now() - 60 * u.s):
     else:
         hrc_observing_status = 'NOT observing'
 
-
-    expected_hrc_i_states = [(0, 0), (42, 53), (79, 91)] # in order of off, half, full
-    expected_hrc_s_states = [(0, 0), (43, 54), (95, 107)] # in order of off, half, full
+    # in order of off, half, full
+    expected_hrc_i_states = [(0, 0), (42, 53), (79, 91)]
+    # in order of off, half, full
+    expected_hrc_s_states = [(0, 0), (43, 54), (95, 107)]
 
     expected_status = ['OFF', 'at HALF voltage', 'at FULL voltage']
 
@@ -113,21 +118,24 @@ def grab_critical_telemetry(start=CxoTime.now() - 60 * u.s):
     hrc_s_status = None
 
     try:
-        hrc_i_status = expected_status[expected_hrc_i_states.index(hrc_i_voltage)]
+        hrc_i_status = expected_status[expected_hrc_i_states.index(
+            hrc_i_voltage)]
     except ValueError:
-        hrc_i_status = 'in a POTENTIALLY UNEXPECTED state ({}). CHECK THIS!'.format(hrc_i_voltage)
+        hrc_i_status = 'in a POTENTIALLY UNEXPECTED state ({}). CHECK THIS!'.format(
+            hrc_i_voltage)
 
     try:
-        hrc_s_status = expected_status[expected_hrc_s_states.index(hrc_s_voltage)]
+        hrc_s_status = expected_status[expected_hrc_s_states.index(
+            hrc_s_voltage)]
     except ValueError:
-        hrc_s_status = 'in a POTENTIALLY UNEXPECTED state ({}). CHECK THIS!'.format(hrc_s_voltage)
-
+        hrc_s_status = 'in a POTENTIALLY UNEXPECTED state ({}). CHECK THIS!'.format(
+            hrc_s_voltage)
 
     te_rate = critical_msids['2TLEV1RT'].vals[-1]
     ve_rate = critical_msids['2VLEV1RT'].vals[-1]
 
-    telem = {'HRC observing status':hrc_observing_status, 'Format': tm_format, 'Shield Rate': shield_rate, 'Shield State': shield_state,
-             'Bus Current (DN)': bus_current_in_dn, 'Bus Current (A)': bus_current_in_amps, 'FEA Temp': fea_temp, 'HRC-I Voltage Steps': hrc_i_voltage,'HRC-I Status':hrc_i_status, 'HRC-S Voltage Steps': hrc_s_voltage, 'HRC-S Status':hrc_s_status, 'TE Rate': te_rate, 'VE Rate': ve_rate}
+    telem = {'HRC observing status': hrc_observing_status, 'Format': tm_format, 'Shield Rate': shield_rate, 'Shield State': shield_state,
+             'Bus Current (DN)': bus_current_in_dn, 'Bus Current (A)': bus_current_in_amps, 'FEA Temp': fea_temp, 'HRC-I Voltage Steps': hrc_i_voltage, 'HRC-I Status': hrc_i_status, 'HRC-S Voltage Steps': hrc_s_voltage, 'HRC-S Status': hrc_s_status, 'TE Rate': te_rate, 'VE Rate': ve_rate}
 
     return telem
 
@@ -156,7 +164,7 @@ def get_args():
     parser = argparse.ArgumentParser(
         description='Monitor the VCDU telemetry stream, and send a message to the HRC Ops Slack with critical HRC telemetry whenever we are in comm.')
 
-    parser.add_argument("--fake_comm", help="Trick the code to think it's in comm. Useful for testing. ",
+    parser.add_argument("--fake_comm", help="Trick the code to think we are in comm. Useful for testing. ",
                         action="store_true")
 
     parser.add_argument("--report_errors", help="Print MAUDE exceptions (which are common) to the command line",
@@ -182,6 +190,7 @@ def main():
     # Initial settings
     recently_in_comm = False
     in_comm_counter = 0
+    telemetry_audit_counter = 0
 
     # Loop infinitely :)
     while True:
@@ -222,7 +231,7 @@ def main():
 
                 recently_in_comm = True
                 in_comm_counter += 1
-
+                telemetry_audit_counter += 1
 
                 time.sleep(5)  # Wait a few seconds for MAUDE to refresh
                 latest_vcdu = fetch.Msid(
@@ -242,9 +251,14 @@ def main():
                     send_slack_message(message, channel=bot_slack_channel)
                     # do a first audit of the telemetry upon announcement
 
-                if in_comm_counter == 10:
+                if telemetry_audit_counter == 10:
+                    # Reset the audit counter
+                    telemetry_audit_counter = 0
                     # Now we've waited a minute. Let's audit the telemetry and send amessage.
-                    audit_telemetry(start=comm_start_timestamp, channel=bot_slack_channel)
+                    # Check starting from the beginning of comm. We always check an ever-expanding
+                    # chunk of telemetry. This is a BIT redundant, but not bad.
+                    audit_telemetry(start=comm_start_timestamp,
+                                    channel=bot_slack_channel)
 
 
         except Exception as e:
@@ -256,7 +270,7 @@ def main():
                 print(f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) ERROR: {e}')
                 print("Heres the traceback:")
                 print(traceback.format_exc())
-                print("Pressing on...")
+                print(f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) Pressing on ...')
             elif not chatty:
                 # Then we're likely in operational mode. Ignore the errors on the command line.
                 print(

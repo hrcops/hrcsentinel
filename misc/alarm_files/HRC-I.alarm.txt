@@ -1,0 +1,127 @@
+# StateFile	 - Instrument State file. ex: HRC-I.alarm => use when HRC-I is selected 
+# MSID	     - FOT MSID 
+# EGSEMSID	 - EGSE MSID 
+# VALIDFLAG	 - Ignore/Use flag for this state: 0=ignore, 1=active 
+# LR         - Lower red limit 
+# LY         - Lower yellow limit 
+# UY         - Upper yellow limit 
+# uR         - Upper red limit 
+# uR         - Upper red limit 
+#
+StateFile	MSID	EGSEMSID	VALIDFLAG	LR	LY	UY	UR
+---------	----	--------	---------	--	--	--	--
+HRC-I.alarm		SelectedMotor	1	0	0	0	0
+HRC-I.alarm		M_CmdMvStepsA	1	-1	-1	1	2
+HRC-I.alarm		M_CmdMvStepsB	1	-1	0	2	2
+HRC-I.alarm		S_BusSelCeaALvps	1	-1	-1	1	1
+HRC-I.alarm		S_BusSelCeaBLvps	1	0	0	2	2
+HRC-I.alarm		S_BusSelImgHvps	1	-1	-1	1	1
+HRC-I.alarm		S_BusSelSpecHvps	1	-1	-1	1	1
+HRC-I.alarm		S_BusSelShldAHvps	1	-1	-1	1	1
+HRC-I.alarm		S_BusSelShldBHvps	1	-1	-1	1	1
+HRC-I.alarm		S_ShldPmtSelPreampA	1	-1	-1	1	1
+HRC-I.alarm		S_ShldPmtSelPreampB	1	0	0	2	2
+HRC-I.alarm		S_DetSelPreampA	1	-1	-1	1	1
+HRC-I.alarm		S_DetSelPreampB	1	0	0	2	2
+HRC-I.alarm		S_FailSafeMasterRelay	1	0	0	2	2
+HRC-I.alarm		S_FailSafeCalSrcRelay	1	0	0	2	2
+HRC-I.alarm		S_FailSafePYShutter	1	0	0	2	2
+HRC-I.alarm		S_FailSafeMYShutter	1	0	0	2	2
+HRC-I.alarm		M_StatMvStepsA	0	0	0	0	0
+HRC-I.alarm		M_StatMvStepsB	0	0	0	0	0
+HRC-I.alarm		M_ClosPriLSActive	0	0	0	0	0
+HRC-I.alarm		M_ClosSecLSActive	0	0	0	0	0
+HRC-I.alarm		M_OpenPriLSActive	0	0	0	0	0
+HRC-I.alarm		M_OpenSecLSActive	0	0	0	0	0
+HRC-I.alarm		S_P5LvpsA	1	0	0	2	2
+HRC-I.alarm		SecP5BusVA	1	4.0	4.5	5.25	5.5
+HRC-I.alarm		SecP15BusVA	1	13.00	14.00	16.00	17.00
+HRC-I.alarm		SecM15BusVA	1	-17.00	-16.00	-14.00	-13.00
+HRC-I.alarm		SecP24BusVA	1	22.0	23.0	25.0	26.0
+HRC-I.alarm		S_P5LvpsB	1	-1	-1	1	1
+HRC-I.alarm		SecP5BusVB	1	-.5	-.25	1	1.5
+HRC-I.alarm		SecP15BusVB	1	-.5	-.25	1	1.5
+HRC-I.alarm		SecM15BusVB	1	-1	-.5	.5	1
+HRC-I.alarm		SecP24BusVB	1	-.5	-.25	1	1.5
+HRC-I.alarm		S_LvpsP24	1	0	0	2	2
+HRC-I.alarm		S_LvpsP15	1	0	0	2	2
+HRC-I.alarm		S_LvpsM15	1	-1	-1	2	2
+HRC-I.alarm		P5BusMon	1	4.5	4.8	5.2	5.5
+HRC-I.alarm		P15BusMon	1	13.0	14.5	15.5	17
+HRC-I.alarm		M15BusMon	1	-17.0	-15.5	-14.5	-13.0
+HRC-I.alarm		P24BusMon	1	22	23.5	24.5	26
+HRC-I.alarm		PrimBusI	1	140	145	155	160
+HRC-I.alarm		PrimBusV	1	22	23	34	35
+HRC-I.alarm		S_ImHvps	1	-1	-1	1	2
+HRC-I.alarm		S_ImHvpsCurLim	1	-1	0	2	3
+HRC-I.alarm		V_ImTopHV	1	85	86	128	128
+HRC-I.alarm		V_ImBotHV	1	78	79	128	128
+HRC-I.alarm		V_ImTopHVStep	1	-1	-1	77	78
+HRC-I.alarm		V_ImBotHVStep	1	-1	-1	89	90
+HRC-I.alarm		S_SpHvps	1	-1	-1	1	1
+HRC-I.alarm		S_SpHvpsCurLim	1	0	0	2	3
+HRC-I.alarm		V_SpTopHV	1	126	126	128	128
+HRC-I.alarm		V_SpBotHV	1	126	126	128	128
+HRC-I.alarm		V_SpTopHVStep	1	-1	-1	1	1
+HRC-I.alarm		V_SpBotHVStep	1	-1	-1	1	1
+HRC-I.alarm		S_ShldA	1	-1	-1	1	1
+HRC-I.alarm		V_ShldAHV	1	126	126	128	128
+HRC-I.alarm		V_ShldAHVStep	1	-1	-1	1	1
+HRC-I.alarm		S_ShldB	1	-1	-1	1	2
+HRC-I.alarm		V_ShldBHV	1	81	83	128	128
+HRC-I.alarm		V_ShldBHVStep	1	-2	-1	8	9
+HRC-I.alarm		S_PriDoorLSOpen	1	-1	-1	1	1
+HRC-I.alarm		S_PriDoorLSClosed	1	-1	-1	1	1
+HRC-I.alarm		S_PYShutterLSHome	1	-1	0	2	3
+HRC-I.alarm		S_PYShutterLSMax	0	0	0	0	0
+HRC-I.alarm		S_MYShutterLSHome	1	-1	0	2	3
+HRC-I.alarm		S_MYShutterLSMax	0	0	0	0	0
+HRC-I.alarm		S_CalSrcPriLSHome	1	-1	0	2	3
+HRC-I.alarm		S_CalSrcPriLSMax	0	0	0	0	0
+HRC-I.alarm		R_tevt1	1	-1	-1	600	1000
+HRC-I.alarm		R_tevt2	1	-1	-1	600	1000
+HRC-I.alarm		R_vevt1	1	-1	-1	175	600
+HRC-I.alarm		R_vevt2	1	-1	-1	175	600
+HRC-I.alarm		R_shield1	1	-1	-1	8000	10000
+HRC-I.alarm		R_shield2	1	-1	-1	8000	10000
+HRC-I.alarm		T_Pmt1	1	-37.5	-35.5	45.5	47.5
+HRC-I.alarm		T_Pmt2	1	-37.5	-35.5	45.5	47.5
+HRC-I.alarm		T_OutDet1	1	-15	-13	35.5	37.5
+HRC-I.alarm		T_OutDet2	1	-12.5	-10.5	35.5	37.5
+HRC-I.alarm		T_FEABox	1	-37.5	-35.5	35.5	37.5
+HRC-I.alarm		T_CEABox	1	-37.5	-35.5	35.5	37.5
+HRC-I.alarm		T_PY	1	-40	-38	35.5	37.5
+HRC-I.alarm		T_MY	1	-37.5	-35.5	45.5	47.5
+HRC-I.alarm		T_Conduit	1	-37.5	-35.5	45.5	47.5
+HRC-I.alarm		T_Snout	1	-47.5	-45.5	45.5	47.5
+HRC-I.alarm		T_FePreAmp	1	-35	-32	50	55
+HRC-I.alarm		T_Spec	1	-15	-12	35	40
+HRC-I.alarm		T_Img	1	-15	-12	35	40
+HRC-I.alarm		T_Lvps	1	-35	-32	50	55
+HRC-I.alarm		T_SpHvps	1	-35	-32	50	55
+HRC-I.alarm		T_ImHvps	1	-35	-32	50	55
+HRC-I.alarm		T_Motor	1	-20	-17	45	50
+HRC-I.alarm		T_FEA	1	-35	-32	45	50
+HRC-I.alarm		T_CEA0	1	-35	-32	45	50
+HRC-I.alarm		T_CEA1	1	-35	-32	45	50
+HRC-I.alarm		ForcedCpU	1	-1	-1	1	1
+HRC-I.alarm		ForcedCpV	1	-1	-1	1	1
+HRC-I.alarm		CenterBlankHiCpU	1	254	254	256	256
+HRC-I.alarm		CenterBlankLoCpU	1	-1	-1	1	1
+HRC-I.alarm		CenterBlankHiCpV	1	254	254	256	256
+HRC-I.alarm		CenterBlankLoCpV	1	-1	-1	1	1
+HRC-I.alarm		WidthThreshold	1	2	2	4	4
+HRC-I.alarm		CalModeEnable	1	-1	-1	1	1
+HRC-I.alarm		S_InstSelect	1	0	0	2	2
+HRC-I.alarm		S_ObsMode	0	254	254	256	256
+HRC-I.alarm		DataFifoEnable	1	0	0	2	2
+HRC-I.alarm		EdgeBlkValidityEnable	1	-1	-1	1	1
+HRC-I.alarm		CtrBlkValidityEnable	1	-1	-1	1	1
+HRC-I.alarm		ULDValidityEnable	1	-1	-1	1	1
+HRC-I.alarm		WidValidityEnable	1	-1	-1	1	1
+HRC-I.alarm		ShldValidityEnable	1	0	0	2	3
+HRC-I.alarm		ULD	1	254	254	256	256
+HRC-I.alarm		LLD	1	130	130	132	132
+HRC-I.alarm		CalPulserSetting	1	126	126	129	130
+HRC-I.alarm		GridBias	1	140	140	142	142
+HRC-I.alarm		RangeSwSetting	1	184	184	186	186

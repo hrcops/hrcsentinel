@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-voltage_msids = ['2P24VAVL',  # 24 V bus EED voltage,
+voltage_msids_a = ['2P24VAVL',  # 24 V bus EED voltage,
                  '2P15VAVL',  # +15 V bus EED voltage
                  '2P05VAVL',  # +05 V bus EED voltage
                  '2N15VAVL'  # +15 V bus EED voltage
@@ -228,7 +228,7 @@ dashboard_tiles_latest = ["Bus Voltages",
                           "LVPS Plate Temp",
                           "Spec & Im HVPS Temps",
                           "Shield & Event Rates",
-                          "Spacecraft Pitch (Solar Array Angle)"]
+                          "Spacecraft Pitch, FIFO Resets, & FMT Changes"]
 
 dashboard_units_latest = ["Voltage (V)",
                           "Voltage (V)",
@@ -246,13 +246,13 @@ dashboard_units_latest = ["Voltage (V)",
 dashboard_limits_latest = [(-20, 30),
                            (25, 29),
                            (1.4, 2.7),
-                           (10, 40),
-                           (10, 40),
-                           (10, 40),
-                           (10, 40),
-                           (10, 40),
-                           (20, 40),
-                           (20, 40),
+                           (10, 45),
+                           (10, 45),
+                           (10, 45),
+                           (10, 45),
+                           (10, 45),
+                           (20, 45),
+                           (20, 45),
                            (10, 64000),
                            (40, 190)
                            ]

@@ -1,0 +1,5 @@
+FileName: HRC-S-IMG.alarm
+Location: /d0/hrc/src/rtcads/ALARMS/
+Description: Used by rtcads software for ALARM checks
+Change: To handle a new operating mode for the HRC
+Date: Feb 28 2015
