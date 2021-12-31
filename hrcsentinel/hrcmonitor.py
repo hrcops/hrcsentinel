@@ -12,7 +12,7 @@ import socket
 import traceback
 
 import plot_stylers
-from plot_dashboard import make_realtime_plot, make_ancillary_plots
+from plot_dashboard import comm_status_stamp, make_realtime_plot, make_ancillary_plots
 
 
 from cheta import fetch
@@ -27,33 +27,6 @@ plot_stylers.styleplots()
 # plt.rcParams['figure.constrained_layout.use'] = True
 
 
-def comm_status_stamp(comm_status, code_start_time, hostname, fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/'):
-
-    if comm_status is True:
-        commreport = f'In Comm!'
-        subtext = f'Comm appears to have started at {dt.datetime.now().strftime("%H:%M:%S")}'
-        textcolor = 'steelblue'
-    elif comm_status is False:
-        commreport = 'Not in Comm'
-        subtext = f'Out of Comm since {dt.datetime.now().strftime("%H:%M:%S")}'
-        textcolor = 'slategray'
-
-    code_uptime = dt.datetime.now() - code_start_time
-
-    fig = plt.figure(figsize=(8, 2))
-    plt.axis('off')
-    plt.tight_layout()
-    fig.patch.set_facecolor('white')
-
-    text = plt.text(0.001, 0.2, commreport, color=textcolor, fontsize=50)
-    subtext = plt.text(
-        0.004, 0.08, subtext, color=textcolor, fontsize=12)
-    uptime_text = plt.text(
-        0.004, 0.0001, 'HRCMonitor has been running on {} since {} ({} days)'.format(hostname, code_start_time.strftime("%Y %b %d %H:%M:%S"), code_uptime.days), color='slategray', fontsize=9)
-
-    plt.savefig(fig_save_directory + 'comm_status.png', dpi=300)
-    plt.close()
-
 
 def get_args():
     '''Fetch command line args, if given'''
@@ -62,6 +35,9 @@ def get_args():
         description='Monitor the VCDU telemetry stream, and update critical status plots whenever we are in comm.')
 
     parser.add_argument("--fake_comm", help="Trick the code to think we are in comm. Useful for testing. ",
+                        action="store_true")
+
+    parser.add_argument("--test", help="Run a full test of the code. ",
                         action="store_true")
 
     parser.add_argument("--force_cheta", help="Trick the code pull from Ska/CXC instead of MAUDE with a switch to fetch.data_source.set() ",
@@ -91,18 +67,14 @@ def main():
     fake_comm = args.fake_comm
     chatty = args.report_errors  # Will be True if user set --report_errors
 
-    if hostname == 'han-v':
-        if chatty:
-            print('Recognized host: {}'.format(hostname))
-        fig_save_directory = '/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/'
-    elif hostname == 'symmetry':
-        if chatty:
-            print('Recognized host: {}'.format(hostname))
-        fig_save_directory = '/Users/grant/Desktop/'
-    elif os.path.isfile('/Users/grant/.symmetry'):
-        if chatty:
-            print('Recognized host: {}'.format(hostname))
-        fig_save_directory = '/Users/grant/Desktop/'
+    allowed_hosts = {'han-v': '/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/',
+                     'symmetry': '/Users/grant/Desktop/',
+                     'semaphore': '/Users/grant/Desktop/'}
+
+    if hostname in allowed_hosts:
+        fig_save_directory = allowed_hosts[hostname]
+        print('Recognized host: {}. Plots will be saved to {}'.format(hostname, fig_save_directory))
+
     else:
         sys.exit('Hostname {} is not recognized. Exiting.'.format(
             hostname))
@@ -125,6 +97,27 @@ def main():
     in_comm_counter = 0
     out_of_comm_refresh_counter = 0
     iteration_counter = 0
+
+
+    if args.test is True:
+        print('Running HRCMonitor in TEST mode. We will try to make all plots just once...')
+        test_start_time = dt.datetime.now()
+        five_days_ago = dt.date.today() - dt.timedelta(days=5)
+        two_days_hence = dt.date.today() + dt.timedelta(days=2)
+
+
+        print('Testing creation of the Comm Status stamp...')
+        comm_status_stamp(comm_status=True, fig_save_directory=fig_save_directory,
+                            code_start_time=test_start_time, hostname=hostname)
+
+        print('Testing realtime plots...')
+        make_realtime_plot(plot_start=five_days_ago, fig_save_directory=fig_save_directory,
+                            plot_stop=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'), force_limits=True, show_in_gui=args.show_in_gui)
+
+        print('Testing ancillary plots...')
+        make_ancillary_plots(fig_save_directory=fig_save_directory)
+        plt.close('all')
+
 
     # Loop infinitely :)
     while True:

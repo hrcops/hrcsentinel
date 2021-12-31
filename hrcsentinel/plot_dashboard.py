@@ -35,6 +35,35 @@ from chandratime import convert_chandra_time, convert_to_doy
 from commbot import convert_bus_current_to_dn
 
 
+
+
+def comm_status_stamp(comm_status, code_start_time, hostname, fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/'):
+
+    if comm_status is True:
+        commreport = f'In Comm!'
+        subtext = f'Comm appears to have started at {dt.datetime.now().strftime("%H:%M:%S")}'
+        textcolor = 'steelblue'
+    elif comm_status is False:
+        commreport = 'Not in Comm'
+        subtext = f'Out of Comm since {dt.datetime.now().strftime("%H:%M:%S")}'
+        textcolor = 'slategray'
+
+    code_uptime = dt.datetime.now() - code_start_time
+
+    fig = plt.figure(figsize=(8, 2))
+    plt.axis('off')
+    plt.tight_layout()
+    fig.patch.set_facecolor('white')
+
+    text = plt.text(0.001, 0.2, commreport, color=textcolor, fontsize=50)
+    subtext = plt.text(
+        0.004, 0.08, subtext, color=textcolor, fontsize=12)
+    uptime_text = plt.text(
+        0.004, 0.0001, 'HRCMonitor has been running on {} since {} ({} days)'.format(hostname, code_start_time.strftime("%Y %b %d %H:%M:%S"), code_uptime.days), color='slategray', fontsize=9)
+
+    plt.savefig(fig_save_directory + 'comm_status.png', dpi=300)
+    plt.close()
+
 def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), plot_stop=dt.date.today() + dt.timedelta(days=2), sampling='full', current_hline=False, date_format=mdate.DateFormatter('%d %H'), force_limits=False, missionwide=False, fig_save_directory=None, show_in_gui=False, use_cheta=False):
     plotnum = -1
 
