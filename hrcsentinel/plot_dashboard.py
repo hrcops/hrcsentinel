@@ -134,7 +134,7 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
                 ax.axvline(dt.datetime.now(pytz.utc), color='gray', alpha=0.5)
 
                 if plotnum == 11:
-                    # then this is the Bus Voltage plot. I want to *underplot* FIFO resets
+                    # then this is the Pitch plot, and I want to underplot spacecraft pitch
                     fifo_resets = fetch.get_telem('2FIFOAVR', start=convert_to_doy(plot_start), sampling=sampling, max_fetch_Mb=100000, max_output_Mb=100000, quiet=True)
                     format_changes = fetch.get_telem('CCSDSTMF', start=convert_to_doy(plot_start), sampling=sampling, max_fetch_Mb=100000, max_output_Mb=100000, quiet=True)
                     ax_resets = ax.twinx()
@@ -144,7 +144,7 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
                     ax_resets.tick_params(labelright='off')
                     ax_resets.set_yticks([])
                     ax_resets.legend(prop={'size': 8}, loc=3)
-                    # ax.legend(prop={'size': 5}, loc=2) # make a really tiny main legend
+
 
             # Do mission-wide tweaking
             elif missionwide is True:
