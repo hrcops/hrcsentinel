@@ -140,6 +140,9 @@ def make_thermal_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/h
     ax.text(dt.datetime.now(pytz.utc), ax.get_ylim()[1]+0.3,
             'Now', fontsize=10, color='slategray')
 
+    ax.set_xlim(dt.datetime(2001, 1, 1),
+                dt.date.today() + dt.timedelta(days=180))
+
     fig.savefig(fig_save_directory + 'thermals.png',
                 dpi=300, bbox_inches='tight')
     fig.savefig(fig_save_directory + 'thermals.pdf',
@@ -199,7 +202,8 @@ def make_thermal_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/h
     ax.text(dt.datetime.now(pytz.utc), ax.get_ylim()[1]+0.3,
             'Now', fontsize=10, color='slategray')
 
-    ax.set_xlim(dt.datetime(2001, 1, 1), dt.datetime(2022, 1, 1))
+    ax.set_xlim(dt.datetime(2001, 1, 1),
+                dt.date.today() + dt.timedelta(days=180))
 
     fig.savefig(fig_save_directory + 'thermal_trends.png',
                 dpi=300, bbox_inches='tight')

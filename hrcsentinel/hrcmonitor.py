@@ -1,6 +1,5 @@
 #!/usr/bin/env conda run -n ska3 python
 
-import os
 import time
 import sys
 import argparse
@@ -14,18 +13,16 @@ import traceback
 import plot_stylers
 from plot_dashboard import comm_status_stamp, make_realtime_plot, make_ancillary_plots
 
-
 from cheta import fetch
 from cxotime import CxoTime
 
 from heartbeat import are_we_in_comm
+from plot_rates import make_shield_plot
 
-import matplotlib.pyplot as plt
 plot_stylers.styleplots()
 
 # Use the new Matplotlib 3.X constrained_layout solver in lieu of tight_layout()
 # plt.rcParams['figure.constrained_layout.use'] = True
-
 
 
 def get_args():
@@ -73,7 +70,8 @@ def main():
 
     if hostname in allowed_hosts:
         fig_save_directory = allowed_hosts[hostname]
-        print('Recognized host: {}. Plots will be saved to {}'.format(hostname, fig_save_directory))
+        print('Recognized host: {}. Plots will be saved to {}'.format(
+            hostname, fig_save_directory))
 
     else:
         sys.exit('Hostname {} is not recognized. Exiting.'.format(
@@ -98,26 +96,24 @@ def main():
     out_of_comm_refresh_counter = 0
     iteration_counter = 0
 
-
     if args.test is True:
         print('Running HRCMonitor in TEST mode. We will try to make all plots just once...')
         test_start_time = dt.datetime.now()
         five_days_ago = dt.date.today() - dt.timedelta(days=5)
         two_days_hence = dt.date.today() + dt.timedelta(days=2)
 
-
         print('Testing creation of the Comm Status stamp...')
         comm_status_stamp(comm_status=True, fig_save_directory=fig_save_directory,
-                            code_start_time=test_start_time, hostname=hostname)
+                          code_start_time=test_start_time, hostname=hostname)
 
         print('Testing realtime plots...')
         make_realtime_plot(plot_start=five_days_ago, fig_save_directory=fig_save_directory,
-                            plot_stop=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'), force_limits=True, show_in_gui=args.show_in_gui)
+                           plot_stop=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'), force_limits=True, show_in_gui=args.show_in_gui)
 
         print('Testing ancillary plots...')
         make_ancillary_plots(fig_save_directory=fig_save_directory)
         plt.close('all')
-
+        sys.exit()
 
     # Loop infinitely :)
     while True:
@@ -144,7 +140,6 @@ def main():
                     plt.close('all')
                     # Finally, reset the out-of-comm reset counter, because it can get into a state where it doesn't get below 20 again
                     out_of_comm_refresh_counter = 0
-
 
                 recently_in_comm = False
                 in_comm_counter = 0
@@ -202,6 +197,9 @@ def main():
 
                 make_realtime_plot(plot_start=five_days_ago, fig_save_directory=fig_save_directory,
                                    plot_stop=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'), force_limits=True, show_in_gui=args.show_in_gui)
+
+                make_shield_plot(fig_save_directory=fig_save_directory,
+                                 plot_start=five_days_ago, plot_stop=two_days_hence)
 
                 print('Saved Current Status Plots to {}'.format(
                     fig_save_directory), end="\r", flush=True)

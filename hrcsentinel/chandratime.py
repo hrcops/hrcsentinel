@@ -1,21 +1,8 @@
 #!/usr/bin/env conda run -n ska3 python
 
-import matplotlib.pyplot as plt
-from matplotlib import gridspec
+import numpy as np
 import matplotlib.dates as mdate
 import datetime as dt
-import Chandra.Time
-import Ska.engarchive.fetch as fetch
-import socket
-import traceback
-import pytz
-import time
-import shutil
-import sys
-import os
-import traceback
-import numpy as np
-import pandas as pd
 
 
 def convert_chandra_time(rawtimes):
@@ -46,6 +33,18 @@ def convert_chandra_time(rawtimes):
                    rawtimes[0]) / 86400. + plotdate_start
 
     return chandratime
+
+
+def convert_kadi_time(rawtime):
+    """[summary]
+
+    Args:
+        rawtime (str): A string of time in the format: 2021:347:17:35:14.442
+    """
+
+    datetime_object = "blah"
+
+    return datetime_object
 
 
 def convert_to_doy(datetime_start):

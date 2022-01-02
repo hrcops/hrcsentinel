@@ -1,18 +1,13 @@
 #!/usr/bin/env conda run -n ska3 python
 
-import time
-import shutil
 import sys
-import os
 import argparse
 
-# Third party modules
 import numpy as np
 import matplotlib
 import matplotlib.dates as mdate
 import matplotlib.pyplot as plt
 
-# Time is the fire in which we burn
 import datetime as dt
 import pytz
 
@@ -22,19 +17,17 @@ try:
 except ImportError:
     sys.exit("Failed to import cheta (aka ska). Make sure you're using the latest version of the ska runtime environment (and that you have the conda environment initialized!).")
 
-
 # HRCSentinel stuff
 import plot_stylers
 import msidlists
 import event_times
 
+from plot_rates import make_shield_plot
 from plot_thermals import make_thermal_plots
 from plot_motors import make_motor_plots
 
 from chandratime import convert_chandra_time, convert_to_doy
 from commbot import convert_bus_current_to_dn
-
-
 
 
 def comm_status_stamp(comm_status, code_start_time, hostname, fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/'):
@@ -64,6 +57,7 @@ def comm_status_stamp(comm_status, code_start_time, hostname, fig_save_directory
     plt.savefig(fig_save_directory + 'comm_status.png', dpi=300)
     plt.close()
 
+
 def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), plot_stop=dt.date.today() + dt.timedelta(days=2), sampling='full', current_hline=False, date_format=mdate.DateFormatter('%d %H'), force_limits=False, missionwide=False, fig_save_directory=None, show_in_gui=False, use_cheta=False):
     plotnum = -1
 
@@ -73,7 +67,6 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
 
     if (sampling == 'full') and (use_cheta is False):
         fetch.data_source.set('maude allow_subset=False')
-
 
     if missionwide is False:
         # Then override the existing dashboard_msid* with the missionwide one
@@ -95,7 +88,8 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
             plotnum += 1
             for msid in dashboard_msids[plotnum]:
 
-                data = fetch.get_telem(msid, start=convert_to_doy(plot_start), sampling=sampling, max_fetch_Mb=100000, max_output_Mb=100000, quiet=True)
+                data = fetch.get_telem(msid, start=convert_to_doy(
+                    plot_start), sampling=sampling, max_fetch_Mb=100000, max_output_Mb=100000, quiet=True)
 
                 print('Fetching from {} at {} resolution: {}'.format(
                     convert_to_doy(plot_start), sampling, msid), end='\r', flush=True)
@@ -135,16 +129,18 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
 
                 if plotnum == 11:
                     # then this is the Pitch plot, and I want to underplot spacecraft pitch
-                    fifo_resets = fetch.get_telem('2FIFOAVR', start=convert_to_doy(plot_start), sampling=sampling, max_fetch_Mb=100000, max_output_Mb=100000, quiet=True)
-                    format_changes = fetch.get_telem('CCSDSTMF', start=convert_to_doy(plot_start), sampling=sampling, max_fetch_Mb=100000, max_output_Mb=100000, quiet=True)
+                    fifo_resets = fetch.get_telem('2FIFOAVR', start=convert_to_doy(
+                        plot_start), sampling=sampling, max_fetch_Mb=100000, max_output_Mb=100000, quiet=True)
+                    format_changes = fetch.get_telem('CCSDSTMF', start=convert_to_doy(
+                        plot_start), sampling=sampling, max_fetch_Mb=100000, max_output_Mb=100000, quiet=True)
                     ax_resets = ax.twinx()
                     ax_resets.plot_date(convert_chandra_time(
                         fifo_resets['2FIFOAVR'].times), fifo_resets['2FIFOAVR'].vals, linestyle='solid', linewidth=0.5, marker=None, alpha=0.7,  color=plot_stylers.blue, label='FIFO Reset', zorder=0, rasterized=True)
-                    ax_resets.plot_date(convert_chandra_time(format_changes['CCSDSTMF'].times), format_changes['CCSDSTMF'].vals, linestyle='solid', linewidth=0.5, marker=None, alpha=0.7,  color=plot_stylers.purple, label='Format Changes', zorder=0, rasterized=True)
+                    ax_resets.plot_date(convert_chandra_time(format_changes['CCSDSTMF'].times), format_changes['CCSDSTMF'].vals, linestyle='solid',
+                                        linewidth=0.5, marker=None, alpha=0.7,  color=plot_stylers.purple, label='Format Changes', zorder=0, rasterized=True)
                     ax_resets.tick_params(labelright='off')
                     ax_resets.set_yticks([])
                     ax_resets.legend(prop={'size': 8}, loc=3)
-
 
             # Do mission-wide tweaking
             elif missionwide is True:
@@ -156,8 +152,10 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
                                        '2N15VAVL'  # +15 V bus EED voltage
                                        ]
                     for msid in voltage_msids_a:
-                        a_side_voltages = fetch.get_telem(msid, start=convert_to_doy(plot_start), stop=convert_to_doy(event_times.time_of_cap_1543), sampling=sampling, max_fetch_Mb=100000, max_output_Mb=100000, quiet=True)
-                        ax.plot_date(convert_chandra_time(a_side_voltages[msid].times), a_side_voltages[msid].means, color=plot_stylers.green, markersize=0.3, alpha=0.3, label=msid, zorder=1, rasterized=True)
+                        a_side_voltages = fetch.get_telem(msid, start=convert_to_doy(plot_start), stop=convert_to_doy(
+                            event_times.time_of_cap_1543), sampling=sampling, max_fetch_Mb=100000, max_output_Mb=100000, quiet=True)
+                        ax.plot_date(convert_chandra_time(a_side_voltages[msid].times), a_side_voltages[msid].means,
+                                     color=plot_stylers.green, markersize=0.3, alpha=0.3, label=msid, zorder=1, rasterized=True)
 
                     # Label the B-side swap (Aug 2020)
                     ax.text(event_times.time_of_cap_1543, ax.get_ylim()[
@@ -168,7 +166,6 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
                 if plotnum == 11:
                     # then we're plotting AntiCo shield rate, not pitch, so log it
                     ax.set_yscale('log')
-
 
             if plotnum == 2:
                 # Then this is the Bus Current plot. Overplot the CAUTION and WARNING limits
@@ -229,6 +226,14 @@ def make_ancillary_plots(fig_save_directory):
 
     five_days_ago = dt.date.today() - dt.timedelta(days=5)
     two_days_hence = dt.date.today() + dt.timedelta(days=2)
+
+    fetch.data_source.set('maude allow_subset=True')
+    print('Updating Event Rates Plot', end="\r", flush=True)
+    make_shield_plot(fig_save_directory=fig_save_directory,
+                     plot_start=five_days_ago, plot_stop=two_days_hence)
+    print('Done', end="\r", flush=True)
+    # Clear the command line manually
+    sys.stdout.write("\033[K")
 
     fetch.data_source.set('cxc')
     make_realtime_plot(fig_save_directory=fig_save_directory, plot_start=dt.datetime(
