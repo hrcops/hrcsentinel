@@ -53,7 +53,7 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
                 dpi=300, bbox_inches='tight')
     fig.savefig(fig_save_directory + 'events.pdf',
                 dpi=300, bbox_inches='tight')
-    plt.close()
+    plt.close('all')
     fetch.data_source.set('cxc')
 
 
