@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # I use dotfiles in my home directory to ID the machine type i'm on.
-if [ -f "/Users/grant/.symmetry" ]; then
+if [ -f "/Users/grant/.symmetry" -o -f "/Users/grant/.semaphore" ]; then
   skainit='conda activate ska3; export PS1="ska3-$PS1"'
 fi
 
@@ -12,7 +12,7 @@ fi
 # Initialize the ska environment. Screen will inherit it
 $skainit
 
-screen -S commbot -d -m python commbot.py --report_errors
+screen -S commbot -dm bash -c 'sleep 5; skainit; sleep 5; python commbot.py --report_errors'
 echo "Starting commbot.py in a separate screen (use screen -r commbot) to attach to it" 
-screen -S hrcsentinel -d -m python hrcsentinel.py --report_errors
-echo "Starting hrcsentinel.py in a separate screen (use screen -r hrcsentinel) to attach to it"
+#screen -S hrcsentinel -d -m python hrcsentinel.py --report_errors
+#echo "Starting hrcsentinel.py in a separate screen (use screen -r hrcsentinel) to attach to it"
