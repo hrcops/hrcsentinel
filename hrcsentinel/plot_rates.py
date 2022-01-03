@@ -31,8 +31,8 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
 
     ax.set_ylabel(r'Event Rates (counts s$^{-1}$)', fontsize=10)
     ax.set_xlabel('Date', fontsize=10)
-    ax.set_yscale('symlog')
-    ax.set_ylim(0, 2000000)
+    ax.set_yscale('log')  # symlog will show zero but it's kinda not needed
+    ax.set_ylim(10, 2000000)
     ax.set_xlim(plot_start, plot_stop)
     ax.set_title('Shield & Detector Rates as of {} EST'.format(
         dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), color='slategray', size=10)
