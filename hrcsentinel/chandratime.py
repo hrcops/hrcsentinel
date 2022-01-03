@@ -35,17 +35,6 @@ def convert_chandra_time(rawtimes):
     return chandratime
 
 
-def convert_kadi_time(rawtime):
-    """[summary]
-
-    Args:
-        rawtime (str): A string of time in the format: 2021:347:17:35:14.442
-    """
-
-    datetime_object = "blah"
-
-    return datetime_object
-
 
 def convert_to_doy(datetime_start):
     '''
