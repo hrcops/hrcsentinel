@@ -14,6 +14,7 @@ import pytz
 # Ska / Cheta
 try:
     from cheta import fetch
+    from kadi import events
 except ImportError:
     sys.exit("Failed to import cheta (aka ska). Make sure you're using the latest version of the ska runtime environment (and that you have the conda environment initialized!).")
 
@@ -26,8 +27,9 @@ from plot_rates import make_shield_plot
 from plot_thermals import make_thermal_plots
 from plot_motors import make_motor_plots
 
-from chandratime import convert_chandra_time, convert_to_doy
+from chandratime import convert_chandra_time, convert_to_doy, calc_time_to_next_comm
 from commbot import convert_bus_current_to_dn
+
 
 
 def comm_status_stamp(comm_status, code_start_time, hostname, fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/'):
@@ -37,8 +39,13 @@ def comm_status_stamp(comm_status, code_start_time, hostname, fig_save_directory
         subtext = f'Comm appears to have started at {dt.datetime.now().strftime("%H:%M:%S")}'
         textcolor = 'steelblue'
     elif comm_status is False:
+        # Then figure out when the next comm is:
+        comms = events.dsn_comms.filter(
+            start=convert_to_doy(dt.datetime.utcnow())).table
+
+        next_comm_string = calc_time_to_next_comm()
         commreport = 'Not in Comm'
-        subtext = f'Out of Comm since {dt.datetime.now().strftime("%H:%M:%S")}'
+        subtext = f'Next Comm should be in {next_comm_string}'
         textcolor = 'slategray'
 
     code_uptime = dt.datetime.now() - code_start_time

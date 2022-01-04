@@ -126,15 +126,17 @@ def main():
             # Generate the first comm status stamp and create code start date
             if iteration_counter == 0:
                 code_start_time = dt.datetime.now()
-                comm_status_stamp(comm_status=in_comm, fig_save_directory=fig_save_directory,
-                                  code_start_time=code_start_time, hostname=hostname)
 
+            comm_status_stamp(comm_status=in_comm, fig_save_directory=fig_save_directory,
+                              code_start_time=code_start_time, hostname=hostname)
+
+            # We ALWAYS update the comm status stamp
             if not in_comm:
 
                 if recently_in_comm:
                     # Then update the text stamp
-                    comm_status_stamp(comm_status=in_comm, code_start_time=code_start_time,
-                                      fig_save_directory=fig_save_directory, hostname=hostname)
+                    # comm_status_stamp(comm_status=in_comm, code_start_time=code_start_time,
+                    #                   fig_save_directory=fig_save_directory, hostname=hostname)
 
                     make_ancillary_plots(fig_save_directory=fig_save_directory)
                     plt.close('all')
@@ -172,10 +174,10 @@ def main():
                 recently_in_comm = True
                 in_comm_counter += 1
 
-                if in_comm_counter == 1:
-                    # Then update the text stamp
-                    comm_status_stamp(comm_status=in_comm, code_start_time=code_start_time,
-                                      fig_save_directory=fig_save_directory, hostname=hostname)
+                # if in_comm_counter == 1:
+                #     # Then update the text stamp
+                #     comm_status_stamp(comm_status=in_comm, code_start_time=code_start_time,
+                #                       fig_save_directory=fig_save_directory, hostname=hostname)
 
                 if in_comm_counter == 5:
                     # Then create the mission-wide status plots
