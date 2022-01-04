@@ -16,7 +16,7 @@ from cxotime import CxoTime
 
 
 import datetime as dt
-from chandratime import convert_chandra_time, convert_to_doy
+from chandratime import convert_chandra_time, convert_to_doy, calc_time_to_next_comm
 from heartbeat import are_we_in_comm
 
 
@@ -24,7 +24,6 @@ def audit_telemetry(start, channel=None):
     # Want to implement this!!!
 
     print(f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) TELEMETRY AUDIT', end='\r')
-
 
     critical_msidlist = {'2C05PALV': (4.9, 5.1),
                          '2C15PALV': (14.9, 15.1),
@@ -36,10 +35,11 @@ def audit_telemetry(start, channel=None):
         list(critical_msidlist.keys()), start=start, quiet=True, unit_system='eng')
 
     for msid in list(critical_msidlist.keys()):
-        out_of_limit_mask = (values_since_comm_start[msid].vals < critical_msidlist[msid][0]) or (values_since_comm_start[msid].vals > critical_msidlist[msid][1])
+        out_of_limit_mask = (values_since_comm_start[msid].vals < critical_msidlist[msid][0]) or (
+            values_since_comm_start[msid].vals > critical_msidlist[msid][1])
         if sum(out_of_limit_mask) > 3:
-            send_slack_message(f'{msid} shows out-of-green-range values: {values_since_comm_start[out_of_limit_mask][0]}. This is beyond CAUTION/WARN limit of {critical_msidlist[msid]}', channel=channel)
-
+            send_slack_message(
+                f'{msid} shows out-of-green-range values: {values_since_comm_start[out_of_limit_mask][0]}. This is beyond CAUTION/WARN limit of {critical_msidlist[msid]}', channel=channel)
 
 
 def send_slack_message(message, channel='#comm_passes', blocks=None):
@@ -210,7 +210,7 @@ def main():
                     # Assuming the end of comm is real, then comm has recently ended and we need to report that.
                     telem = grab_critical_telemetry(
                         start=CxoTime.now() - 1800 * u.s)
-                    message = f"It appears that COMM has ended as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}` \n\n HRC was *{telem['HRC observing status']}* \n Last telemetry was in `{telem['Format']}` \n\n *HRC-I* was {telem['HRC-I Status']} \n *HRC-S* was {telem['HRC-S Status']} \n\n *Shields were {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n\n *HRC-I* Voltage Steps were (Top/Bottom) = `{telem['HRC-I Voltage Steps'][0]}/{telem['HRC-I Voltage Steps'][1]}` \n *HRC-S* Voltage Steps were (Top/Bottom) = `{telem['HRC-S Voltage Steps'][0]}/{telem['HRC-S Voltage Steps'][1]}`  \n\n *Bus Current* was `{telem['Bus Current (DN)']} DN` (`{telem['Bus Current (A)']} A`)  \n\n *FEA Temperature* was `{telem['FEA Temp']} C`"
+                    message = f"It appears that COMM has ended as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}` \n\n Next COMM is expected in {calc_time_to_next_comm()} \n\n HRC was *{telem['HRC observing status']}* \n Last telemetry was in `{telem['Format']}` \n\n *HRC-I* was {telem['HRC-I Status']} \n *HRC-S* was {telem['HRC-S Status']} \n\n *Shields were {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n\n *HRC-I* Voltage Steps were (Top/Bottom) = `{telem['HRC-I Voltage Steps'][0]}/{telem['HRC-I Voltage Steps'][1]}` \n *HRC-S* Voltage Steps were (Top/Bottom) = `{telem['HRC-S Voltage Steps'][0]}/{telem['HRC-S Voltage Steps'][1]}`  \n\n *Bus Current* was `{telem['Bus Current (DN)']} DN` (`{telem['Bus Current (A)']} A`)  \n\n *FEA Temperature* was `{telem['FEA Temp']} C`"
                     send_slack_message(message, channel=bot_slack_channel)
 
                 recently_in_comm = False
@@ -260,7 +260,6 @@ def main():
                     audit_telemetry(start=comm_start_timestamp,
                                     channel=bot_slack_channel)
 
-
         except Exception as e:
             # MAUDE queries fail regularly as TM is streaming in (mismatched array sizes as data is being populated), 404s, etc.
             # The solution is almost always to simply try again. Therefore this script just presses on in the event of an Exception.
@@ -270,7 +269,8 @@ def main():
                 print(f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) ERROR: {e}')
                 print("Heres the traceback:")
                 print(traceback.format_exc())
-                print(f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) Pressing on ...')
+                print(
+                    f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) Pressing on ...')
             elif not chatty:
                 # Then we're likely in operational mode. Ignore the errors on the command line.
                 print(
