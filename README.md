@@ -12,10 +12,25 @@ __Real-time trending, telemetry auditing, and comm alerts for the *Chandra* High
 
 * `HRCCommBot`, a Slack Bot that provides real-time DSN comm pass alerts with telemetry auditing.
 
-See the screenshots below for the output from these two codes:
 ![Screenshots](misc/screenshots.png)
 
-While I've happily made this code public, it will unfortunately only work on *Chandra* [Operations Control Center](https://www.si.edu/newsdesk/releases/virtual-behind-scenes-tour-chandra-operations-control-center-now-available) EGSE machines and the [Center for Astrophysics](www.cfa.harvard.edu) LAN. This is because it heavily relies on *Chandra*-internal packages/tools, namely `MAUDE` (for real-time processed telemetry) and the `ska/cheta` archives (for long-term monitoring). *This code will therefore probably not work on your machine!*. If you are a *Chandra* Flight Operations Team member and you would like help adapting this code for your use, please contact [Grant Tremblay](www.granttremblay.com).
+This code will only work on *Chandra* [Operations Control Center](https://www.si.edu/newsdesk/releases/virtual-behind-scenes-tour-chandra-operations-control-center-now-available) EGSE machines and the [Center for Astrophysics](www.cfa.harvard.edu) LAN. This is because it heavily relies on *Chandra*-internal tools, namely `MAUDE` (for real-time processed telemetry) and the `ska/cheta` archives (for long-term monitoring). Therefore, if you're a member of the public, *this code will probably not work on your machine!* (but you're still welcome to see it!). If you are a *Chandra* Flight Operations Team member and you would like help adapting this code for your use, please contact [Grant Tremblay](www.granttremblay.com).
+
+## `HRCSentinel` in more detail
+
+At a basic level, the codes main components are:
+* `commbot.py`, which watches for every DSN Comm Pass with *Chandra*. At the start and end of every Comm pass, it sends a Slack message to our channel summarizing the current status of the HRC.
+
+* `hrcmonitor.py`, which creates a large number of plots that are viewable [here](https://icxc.cfa.harvard.edu/hrcops/hrcmonitor/). These plots include:
+
+  * A 12-pane status dashboard of all relevant HRC telelmetry (temperatures, voltages, etc.). These plots show all telemetry over a 7 day window. A vertical line is used to indicate the current time.
+  * A continually updated plot of anti-coincidence shield and detector event rates. This plot includes markers for all scheduled DSN comm passes. It will eventually incorporate the new GOES Shield proxy.
+  * Twenty-year mission-wide plots of all MSIDs shown on the current status dashboard. Yellow lines are used to indicate the very latest telemetry, so that currrent temperatures / voltages (etc.) can be compared with mission-wide trends.
+  * Two detailed plots of thermal trending over the mission lifetime.
+  * Motor Control status plots. These should NEVER move. The motor control dashboard is for piece of mind and should always show straight horizontal lines. No step functions! :)
+
+
+
 
 ## How to run `HRCSentinel`
 
