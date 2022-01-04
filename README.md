@@ -32,7 +32,7 @@ At a basic level, the codes main components are:
   * Two detailed plots of thermal trending over the mission lifetime.
   * Motor Control status plots. These should NEVER move. The motor control dashboard is for piece of mind and should always show straight horizontal lines. No step functions! :)
 
-
+![An example of an HRCCommBot Alert on Slack](misc/hrcmonitor_examples.png)
 
 
 ## How to run `HRCSentinel`

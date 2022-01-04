@@ -1,17 +1,12 @@
 #!/usr/bin/env python
 
-import argparse
 import collections
-import sys
 import time
-from pathlib import Path
 
 import numpy as np
 import requests
-import tables
 from astropy.table import Table
 from astropy.time import Time
-from Chandra.Time import DateTime
 
 from chandratime import convert_chandra_time
 
