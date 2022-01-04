@@ -1,22 +1,21 @@
 #!/usr/bin/env python
 
-import sys
-import requests
-import json
-import traceback
 import argparse
+import datetime as dt
+import json
 import socket
+import sys
 import time
+import traceback
 
-import numpy as np
 import astropy.units as u
-
+import numpy as np
+import requests
 from cheta import fetch
 from cxotime import CxoTime
 
-
-import datetime as dt
-from chandratime import convert_chandra_time, convert_to_doy, calc_time_to_next_comm
+from chandratime import (calc_time_to_next_comm, convert_chandra_time,
+                         convert_to_doy)
 from heartbeat import are_we_in_comm
 
 
@@ -216,7 +215,7 @@ def main():
                 recently_in_comm = False
                 in_comm_counter = 0
                 print(
-                    f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) Not in Comm.                                 ', end='\r\r\r')
+                    f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) Not in Comm. Next Comm expected in {calc_time_to_next_comm()}.                               ', end='\r\r\r')
 
             if in_comm:
                 if fake_comm:

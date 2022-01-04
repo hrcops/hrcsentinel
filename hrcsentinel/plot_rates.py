@@ -1,15 +1,25 @@
 #!/usr/bin/env conda run -n ska3 python
+import collections
+import datetime as dt
+import socket
 import sys
+import time
+from pathlib import Path
+
+import numpy as np
+import pytz
+import requests
+from astropy.table import Table
+from astropy.time import Time
+from Chandra.Time import DateTime
+from cheta import fetch
+from kadi import events
 from matplotlib import pyplot as plt
 
-import socket
-from kadi import events
-from cheta import fetch
-import datetime as dt
-import pytz
-
-from chandratime import convert_chandra_time, convert_to_doy, calc_time_to_next_comm
 import plot_stylers
+from chandratime import (calc_time_to_next_comm, convert_chandra_time,
+                         convert_to_doy)
+from goes_proxy import get_goes_proxy
 
 
 def grab_orbit_metadata(plot_start=dt.date.today() - dt.timedelta(days=5), plot_stop=dt.date.today() + dt.timedelta(days=3)):
@@ -54,13 +64,21 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
         ax.plot_date(convert_chandra_time(
             data[msid].times), data[msid].vals, marker='o', markersize=1.5, label=namelist[i])
 
+    # Try to plot the GOES proxy rates. Don't die if it fails.
+    try:
+        goes_times, goes_rates = get_goes_proxy()
+        ax.plot_date(goes_times, goes_rates, marker=None, linestyle='-',
+                     alpha=0.8, zorder=0, label='GOES-16 Proxy')
+    except Exception:
+        pass
+
     ax.set_ylabel(r'Event Rates (counts s$^{-1}$)', fontsize=10)
     ax.set_xlabel('Date', fontsize=10)
     ax.set_yscale('log')  # symlog will show zero but it's kinda not needed
     ax.set_ylim(10, 2000000)
     ax.set_xlim(plot_start, plot_stop)
     ax.set_title('Shield & Detector Rates as of {} EST | Next Comm is expected in {}'.format(
-        dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S"), calc_time_to_next_comm()), color='slategray', size=10)
+        dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S"), calc_time_to_next_comm()), color='slategray', size=12, pad=20)
     ax.axhline(60000, color=plot_stylers.red, linestyle='-',
                linewidth=2, label='SCS 107 Limit')
     ax.legend(prop={'size': 12}, loc=2)

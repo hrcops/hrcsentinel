@@ -1,8 +1,10 @@
 #!/usr/bin/env conda run -n ska3 python
 
-import numpy as np
-import matplotlib.dates as mdate
 import datetime as dt
+
+import matplotlib.dates as mdate
+import numpy as np
+import pytz
 from kadi import events
 
 
@@ -69,9 +71,16 @@ def calc_time_to_next_comm():
     comm_tdelta = None
 
     for i in range(0, 4):
-        comm_tdelta = dt.datetime.strptime(comms['start'][i], "%Y:%j:%H:%M:%S.%f").replace(
-            tzinfo=None) - dt.datetime.utcnow().replace(tzinfo=None).replace(
-            tzinfo=None)
+        raw_comm_start = dt.datetime.strptime(
+            comms['start'][i], "%Y:%j:%H:%M:%S.%f")
+
+        est = pytz.timezone('US/Eastern')
+        utc = pytz.utc
+
+        localized_comm_start = utc.localize(raw_comm_start)
+        # I DO NOT understand why DST is not being accounted for! the subtraction of 1 hour is a brute-force fix.
+        localized_now = est.localize(dt.datetime.now()) - dt.timedelta(hours=1)
+        comm_tdelta = localized_comm_start - localized_now
 
         if comm_tdelta.total_seconds() > 0:
             # Then we have (hopefully) succeeded, and now need only format a string to return.

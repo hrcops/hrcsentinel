@@ -19,7 +19,10 @@ This code will only work on *Chandra* [Operations Control Center](https://www.si
 ## `HRCSentinel` in more detail
 
 At a basic level, the codes main components are:
-* `commbot.py`, which watches for every DSN Comm Pass with *Chandra*. At the start and end of every Comm pass, it sends a Slack message to our channel summarizing the current status of the HRC.
+* `commbot.py`, which watches for every DSN Comm Pass with *Chandra*. At the start and end of every Comm pass, it sends a Slack message to our channel summarizing the current status of the HRC. `HRCCommBot` is also used to send Slack alerts (i.e. mobile & desktop push notifications) in the event that `HRCMonitor`'s telemetry monitoring detects an anomaly.
+
+![An example of an HRCCommBot Alert on Slack](misc/commbot_1.png)
+
 
 * `hrcmonitor.py`, which creates a large number of plots that are viewable [here](https://icxc.cfa.harvard.edu/hrcops/hrcmonitor/). These plots include:
 
@@ -94,6 +97,12 @@ python commbot.py --report_errors
 ```
 
 ### Other utilities
+
+```python
+python plot_rates.py
+```
+will plot a 7 day view of the HRC AntiCoincidence shield rate, as well as total
+and valid detector event rates. It will also plot the GOES-16 proxy for the AntiCo shield rate (if available).
 
 You can also call `plot_dashboard.py` directly from the command line for a custom dashboard view with
 user-defined date ranges and data sampling. For example,

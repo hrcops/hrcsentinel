@@ -1,22 +1,21 @@
 #!/usr/bin/env conda run -n ska3 python
 
-import time
-import sys
 import argparse
-
-import matplotlib
 import datetime as dt
-
 import socket
+import sys
+import time
 import traceback
 
-import plot_stylers
-from plot_dashboard import comm_status_stamp, make_realtime_plot, make_ancillary_plots
-
+import matplotlib
 from cheta import fetch
 from cxotime import CxoTime
 
+import plot_stylers
+from chandratime import calc_time_to_next_comm
 from heartbeat import are_we_in_comm
+from plot_dashboard import (comm_status_stamp, make_ancillary_plots,
+                            make_realtime_plot)
 from plot_rates import make_shield_plot
 
 plot_stylers.styleplots()
@@ -84,9 +83,9 @@ def main():
         backend = 'MacOSX'
     matplotlib.use(backend, force=True)
 
-    from matplotlib import gridspec
     import matplotlib.dates as mdate
     import matplotlib.pyplot as plt
+    from matplotlib import gridspec
     if chatty:
         print("Using Matplotlib backend:", matplotlib.get_backend())
 
@@ -113,6 +112,7 @@ def main():
         print('Testing ancillary plots...')
         make_ancillary_plots(fig_save_directory=fig_save_directory)
         plt.close('all')
+        print('Tests completed. Exiting.')
         sys.exit()
 
     # Loop infinitely :)
@@ -135,8 +135,8 @@ def main():
 
                 if recently_in_comm:
                     # Then update the text stamp
-                    # comm_status_stamp(comm_status=in_comm, code_start_time=code_start_time,
-                    #                   fig_save_directory=fig_save_directory, hostname=hostname)
+                    comm_status_stamp(comm_status=in_comm, code_start_time=code_start_time,
+                                      fig_save_directory=fig_save_directory, hostname=hostname)
 
                     make_ancillary_plots(fig_save_directory=fig_save_directory)
                     plt.close('all')
@@ -147,14 +147,14 @@ def main():
                 in_comm_counter = 0
                 out_of_comm_refresh_counter += 1
                 print(
-                    f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) Not in Comm.                                 ', end='\r\r\r')
+                    f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) Not in Comm. Next Comm expected in {calc_time_to_next_comm()}.                                 ', end='\r\r\r')
 
                 if out_of_comm_refresh_counter == 20:
 
                     # Explicitly set maude each time, because ancillary plots use CXC
                     fetch.data_source.set('maude allow_subset=False')
                     # Refresh the plots every 20th iteration out-of-comm
-                    print("Performing out-of-comm plot refresh at {}".format(
+                    print("Performing out-of-comm plot refresh at {}                                      ".format(
                         dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), flush=True)
                     sys.stdout.write("\033[K")
                     five_days_ago = dt.date.today() - dt.timedelta(days=5)

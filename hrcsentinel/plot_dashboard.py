@@ -1,14 +1,13 @@
 #!/usr/bin/env conda run -n ska3 python
 
-import sys
 import argparse
+import datetime as dt
+import sys
 
-import numpy as np
 import matplotlib
 import matplotlib.dates as mdate
 import matplotlib.pyplot as plt
-
-import datetime as dt
+import numpy as np
 import pytz
 
 # Ska / Cheta
@@ -18,18 +17,16 @@ try:
 except ImportError:
     sys.exit("Failed to import cheta (aka ska). Make sure you're using the latest version of the ska runtime environment (and that you have the conda environment initialized!).")
 
+import event_times
+import msidlists
 # HRCSentinel stuff
 import plot_stylers
-import msidlists
-import event_times
-
+from chandratime import (calc_time_to_next_comm, convert_chandra_time,
+                         convert_to_doy)
+from commbot import convert_bus_current_to_dn
+from plot_motors import make_motor_plots
 from plot_rates import make_shield_plot
 from plot_thermals import make_thermal_plots
-from plot_motors import make_motor_plots
-
-from chandratime import convert_chandra_time, convert_to_doy, calc_time_to_next_comm
-from commbot import convert_bus_current_to_dn
-
 
 
 def comm_status_stamp(comm_status, code_start_time, hostname, fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/'):
@@ -62,7 +59,7 @@ def comm_status_stamp(comm_status, code_start_time, hostname, fig_save_directory
         0.004, 0.0001, 'HRCMonitor has been running on {} since {} ({} days)'.format(hostname, code_start_time.strftime("%Y %b %d %H:%M:%S"), code_uptime.days), color='slategray', fontsize=9)
 
     plt.savefig(fig_save_directory + 'comm_status.png', dpi=300)
-    plt.close()
+    plt.close('all')
 
 
 def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), plot_stop=dt.date.today() + dt.timedelta(days=2), sampling='full', current_hline=False, date_format=mdate.DateFormatter('%d %H'), force_limits=False, missionwide=False, fig_save_directory=None, show_in_gui=False, use_cheta=False):
