@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import os
 import argparse
 import datetime as dt
 import json
@@ -17,6 +18,9 @@ from cxotime import CxoTime
 from chandratime import (calc_time_to_next_comm, convert_chandra_time,
                          convert_to_doy)
 from heartbeat import are_we_in_comm
+
+import psutil
+process = psutil.Process(os.getpid())
 
 
 def audit_telemetry(start, channel=None):
@@ -215,8 +219,7 @@ def main():
                 recently_in_comm = False
                 in_comm_counter = 0
                 print(
-                    f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) Not in Comm. Next Comm expected in {calc_time_to_next_comm()}.                               ', end='\r\r\r')
-
+                    f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) Not in Comm.                                ', end='\r')
             if in_comm:
                 if fake_comm:
                     # two days to make sure we grab previous comm

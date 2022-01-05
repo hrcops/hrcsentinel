@@ -6,6 +6,7 @@ import socket
 import sys
 import time
 import traceback
+import gc
 
 import matplotlib
 from cheta import fetch
@@ -147,7 +148,7 @@ def main():
                 in_comm_counter = 0
                 out_of_comm_refresh_counter += 1
                 print(
-                    f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) Not in Comm. Next Comm expected in {calc_time_to_next_comm()}.                                 ', end='\r\r\r')
+                    f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) Not in Comm.                                  ', end='\r\r\r')
 
                 if out_of_comm_refresh_counter == 20:
 

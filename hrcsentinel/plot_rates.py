@@ -45,7 +45,7 @@ def grab_orbit_metadata(plot_start=dt.date.today() - dt.timedelta(days=5), plot_
     return orbits, comms, comm_start_times, radzone_start_times, radzone_stop_times
 
 
-def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/', plot_start=dt.date.today() - dt.timedelta(days=5), plot_stop=dt.date.today() + dt.timedelta(days=3), show_plot=False):
+def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/', plot_start=dt.date.today() - dt.timedelta(days=5), plot_stop=dt.date.today() + dt.timedelta(days=3), show_plot=False, custom_save_name=None, figure_size=(8, 4), save_dpi=300):
 
     fetch.data_source.set('maude allow_subset=False')
 
@@ -55,7 +55,7 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
     orbits, comms, comm_start_times, radzone_start_times, radzone_stop_times = grab_orbit_metadata(
         plot_start, plot_stop)
 
-    fig, ax = plt.subplots(figsize=(16, 8))
+    fig, ax = plt.subplots(figsize=figure_size)
 
     for i, msid in enumerate(msidlist):
         data = fetch.get_telem(msid, start=convert_to_doy(
@@ -105,13 +105,19 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
     plt.xticks(fontsize=12)
     plt.yticks(fontsize=12)
 
-    fig.savefig(fig_save_directory + 'events.png',
-                dpi=300, bbox_inches='tight')
-    fig.savefig(fig_save_directory + 'events.pdf',
-                dpi=300, bbox_inches='tight')
+    if custom_save_name is None:
+        fig.savefig(fig_save_directory + 'events.png',
+                    dpi=save_dpi, bbox_inches='tight')
+        fig.savefig(fig_save_directory + 'events.pdf',
+                    dpi=save_dpi, bbox_inches='tight')
+    elif custom_save_name is not None:
+        fig.savefig(custom_save_name, dpi=save_dpi, bbox_inches='tight')
 
     if show_plot is True:
         plt.show()
+
+    # Cleanup
+    del data, goes_times, goes_rates
     plt.close('all')
     fetch.data_source.set('cxc')
 

@@ -98,3 +98,5 @@ def calc_time_to_next_comm():
     if comm_tdelta is None:
         # Then the code has failed to find a next comm and there is a problem. Just report that.
         return "ERROR: Failed to find next comm!"
+
+    del comms
