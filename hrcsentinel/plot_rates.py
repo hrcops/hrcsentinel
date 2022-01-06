@@ -45,7 +45,7 @@ def grab_orbit_metadata(plot_start=dt.date.today() - dt.timedelta(days=5), plot_
     return orbits, comms, comm_start_times, radzone_start_times, radzone_stop_times
 
 
-def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/', plot_start=dt.date.today() - dt.timedelta(days=5), plot_stop=dt.date.today() + dt.timedelta(days=3), show_plot=False, custom_save_name=None, figure_size=(8, 4), save_dpi=300):
+def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/', plot_start=dt.date.today() - dt.timedelta(days=5), plot_stop=dt.date.today() + dt.timedelta(days=3), show_plot=False, custom_save_name=None, figure_size=(16, 8), save_dpi=300):
 
     fetch.data_source.set('maude allow_subset=False')
 

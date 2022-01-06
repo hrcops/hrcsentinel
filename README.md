@@ -10,7 +10,13 @@ __Real-time trending, telemetry auditing, and comm alerts for the *Chandra* High
 
 * `HRCMonitor`, which continually updates an instrument status dashboard. At this time, we host that dashboard [here](https://icxc.cfa.harvard.edu/hrcops/hrcmonitor/) (SAO VPN required).
 
-* `HRCCommBot`, a Slack Bot that provides real-time DSN comm pass alerts with telemetry auditing.
+* `HRCAuditor`, which audits instrument telemetry during all real-time DSN comm
+passes, and sends Slack alerts when anomalies are detected.
+
+* `HRCCommBot`, a Slack Bot that provides real-time DSN comm pass alerts.
+
+
+
 
 ![Screenshots](misc/screenshots.png)
 

@@ -24,7 +24,6 @@ process = psutil.Process(os.getpid())
 
 
 def audit_telemetry(start, channel=None):
-    # Want to implement this!!!
 
     print(f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) TELEMETRY AUDIT', end='\r')
 
