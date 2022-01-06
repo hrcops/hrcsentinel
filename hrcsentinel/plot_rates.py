@@ -40,7 +40,7 @@ def grab_orbit_metadata(plot_start=dt.date.today() - dt.timedelta(days=5), plot_
     radzone_stop_times = convert_chandra_time(
         orbits['t_perigee'] + orbits['dt_stop_radzone'])
 
-    comm_start_times = convert_chandra_time(comms['tstart'])
+    comm_start_times = convert_chandra_time(comms['tstart'] + 3600)
 
     return orbits, comms, comm_start_times, radzone_start_times, radzone_stop_times
 
