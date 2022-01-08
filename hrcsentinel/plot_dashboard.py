@@ -37,13 +37,21 @@ def comm_status_stamp(comm_status, code_start_time, hostname, fig_save_directory
         textcolor = 'steelblue'
     elif comm_status is False:
         # Then figure out when the next comm is:
-        comms = events.dsn_comms.filter(
-            start=convert_to_doy(dt.datetime.utcnow())).table
+        try:
+            comms = events.dsn_comms.filter(
+                start=convert_to_doy(dt.datetime.utcnow())).table
+            next_comm_string = calc_time_to_next_comm()
+        except:
+            comms = None
 
-        next_comm_string = calc_time_to_next_comm()
         commreport = 'Not in Comm'
-        subtext = f'Next Comm should be in {next_comm_string}'
+        if comms is not None:
+            subtext = f'Next Comm should be in {next_comm_string}'
+        elif comms is None:
+            subtext = f'Currently cannot fetch next comm time.'
         textcolor = 'slategray'
+        # Cleanup if we've populated comms
+        del comms
 
     code_uptime = dt.datetime.now() - code_start_time
 

@@ -4,7 +4,6 @@ import datetime as dt
 import socket
 import sys
 import time
-from pathlib import Path
 
 import numpy as np
 import pytz
@@ -25,24 +24,29 @@ from goes_proxy import get_goes_proxy
 def grab_orbit_metadata(plot_start=dt.date.today() - dt.timedelta(days=5), plot_stop=dt.date.today() + dt.timedelta(days=3)):
 
     # Grab the metadata (orbit, obsid, and radzone info) for the specified time period
-    orbits = events.orbits.filter(
-        start=convert_to_doy(plot_start), stop=(plot_stop)).table
-    # obsids = events.obsids.filter(start=convert_to_doy(plot_start), stop=(plot_stop)).table
-    comms = events.dsn_comms.filter(
-        start=convert_to_doy(plot_start), stop=(plot_stop)).table
 
-    # orbit_start_times = convert_chandra_time(orbits['tstart'])
-    # orbit_stop_times = convert_chandra_time(orbits['tstop'])
+    try:
+        orbits = events.orbits.filter(
+            start=convert_to_doy(plot_start), stop=(plot_stop)).table
+        comms = events.dsn_comms.filter(
+            start=convert_to_doy(plot_start), stop=(plot_stop)).table
+    except:
+        orbits = None
+        comms = None
 
-    # Radzone t_start is with respect to t_perigee, not t_start!
-    radzone_start_times = convert_chandra_time(
-        orbits['t_perigee'] + orbits['dt_start_radzone'])
-    radzone_stop_times = convert_chandra_time(
-        orbits['t_perigee'] + orbits['dt_stop_radzone'])
+    if comms is not None:
+        # Radzone t_start is with respect to t_perigee, not t_start!
+        radzone_start_times = convert_chandra_time(
+            orbits['t_perigee'] + orbits['dt_start_radzone'])
+        radzone_stop_times = convert_chandra_time(
+            orbits['t_perigee'] + orbits['dt_stop_radzone'])
 
-    comm_start_times = convert_chandra_time(comms['tstart'] + 3600)
+        comm_start_times = convert_chandra_time(comms['tstart'] + 3600)
 
-    return orbits, comms, comm_start_times, radzone_start_times, radzone_stop_times
+        return orbits, comms, comm_start_times, radzone_start_times, radzone_stop_times
+
+    elif comms is None:
+        return None
 
 
 def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/', plot_start=dt.date.today() - dt.timedelta(days=5), plot_stop=dt.date.today() + dt.timedelta(days=3), show_plot=False, custom_save_name=None, figure_size=(16, 8), save_dpi=300):
@@ -52,8 +56,11 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
     msidlist = ['2TLEV1RT', '2VLEV1RT', '2SHEV1RT']
     namelist = ['Total Event Rate', 'Valid Event Rate', 'AntiCo Shield Rate']
 
-    orbits, comms, comm_start_times, radzone_start_times, radzone_stop_times = grab_orbit_metadata(
-        plot_start, plot_stop)
+    try:
+        orbits, comms, comm_start_times, radzone_start_times, radzone_stop_times = grab_orbit_metadata(
+            plot_start, plot_stop)
+    except ValueError:
+        comms = None
 
     fig, ax = plt.subplots(figsize=figure_size)
 
@@ -88,19 +95,18 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
             'Now', fontsize=12, color='slategray', zorder=3, ha='center')
     ax.axvline(dt.datetime.now(pytz.utc), color='gray', alpha=0.5)
 
-    for i, (radzone_start, radzone_stop) in enumerate(zip(radzone_start_times, radzone_stop_times)):
-        ax.axvspan(radzone_start, radzone_stop,
-                   alpha=0.3, color='slategray', zorder=1)
-        ax.text((radzone_start + radzone_stop) / 2, 300000, 'Radzone for \n Orbit {}'.format(
-            orbits['orbit_num'][i]), color='slategray', fontsize=6, ha='center', clip_on=True)
+    if comms is not None:
+        for i, (radzone_start, radzone_stop) in enumerate(zip(radzone_start_times, radzone_stop_times)):
+            ax.axvspan(radzone_start, radzone_stop,
+                       alpha=0.3, color='slategray', zorder=1)
+            ax.text((radzone_start + radzone_stop) / 2, 300000, 'Radzone for \n Orbit {}'.format(
+                orbits['orbit_num'][i]), color='slategray', fontsize=6, ha='center', clip_on=True)
 
-    for i, comm in enumerate(comms):
-        plt.vlines(x=comm_start_times[i], ymin=80000, ymax=110000,
-                   color='cornflowerblue', alpha=1, zorder=2)
-        ax.text(comm_start_times[i], 120000, 'Comm \n {}'.format(
-            comm['station']), color='cornflowerblue', fontsize=6, ha='center', clip_on=True)
-
-    # print(comms)
+        for i, comm in enumerate(comms):
+            plt.vlines(x=comm_start_times[i], ymin=80000, ymax=110000,
+                       color='cornflowerblue', alpha=1, zorder=2)
+            ax.text(comm_start_times[i], 120000, 'Comm \n {}'.format(
+                comm['station']), color='cornflowerblue', fontsize=6, ha='center', clip_on=True)
 
     plt.xticks(fontsize=12)
     plt.yticks(fontsize=12)

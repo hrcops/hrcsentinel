@@ -103,7 +103,7 @@ def main():
         two_days_hence = dt.date.today() + dt.timedelta(days=2)
 
         print('Testing creation of the Comm Status stamp...')
-        comm_status_stamp(comm_status=True, fig_save_directory=fig_save_directory,
+        comm_status_stamp(comm_status=False, fig_save_directory=fig_save_directory,
                           code_start_time=test_start_time, hostname=hostname)
 
         print('Testing realtime plots...')
