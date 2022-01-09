@@ -258,8 +258,8 @@ def main():
                     # Now we've waited a minute. Let's audit the telemetry and send amessage.
                     # Check starting from the beginning of comm. We always check an ever-expanding
                     # chunk of telemetry. This is a BIT redundant, but not bad.
-                    audit_telemetry(start=comm_start_timestamp,
-                                    channel=bot_slack_channel)
+                    # audit_telemetry(start=comm_start_timestamp,
+                    #                 channel=bot_slack_channel)
 
         except Exception as e:
             # MAUDE queries fail regularly as TM is streaming in (mismatched array sizes as data is being populated), 404s, etc.
