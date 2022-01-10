@@ -21,32 +21,25 @@ from chandratime import (calc_time_to_next_comm, convert_chandra_time,
 from goes_proxy import get_goes_proxy
 
 
-def grab_orbit_metadata(plot_start=dt.date.today() - dt.timedelta(days=5), plot_stop=dt.date.today() + dt.timedelta(days=3)):
+def grab_orbit_metadata(plot_start=dt.date.today() - dt.timedelta(days=5)):
 
     # Grab the metadata (orbit, obsid, and radzone info) for the specified time period
+    # This may well fail. You should wrap this in a try/except block.
 
-    try:
-        orbits = events.orbits.filter(
-            start=convert_to_doy(plot_start), stop=(plot_stop)).table
-        comms = events.dsn_comms.filter(
-            start=convert_to_doy(plot_start), stop=(plot_stop)).table
-    except:
-        orbits = None
-        comms = None
+    orbits = events.orbits.filter(
+        start=convert_to_doy(plot_start)).table
+    comms = events.dsn_comms.filter(
+        start=convert_to_doy(plot_start)).table
 
-    if comms is not None:
-        # Radzone t_start is with respect to t_perigee, not t_start!
-        radzone_start_times = convert_chandra_time(
-            orbits['t_perigee'] + orbits['dt_start_radzone'])
-        radzone_stop_times = convert_chandra_time(
-            orbits['t_perigee'] + orbits['dt_stop_radzone'])
+    # Radzone t_start is with respect to t_perigee, not t_start!
+    radzone_start_times = convert_chandra_time(
+        orbits['t_perigee'] + orbits['dt_start_radzone'])
+    radzone_stop_times = convert_chandra_time(
+        orbits['t_perigee'] + orbits['dt_stop_radzone'])
 
-        comm_start_times = convert_chandra_time(comms['tstart'] + 3600)
+    comm_start_times = convert_chandra_time(comms['tstart'] + 3600)
 
-        return orbits, comms, comm_start_times, radzone_start_times, radzone_stop_times
-
-    elif comms is None:
-        return None
+    return orbits, comms, comm_start_times, radzone_start_times, radzone_stop_times
 
 
 def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/', plot_start=dt.date.today() - dt.timedelta(days=5), plot_stop=dt.date.today() + dt.timedelta(days=3), show_plot=False, custom_save_name=None, figure_size=(16, 8), save_dpi=300):
@@ -58,8 +51,8 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
 
     try:
         orbits, comms, comm_start_times, radzone_start_times, radzone_stop_times = grab_orbit_metadata(
-            plot_start, plot_stop)
-    except ValueError:
+            plot_start=plot_start)
+    except Exception:
         comms = None
 
     fig, ax = plt.subplots(figsize=figure_size)
@@ -77,6 +70,7 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
         ax.plot_date(goes_times, goes_rates, marker=None, linestyle='-',
                      alpha=0.8, zorder=0, label='GOES-16 Proxy')
     except Exception:
+        # this is very bad practice
         pass
 
     ax.set_ylabel(r'Event Rates (counts s$^{-1}$)', fontsize=10)
