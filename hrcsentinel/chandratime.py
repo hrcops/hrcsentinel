@@ -62,41 +62,47 @@ def calc_time_to_next_comm():
     the list of passes for the first positive time delta, i.e. the first comm pass in the future.
     Returns a string in reporting the time to the next comm pass.
     '''
-    # Now must be in UTC becuase the comm table is is.
-    comms = events.dsn_comms.filter(
-        start=convert_to_doy(dt.datetime.utcnow())).table
+    # This can sometimes fail, and I really don't want a failure to kill my code. It's not important enough.
 
-    # The NEXT comm will either be row zero of the table, or row one. It depends on when you fetch. So just check.
+    try:
+        # Now must be in UTC becuase the comm table is is.
+        comms = events.dsn_comms.filter(
+            start=convert_to_doy(dt.datetime.utcnow())).table
 
-    comm_tdelta = None
+        # The NEXT comm will either be row zero of the table, or row one. It depends on when you fetch. So just check.
 
-    for i in range(0, 4):
-        raw_comm_start = dt.datetime.strptime(
-            comms['start'][i], "%Y:%j:%H:%M:%S.%f")
+        comm_tdelta = None
 
-        est = pytz.timezone('US/Eastern')
-        utc = pytz.utc
+        for i in range(0, 4):
+            raw_comm_start = dt.datetime.strptime(
+                comms['start'][i], "%Y:%j:%H:%M:%S.%f")
 
-        localized_comm_start = utc.localize(raw_comm_start)
-        # I DO NOT understand why DST is not being accounted for! the subtraction of 1 hour is a brute-force fix.
-        localized_now = est.localize(dt.datetime.now()) - dt.timedelta(hours=1)
-        comm_tdelta = localized_comm_start - localized_now
+            est = pytz.timezone('US/Eastern')
+            utc = pytz.utc
 
-        if comm_tdelta.total_seconds() > 0:
-            # Then we have (hopefully) succeeded, and now need only format a string to return.
+            localized_comm_start = utc.localize(raw_comm_start)
+            # I DO NOT understand why DST is not being accounted for! the subtraction of 1 hour is a brute-force fix.
+            localized_now = est.localize(dt.datetime.now()) - dt.timedelta(hours=1)
+            comm_tdelta = localized_comm_start - localized_now
 
-            days = int(comm_tdelta.days)
-            seconds = round(int(comm_tdelta.seconds), 0)
-            # the // operator rounds down the answer, and returns a whole number.
-            hours = seconds // 3600
-            minutes = (seconds//60) % 60
+            if comm_tdelta.total_seconds() > 0:
+                # Then we have (hopefully) succeeded, and now need only format a string to return.
 
-            next_comm_string = f'{days} days, {hours} hours, {minutes} minutes'
+                days = int(comm_tdelta.days)
+                seconds = round(int(comm_tdelta.seconds), 0)
+                # the // operator rounds down the answer, and returns a whole number.
+                hours = seconds // 3600
+                minutes = (seconds//60) % 60
 
-            return next_comm_string
+                next_comm_string = f'{days} days, {hours} hours, {minutes} minutes'
 
-    if comm_tdelta is None:
-        # Then the code has failed to find a next comm and there is a problem. Just report that.
-        return "ERROR: Failed to find next comm!"
+                return next_comm_string
+
+        if comm_tdelta is None:
+            # Then the code has failed to find a next comm and there is a problem. Just report that.
+            return "ERROR: Failed to find next comm!"
+    except Exception as e:
+
+        return f"Function calc_time_to_next_comm() returned exception: {}"
 
     del comms
