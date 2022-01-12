@@ -210,9 +210,17 @@ def main():
                         continue
 
                     # Assuming the end of comm is real, then comm has recently ended and we need to report that.
-                    telem = grab_critical_telemetry(
-                        start=CxoTime.now() - 1800 * u.s)
-                    message = f"It appears that COMM has ended as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}` \n\n Next COMM is expected in {calc_time_to_next_comm()} \n\n HRC was *{telem['HRC observing status']}* \n Last telemetry was in `{telem['Format']}` \n\n *HRC-I* was {telem['HRC-I Status']} \n *HRC-S* was {telem['HRC-S Status']} \n\n *Shields were {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n\n *HRC-I* Voltage Steps were (Top/Bottom) = `{telem['HRC-I Voltage Steps'][0]}/{telem['HRC-I Voltage Steps'][1]}` \n *HRC-S* Voltage Steps were (Top/Bottom) = `{telem['HRC-S Voltage Steps'][0]}/{telem['HRC-S Voltage Steps'][1]}`  \n\n *Bus Current* was `{telem['Bus Current (DN)']} DN` (`{telem['Bus Current (A)']} A`)  \n\n *FEA Temperature* was `{telem['FEA Temp']} C`"
+                    try:
+                        telem = grab_critical_telemetry(start=CxoTime.now() - 1800 * u.s)
+                    except Exception as e:
+                        telem = None
+                        if chatty:
+                            print('MAUDE exception: {}'.format(e))
+                        continue
+                    if telem is not None:
+                        message = f"It appears that COMM has ended as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}` \n\n Next COMM is expected in {calc_time_to_next_comm()} \n\n HRC was *{telem['HRC observing status']}* \n Last telemetry was in `{telem['Format']}` \n\n *HRC-I* was {telem['HRC-I Status']} \n *HRC-S* was {telem['HRC-S Status']} \n\n *Shields were {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n\n *HRC-I* Voltage Steps were (Top/Bottom) = `{telem['HRC-I Voltage Steps'][0]}/{telem['HRC-I Voltage Steps'][1]}` \n *HRC-S* Voltage Steps were (Top/Bottom) = `{telem['HRC-S Voltage Steps'][0]}/{telem['HRC-S Voltage Steps'][1]}`  \n\n *Bus Current* was `{telem['Bus Current (DN)']} DN` (`{telem['Bus Current (A)']} A`)  \n\n *FEA Temperature* was `{telem['FEA Temp']} C`"
+                    elif telem is None:
+                        message = f"It appears that COMM has ended as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}` \n\n Currently having trouble querying telemetry; wait to see if the problem resolves, otherwise contact Grant!"
                     send_slack_message(message, channel=bot_slack_channel)
 
                 recently_in_comm = False
