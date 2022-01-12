@@ -102,7 +102,6 @@ def calc_time_to_next_comm():
             # Then the code has failed to find a next comm and there is a problem. Just report that.
             return "ERROR: Failed to find next comm!"
     except Exception as e:
-
-        return f"Function calc_time_to_next_comm() returned exception: {}"
+        return f"Function calc_time_to_next_comm() returned exception: {e}"
 
     del comms
