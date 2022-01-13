@@ -5,7 +5,7 @@ import datetime as dt
 import matplotlib.dates as mdate
 import numpy as np
 import pytz
-from kadi import events
+
 
 
 def convert_chandra_time(rawtimes):
@@ -66,6 +66,7 @@ def calc_time_to_next_comm():
 
     try:
         # Now must be in UTC becuase the comm table is is.
+        from kadi import events
         comms = events.dsn_comms.filter(
             start=convert_to_doy(dt.datetime.utcnow())).table
 
