@@ -7,7 +7,6 @@ import numpy as np
 import pytz
 
 
-
 def convert_chandra_time(rawtimes):
     """
     Convert input CXC time (seconds since 1998.0) to the time base required for
@@ -64,9 +63,10 @@ def calc_time_to_next_comm():
     '''
     # This can sometimes fail, and I really don't want a failure to kill my code. It's not important enough.
 
+    from kadi import events
+
     try:
         # Now must be in UTC becuase the comm table is is.
-        from kadi import events
         comms = events.dsn_comms.filter(
             start=convert_to_doy(dt.datetime.utcnow())).table
 
@@ -83,7 +83,8 @@ def calc_time_to_next_comm():
 
             localized_comm_start = utc.localize(raw_comm_start)
             # I DO NOT understand why DST is not being accounted for! the subtraction of 1 hour is a brute-force fix.
-            localized_now = est.localize(dt.datetime.now()) - dt.timedelta(hours=1)
+            localized_now = est.localize(
+                dt.datetime.now()) - dt.timedelta(hours=1)
             comm_tdelta = localized_comm_start - localized_now
 
             if comm_tdelta.total_seconds() > 0:

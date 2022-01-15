@@ -12,7 +12,6 @@ from astropy.table import Table
 from astropy.time import Time
 from Chandra.Time import DateTime
 from cheta import fetch
-from kadi import events
 from matplotlib import pyplot as plt
 
 import plot_stylers
@@ -25,7 +24,7 @@ def grab_orbit_metadata(plot_start=dt.date.today() - dt.timedelta(days=5)):
 
     # Grab the metadata (orbit, obsid, and radzone info) for the specified time period
     # This may well fail. You should wrap this in a try/except block.
-
+    from kadi import events
     orbits = events.orbits.filter(
         start=convert_to_doy(plot_start)).table
     comms = events.dsn_comms.filter(
@@ -79,7 +78,7 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
     ax.set_ylim(10, 2000000)
     ax.set_xlim(plot_start, plot_stop)
     ax.set_title('Shield & Detector Rates as of {} EST | Next Comm is expected in {}'.format(
-        dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S"), calc_time_to_next_comm()), color='slategray', size=12, pad=20)
+        dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S"), calc_time_to_next_comm()), color='slategray', size=10, pad=20)
     ax.axhline(60000, color=plot_stylers.red, linestyle='-',
                linewidth=2, label='SCS 107 Limit')
     ax.legend(prop={'size': 12}, loc=2)
