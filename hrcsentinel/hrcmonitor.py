@@ -37,6 +37,9 @@ def get_args():
     parser.add_argument("--test", help="Run a full test of the code. ",
                         action="store_true")
 
+    parser.add_argument("--debug", help="Print useful debugging statements ",
+                        action="store_true")
+
     parser.add_argument("--force_cheta", help="Trick the code pull from Ska/CXC instead of MAUDE with a switch to fetch.data_source.set() ",
                         action="store_true")
 
@@ -202,7 +205,7 @@ def main():
                                    plot_stop=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'), force_limits=True, show_in_gui=args.show_in_gui)
 
                 make_shield_plot(fig_save_directory=fig_save_directory,
-                                 plot_start=five_days_ago, plot_stop=two_days_hence)
+                                 plot_start=five_days_ago, plot_stop=two_days_hence, debug_prints=args.debug)
 
                 print('Saved Current Status Plots to {}'.format(
                     fig_save_directory), end="\r", flush=True)

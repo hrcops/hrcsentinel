@@ -53,7 +53,7 @@ def convert_to_doy(datetime_start):
     return doystring
 
 
-def calc_time_to_next_comm():
+def calc_time_to_next_comm(start=None, debug_prints=False):
     '''
     Queries the Kadi event database for the next several (scheduled) comm passes.
     Calculates the duration between now (in UTC) and the next comm pass.
@@ -63,29 +63,58 @@ def calc_time_to_next_comm():
     '''
     # This can sometimes fail, and I really don't want a failure to kill my code. It's not important enough.
 
+    print('importing kadi events')
     from kadi import events
 
     try:
         # Now must be in UTC becuase the comm table is is.
-        comms = events.dsn_comms.filter(
-            start=convert_to_doy(dt.datetime.utcnow())).table
+        if start is None:
+            comms = events.dsn_comms.filter(
+                start=convert_to_doy(dt.datetime.utcnow())).table
+            if debug_prints:
+                print(
+                    f'Start query is automatic and reads as {convert_to_doy(dt.datetime.utcnow())}')
+                print(comms)
+        elif start is not None:
+            comms = events.dsn_comms.filter(start=start).table
+            if debug_prints:
+                print(
+                    f'Start query is manual and reads as {start}')
+                print(comms)
 
         # The NEXT comm will either be row zero of the table, or row one. It depends on when you fetch. So just check.
 
         comm_tdelta = None
 
+        if debug_prints:
+            print(f'Start query is manual and reads as {start}')
+            print(f'comm_tdelta is {comm_tdelta}')
+
         for i in range(0, 4):
             raw_comm_start = dt.datetime.strptime(
                 comms['start'][i], "%Y:%j:%H:%M:%S.%f")
 
+            if debug_prints:
+                print(f'Searching events table on iteration {i}...')
+                print(f'raw_comm_start is {raw_comm_start}')
+
             est = pytz.timezone('US/Eastern')
             utc = pytz.utc
+
+            if debug_prints:
+                print(f'EST initialized as {est}...')
+                print(f'UTC initialized as {utc}...')
 
             localized_comm_start = utc.localize(raw_comm_start)
             # I DO NOT understand why DST is not being accounted for! the subtraction of 1 hour is a brute-force fix.
             localized_now = est.localize(
                 dt.datetime.now()) - dt.timedelta(hours=1)
             comm_tdelta = localized_comm_start - localized_now
+
+            if debug_prints:
+                print(f'localized_comm_start is {localized_comm_start}...')
+                print(f'localized_now is {localized_now}...')
+                print(f'comm_tdelta is {comm_tdelta}...')
 
             if comm_tdelta.total_seconds() > 0:
                 # Then we have (hopefully) succeeded, and now need only format a string to return.
