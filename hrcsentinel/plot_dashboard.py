@@ -29,7 +29,7 @@ from plot_rates import make_shield_plot
 from plot_thermals import make_thermal_plots
 
 
-def comm_status_stamp(comm_status, code_start_time, hostname, fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/'):
+def comm_status_stamp(comm_status, code_start_time, hostname, fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/', debug_prints=False):
 
     if comm_status is True:
         commreport = f'In Comm!'
@@ -38,9 +38,10 @@ def comm_status_stamp(comm_status, code_start_time, hostname, fig_save_directory
     elif comm_status is False:
         # Then figure out when the next comm is:
         try:
+            from kadi import events
             comms = events.dsn_comms.filter(
                 start=convert_to_doy(dt.datetime.utcnow())).table
-            next_comm_string = calc_time_to_next_comm()
+            next_comm_string = calc_time_to_next_comm(debug_prints=debug_prints)
         except:
             comms = None
 

@@ -107,7 +107,7 @@ def main():
 
         print('Testing creation of the Comm Status stamp...')
         comm_status_stamp(comm_status=False, fig_save_directory=fig_save_directory,
-                          code_start_time=test_start_time, hostname=hostname)
+                          code_start_time=test_start_time, hostname=hostname, debug_prints=True)
 
         print('Testing realtime plots...')
         make_realtime_plot(plot_start=five_days_ago, fig_save_directory=fig_save_directory,
@@ -132,7 +132,7 @@ def main():
                 code_start_time = dt.datetime.now()
 
             comm_status_stamp(comm_status=in_comm, fig_save_directory=fig_save_directory,
-                              code_start_time=code_start_time, hostname=hostname)
+                              code_start_time=code_start_time, hostname=hostname, debug_prints=args.debug)
 
             # We ALWAYS update the comm status stamp
             if not in_comm:
