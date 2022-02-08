@@ -5,6 +5,7 @@ import datetime as dt
 import matplotlib.dates as mdate
 import numpy as np
 import pytz
+import traceback
 
 
 def convert_chandra_time(rawtimes):
@@ -133,6 +134,8 @@ def calc_time_to_next_comm(start=None, debug_prints=False):
             # Then the code has failed to find a next comm and there is a problem. Just report that.
             return "ERROR: Failed to find next comm!"
     except Exception as e:
+        print(f'Exception in calc_time_to_next_comm: {e}')
+        print(f'Traceback: {traceback.format_exc()}')
         return f"Function calc_time_to_next_comm() returned exception: {e}"
 
     del comms
