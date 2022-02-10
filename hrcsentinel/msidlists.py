@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
 voltage_msids_a = ['2P24VAVL',  # 24 V bus EED voltage,
-                 '2P15VAVL',  # +15 V bus EED voltage
-                 '2P05VAVL',  # +05 V bus EED voltage
-                 '2N15VAVL'  # +15 V bus EED voltage
-                 ]
+                   '2P15VAVL',  # +15 V bus EED voltage
+                   '2P05VAVL',  # +05 V bus EED voltage
+                   '2N15VAVL'  # +15 V bus EED voltage
+                   ]
 
 voltage_msids_b = ['2P24VBVL',  # 24 V bus EED voltage,
                    '2P15VBVL',  # +15 V bus EED voltage
@@ -247,16 +247,30 @@ dashboard_units_latest = ["Voltage (V)",
 dashboard_limits_latest = [(-20, 30),
                            (25, 29),
                            (1.4, 2.7),
-                           (10, 45),
-                           (10, 45),
-                           (10, 45),
-                           (10, 45),
+                           (-30, 45),
+                           (-30, 45),
+                           (-30, 45),
+                           (-30, 45),
                            (10, 45),
                            (20, 45),
                            (20, 45),
                            (10, 64000),
                            (40, 190)
                            ]
+
+dashboard_limits_anomaly = [(-20, 30),
+                            (25, 29),
+                            (1.4, 2.7),
+                            (10, 45),
+                            (10, 45),
+                            (10, 45),
+                            (10, 45),
+                            (10, 45),
+                            (20, 45),
+                            (20, 45),
+                            (10, 64000),
+                            (40, 190)
+                            ]
 
 dashboard_msids_missionwide = [["2P24VBVL", "2P15VBVL", "2N15VBVL", "2P05VBVL"],
                                ["2PRBSVL"],

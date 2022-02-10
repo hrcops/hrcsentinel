@@ -11,6 +11,8 @@ from chandratime import convert_chandra_time, convert_to_doy
 end_date = dt.date.today() + dt.timedelta(days=2)
 
 
+time_of_2022_anomaly=dt.datetime(2022, 2, 9, 13, 17,38)
+
 sunday_pass = dt.datetime(2020, 8, 24, 2, 30)
 sunday_pass_end = dt.datetime(2020, 8, 24, 3, 27, 34)
 
