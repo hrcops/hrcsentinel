@@ -36,23 +36,17 @@ def comm_status_stamp(comm_status, code_start_time, hostname, fig_save_directory
         subtext = f'Comm appears to have started at {dt.datetime.now().strftime("%H:%M:%S")}'
         textcolor = 'steelblue'
     elif comm_status is False:
-        # Then figure out when the next comm is:
-        try:
-            from kadi import events
-            comms = events.dsn_comms.filter(
-                start=convert_to_doy(dt.datetime.utcnow())).table
-            next_comm_string = calc_time_to_next_comm(debug_prints=debug_prints)
-        except:
-            comms = None
 
         commreport = 'Not in Comm'
-        if comms is not None:
+        # and (try to) figure out when the next comm is:
+        comm_fetch_success, next_comm_string = calc_time_to_next_comm(
+            debug_prints=debug_prints)
+
+        if comm_fetch_success:
             subtext = f'Next Comm should be in {next_comm_string}'
-        elif comms is None:
-            subtext = f'Currently cannot fetch next comm time.'
+        elif not comm_fetch_success:
+            subtext = ''
         textcolor = 'slategray'
-        # Cleanup if we've populated comms
-        del comms
 
     code_uptime = dt.datetime.now() - code_start_time
 

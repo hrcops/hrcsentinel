@@ -64,11 +64,9 @@ def calc_time_to_next_comm(start=None, debug_prints=False):
     '''
     # This can sometimes fail, and I really don't want a failure to kill my code. It's not important enough.
 
-    print('importing kadi events')
-    from kadi import events
-
     try:
         # Now must be in UTC becuase the comm table is is.
+        from kadi import events
         if start is None:
             comms = events.dsn_comms.filter(
                 start=convert_to_doy(dt.datetime.utcnow())).table
@@ -126,16 +124,18 @@ def calc_time_to_next_comm(start=None, debug_prints=False):
                 hours = seconds // 3600
                 minutes = (seconds//60) % 60
 
-                next_comm_string = f'{days} days, {hours} hours, {minutes} minutes'
-
-                return next_comm_string
+                comm_fetch_success = True
+                comm_string = f'{days} days, {hours} hours, {minutes} minutes'
 
         if comm_tdelta is None:
             # Then the code has failed to find a next comm and there is a problem. Just report that.
-            return "ERROR: Failed to find next comm!"
+            comm_fetch_success = False
+            comm_string = 'Comm fetch seems to be working, but next comm is not found.'
+
     except Exception as e:
         print(f'Exception in calc_time_to_next_comm: {e}')
         print(f'Traceback: {traceback.format_exc()}')
-        return f"Function calc_time_to_next_comm() returned exception: {e}"
+        comm_fetch_success = False
+        comm_string = f"Function calc_time_to_next_comm() returned exception: {e}"
 
-    del comms
+    return comm_fetch_success, comm_string
