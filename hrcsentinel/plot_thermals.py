@@ -150,7 +150,7 @@ def make_thermal_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/h
 
     plt.close()
 
-    # Make Figure 2
+    # Make the moving averages figure
 
     fetch.data_source.set('cxc')
 
@@ -204,6 +204,8 @@ def make_thermal_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/h
 
     ax.set_xlim(dt.datetime(2001, 1, 1),
                 dt.date.today() + dt.timedelta(days=180))
+
+    ax.set_ylim(0, 40)
 
     fig.savefig(fig_save_directory + 'thermal_trends.png',
                 dpi=300, bbox_inches='tight')
