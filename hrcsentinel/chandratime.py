@@ -82,7 +82,6 @@ def calc_time_to_next_comm(start=None, debug_prints=False):
                 print(comms)
 
         # The NEXT comm will either be row zero of the table, or row one. It depends on when you fetch. So just check.
-
         comm_tdelta = None
 
         if debug_prints:

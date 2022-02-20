@@ -80,12 +80,15 @@ def grab_critical_telemetry(start=CxoTime.now() - 60 * u.s):
                          '2FHTRMZT', '2CHTRPZT', '2IMTPAST', '2IMBPAST', '2SPTPAST', '2SPBPAST', '2TLEV1RT', '2VLEV1RT']
     critical_msids = fetch.MSIDset(critical_msidlist, start=start)
 
+    error_state = False
+
     tm_format = critical_msids['CCSDSTMF'].vals[-1]
     shield_rate = critical_msids['2SHEV1RT'].vals[-1]
     if shield_rate > 0:
         shield_state = 'UP'
         if shield_rate == 65535:
             shield_state = 'AT MAXIMUM VALUE OF 65535! WARNING! CHECK RTCADS NOW!'
+            error_state = True
     elif shield_rate == 0:
         shield_state = 'DOWN'
     bus_current_in_amps = np.round(critical_msids['2PRBSCR'].vals[-1], 2)
@@ -124,6 +127,7 @@ def grab_critical_telemetry(start=CxoTime.now() - 60 * u.s):
         hrc_i_status = expected_status[expected_hrc_i_states.index(
             hrc_i_voltage)]
     except ValueError:
+        error_state = True
         hrc_i_status = 'in a POTENTIALLY UNEXPECTED state {}. CHECK THIS!'.format(
             hrc_i_voltage)
 
@@ -131,13 +135,14 @@ def grab_critical_telemetry(start=CxoTime.now() - 60 * u.s):
         hrc_s_status = expected_status[expected_hrc_s_states.index(
             hrc_s_voltage)]
     except ValueError:
+        error_state = True
         hrc_s_status = 'in a POTENTIALLY UNEXPECTED state {}. CHECK THIS!'.format(
             hrc_s_voltage)
 
     te_rate = critical_msids['2TLEV1RT'].vals[-1]
     ve_rate = critical_msids['2VLEV1RT'].vals[-1]
 
-    telem = {'HRC observing status': hrc_observing_status, 'Format': tm_format, 'Shield Rate': shield_rate, 'Shield State': shield_state,
+    telem = {'Error State': error_state, 'HRC observing status': hrc_observing_status, 'Format': tm_format, 'Shield Rate': shield_rate, 'Shield State': shield_state,
              'Bus Current (DN)': bus_current_in_dn, 'Bus Current (A)': bus_current_in_amps, 'FEA Temp': fea_temp, 'CEA Temp': cea_temp, 'HRC-I Voltage Steps': hrc_i_voltage, 'HRC-I Status': hrc_i_status, 'HRC-S Voltage Steps': hrc_s_voltage, 'HRC-S Status': hrc_s_status, 'TE Rate': te_rate, 'VE Rate': ve_rate}
 
     return telem
@@ -220,7 +225,10 @@ def main():
                             print('MAUDE exception: {}'.format(e))
                         continue
                     if telem is not None:
-                        message = f"It appears that COMM has ended as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}` \n\n HRC was *{telem['HRC observing status']}* \n Last telemetry was in `{telem['Format']}` \n\n *HRC-I* was {telem['HRC-I Status']} \n *HRC-S* was {telem['HRC-S Status']} \n\n *Shields were {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n\n *HRC-I* Voltage Steps were (Top/Bottom) = `{telem['HRC-I Voltage Steps'][0]}/{telem['HRC-I Voltage Steps'][1]}` \n *HRC-S* Voltage Steps were (Top/Bottom) = `{telem['HRC-S Voltage Steps'][0]}/{telem['HRC-S Voltage Steps'][1]}`  \n\n *Bus Current* was `{telem['Bus Current (DN)']} DN` (`{telem['Bus Current (A)']} A`)  \n\n *FEA Temperature* was `{telem['FEA Temp']} C` \n *CEA Temperature* was `{telem['CEA Temp']} C` "
+                        if telem['Error State'] is False:
+                            message = f"It appears that COMM has ended as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}` \n\n HRC was *{telem['HRC observing status']}* \n Last telemetry was in `{telem['Format']}` \n\n *HRC-I* was {telem['HRC-I Status']} \n *HRC-S* was {telem['HRC-S Status']} \n\n *Shields were {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n\n *HRC-I* Voltage Steps were (Top/Bottom) = `{telem['HRC-I Voltage Steps'][0]}/{telem['HRC-I Voltage Steps'][1]}` \n *HRC-S* Voltage Steps were (Top/Bottom) = `{telem['HRC-S Voltage Steps'][0]}/{telem['HRC-S Voltage Steps'][1]}`  \n\n *Bus Current* was `{telem['Bus Current (DN)']} DN` (`{telem['Bus Current (A)']} A`)  \n\n *FEA Temperature* was `{telem['FEA Temp']} C` \n *CEA Temperature* was `{telem['CEA Temp']} C` "
+                        elif telem['Error State'] is True:
+                            message = f"It appears that COMM has ended as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}` \n\n WARNING: HRC State Errors Detected! \n\n Last telemetry was in `{telem['Format']}` \n\n *HRC-I* was {telem['HRC-I Status']} \n *HRC-S* was {telem['HRC-S Status']} \n\n *Shields were {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n\n *HRC-I* Voltage Steps were (Top/Bottom) = `{telem['HRC-I Voltage Steps'][0]}/{telem['HRC-I Voltage Steps'][1]}` \n *HRC-S* Voltage Steps were (Top/Bottom) = `{telem['HRC-S Voltage Steps'][0]}/{telem['HRC-S Voltage Steps'][1]}`  \n\n *Bus Current* was `{telem['Bus Current (DN)']} DN` (`{telem['Bus Current (A)']} A`)  \n\n *FEA Temperature* was `{telem['FEA Temp']} C` \n *CEA Temperature* was `{telem['CEA Temp']} C` "
                     elif telem is None:
                         message = f"It appears that COMM has ended as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}` \n\n Currently having trouble querying telemetry; wait to see if the problem resolves, otherwise contact Grant!"
                     send_slack_message(message, channel=bot_slack_channel)
@@ -257,7 +265,10 @@ def main():
                         start=CxoTime.now() - 8 * u.h)
 
                     # Craft a message string using this latest elemetry
-                    message = f"We are now *IN COMM* as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}`. \n\n HRC is *{telem['HRC observing status']}*  \n Telemetry Format = `{telem['Format']}` \n\n *HRC-I* is {telem['HRC-I Status']} \n *HRC-S* is {telem['HRC-S Status']} \n\n *Shields are {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n\n *HRC-I* Voltage Steps (Top/Bottom) = `{telem['HRC-I Voltage Steps'][0]}/{telem['HRC-I Voltage Steps'][1]}` \n *HRC-S* Voltage Steps (Top/Bottom) = `{telem['HRC-S Voltage Steps'][0]}/{telem['HRC-S Voltage Steps'][1]}`  \n \n *Total Event* Rate = `{telem['TE Rate']} cps`   \n *Valid Event* Rate = `{telem['VE Rate']} cps`  \n \n *Bus Current* is `{telem['Bus Current (DN)']} DN` (`{telem['Bus Current (A)']} A`) \n \n *FEA Temperature* is `{telem['FEA Temp']} C`\n *CEA Temperature* is `{telem['CEA Temp']} C`"
+                    if telem['Error State'] is False:
+                        message = f"We are now *IN COMM* as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}`. \n\n HRC is *{telem['HRC observing status']}*  \n Telemetry Format = `{telem['Format']}` \n\n *HRC-I* is {telem['HRC-I Status']} \n *HRC-S* is {telem['HRC-S Status']} \n\n *Shields are {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n\n *HRC-I* Voltage Steps (Top/Bottom) = `{telem['HRC-I Voltage Steps'][0]}/{telem['HRC-I Voltage Steps'][1]}` \n *HRC-S* Voltage Steps (Top/Bottom) = `{telem['HRC-S Voltage Steps'][0]}/{telem['HRC-S Voltage Steps'][1]}`  \n \n *Total Event* Rate = `{telem['TE Rate']} cps`   \n *Valid Event* Rate = `{telem['VE Rate']} cps`  \n \n *Bus Current* is `{telem['Bus Current (DN)']} DN` (`{telem['Bus Current (A)']} A`) \n \n *FEA Temperature* is `{telem['FEA Temp']} C`\n *CEA Temperature* is `{telem['CEA Temp']} C`"
+                    elif telem['Error State'] is True:
+                        message = f"*WARNING*! We are now *IN COMM*, and *ERRORS with HRC are detected*`. \n\n Telemetry Format = `{telem['Format']}` \n\n *HRC-I* is {telem['HRC-I Status']} \n *HRC-S* is {telem['HRC-S Status']} \n\n *Shields are {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n\n *HRC-I* Voltage Steps (Top/Bottom) = `{telem['HRC-I Voltage Steps'][0]}/{telem['HRC-I Voltage Steps'][1]}` \n *HRC-S* Voltage Steps (Top/Bottom) = `{telem['HRC-S Voltage Steps'][0]}/{telem['HRC-S Voltage Steps'][1]}`  \n \n *Total Event* Rate = `{telem['TE Rate']} cps`   \n *Valid Event* Rate = `{telem['VE Rate']} cps`  \n \n *Bus Current* is `{telem['Bus Current (DN)']} DN` (`{telem['Bus Current (A)']} A`) \n \n *FEA Temperature* is `{telem['FEA Temp']} C`\n *CEA Temperature* is `{telem['CEA Temp']} C`"
                     # Send the message using our slack bot
                     send_slack_message(message, channel=bot_slack_channel)
                     # do a first audit of the telemetry upon announcement
