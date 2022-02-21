@@ -297,7 +297,7 @@ def main():
             elif not chatty:
                 # Then we're likely in operational mode. Ignore the errors on the command line.
                 print(
-                    f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) ERROR encountered! Use --report_errors to display them.                             ', end='\r\r\r')
+                    f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) ERROR encountered! Use --report_errors to display them.                                               ', end='\r\r\r')
             if in_comm_counter > 0:
                 # Reset the comm counter to make the error "not count"
                 in_comm_counter -= 1
