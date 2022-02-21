@@ -189,6 +189,7 @@ def main():
                         iteration_counter, dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), flush=True)
                     make_ancillary_plots(fig_save_directory)
                     plt.close('all')
+                    sys.stdout.write("\033[K")
 
                 # Explicitly set maude each time, because ancillary plots use CXC
                 fetch.data_source.set('maude allow_subset=False')
