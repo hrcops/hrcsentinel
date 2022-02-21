@@ -49,7 +49,8 @@ def send_slack_message(message, channel='#comm_passes', blocks=None):
     # Make sure it's readable only to you, i.e. chmod og-rwx slackbot_oauth_token
     if socket.gethostname() == 'han-v.cfa.harvard.edu':
         slackbot_token_path = '/home/tremblay/.slackbot/slackbot_oauth_token'
-    elif socket.gethostname() == 'symmetry.local':
+    # split off .local just in case the VPN puts that there
+    elif socket.gethostname().split('.')[0] == 'symmetry':
         slackbot_token_path = '/Users/grant/.slackbot/slackbot_oauth_token'
     else:
         sys.exit('I do not recognize the hostname {}. Exiting.'.format(
@@ -87,7 +88,7 @@ def grab_critical_telemetry(start=CxoTime.now() - 60 * u.s):
     if shield_rate > 0:
         shield_state = 'UP'
         if shield_rate == 65535:
-            shield_state = 'AT MAXIMUM VALUE OF 65535! WARNING! CHECK RTCADS NOW!'
+            shield_state = 'at an INTEGER MAX value of'
             error_state = True
     elif shield_rate == 0:
         shield_state = 'DOWN'
@@ -268,7 +269,7 @@ def main():
                     if telem['Error State'] is False:
                         message = f"We are now *IN COMM* as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}`. \n\n HRC is *{telem['HRC observing status']}*  \n Telemetry Format = `{telem['Format']}` \n\n *HRC-I* is {telem['HRC-I Status']} \n *HRC-S* is {telem['HRC-S Status']} \n\n *Shields are {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n\n *HRC-I* Voltage Steps (Top/Bottom) = `{telem['HRC-I Voltage Steps'][0]}/{telem['HRC-I Voltage Steps'][1]}` \n *HRC-S* Voltage Steps (Top/Bottom) = `{telem['HRC-S Voltage Steps'][0]}/{telem['HRC-S Voltage Steps'][1]}`  \n \n *Total Event* Rate = `{telem['TE Rate']} cps`   \n *Valid Event* Rate = `{telem['VE Rate']} cps`  \n \n *Bus Current* is `{telem['Bus Current (DN)']} DN` (`{telem['Bus Current (A)']} A`) \n \n *FEA Temperature* is `{telem['FEA Temp']} C`\n *CEA Temperature* is `{telem['CEA Temp']} C`"
                     elif telem['Error State'] is True:
-                        message = f"*WARNING*! We are now *IN COMM*, and *ERRORS with HRC are detected*`. \n\n Telemetry Format = `{telem['Format']}` \n\n *HRC-I* is {telem['HRC-I Status']} \n *HRC-S* is {telem['HRC-S Status']} \n\n *Shields are {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n\n *HRC-I* Voltage Steps (Top/Bottom) = `{telem['HRC-I Voltage Steps'][0]}/{telem['HRC-I Voltage Steps'][1]}` \n *HRC-S* Voltage Steps (Top/Bottom) = `{telem['HRC-S Voltage Steps'][0]}/{telem['HRC-S Voltage Steps'][1]}`  \n \n *Total Event* Rate = `{telem['TE Rate']} cps`   \n *Valid Event* Rate = `{telem['VE Rate']} cps`  \n \n *Bus Current* is `{telem['Bus Current (DN)']} DN` (`{telem['Bus Current (A)']} A`) \n \n *FEA Temperature* is `{telem['FEA Temp']} C`\n *CEA Temperature* is `{telem['CEA Temp']} C`"
+                        message = f"*WARNING*! We are now *IN COMM*, and *ERRORS with HRC are detected*: \n\n Telemetry Format = `{telem['Format']}` \n\n *HRC-I* is {telem['HRC-I Status']} \n *HRC-S* is {telem['HRC-S Status']} \n\n *Shields are {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n\n *HRC-I* Voltage Steps (Top/Bottom) = `{telem['HRC-I Voltage Steps'][0]}/{telem['HRC-I Voltage Steps'][1]}` \n *HRC-S* Voltage Steps (Top/Bottom) = `{telem['HRC-S Voltage Steps'][0]}/{telem['HRC-S Voltage Steps'][1]}`  \n \n *Total Event* Rate = `{telem['TE Rate']} cps`   \n *Valid Event* Rate = `{telem['VE Rate']} cps`  \n \n *Bus Current* is `{telem['Bus Current (DN)']} DN` (`{telem['Bus Current (A)']} A`) \n \n *FEA Temperature* is `{telem['FEA Temp']} C`\n *CEA Temperature* is `{telem['CEA Temp']} C`"
                     # Send the message using our slack bot
                     send_slack_message(message, channel=bot_slack_channel)
                     # do a first audit of the telemetry upon announcement

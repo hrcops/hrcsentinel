@@ -67,7 +67,7 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
     try:
         goes_times, goes_rates = get_goes_proxy()
         ax.plot_date(goes_times, goes_rates, marker=None, linestyle='-',
-                     alpha=0.8, zorder=0, label='GOES-16 Proxy')
+                     alpha=0.8, zorder=1, label='GOES-16 Proxy')
     except Exception:
         # this is very bad practice
         pass
