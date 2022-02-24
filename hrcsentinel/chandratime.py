@@ -105,6 +105,7 @@ def calc_time_to_next_comm(start=None, debug_prints=False):
 
             localized_comm_start = utc.localize(raw_comm_start)
             # I DO NOT understand why DST is not being accounted for! the subtraction of 1 hour is a brute-force fix.
+            # OOHHHHHHHH. NOW I understand. It's not Time to BOT, it's time to CALL UP. The localization is working fine
             localized_now = est.localize(
                 dt.datetime.now()) - dt.timedelta(hours=1)
             comm_tdelta = localized_comm_start - localized_now
