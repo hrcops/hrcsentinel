@@ -46,6 +46,9 @@ def make_interactives(telem_start, time_zero, old_telem=None):
 
     fig.add_trace(go.Scatter(x=(telem['2N15VBVL'].times - time_zero.secs) /
                   3600, y=telem['2N15VBVL'].vals, name='-15V DWELL RATE 2N15VBVL'))
+
+    fig.add_trace(go.Scatter(x=(telem['2P05VBVL'].times - time_zero.secs) /
+                  3600, y=telem['2P05VBVL'].vals, name='+5 V'))
     # fig.add_trace(go.Scatter(x=ts_old, y=old_cea.vals,
     #                          name='2020 2CEAHVPT', line=dict(width=4)), secondary_y=False)
 
@@ -83,6 +86,12 @@ def make_interactives(telem_start, time_zero, old_telem=None):
                                   name='FEA 2020 Behavior', line=dict(color='gray', width=2)), secondary_y=False)
     # fig.add_trace(go.Scatter(x=ts_old, y=old_cea.vals,
     #                          name='2020 2CEAHVPT', line=dict(width=4)), secondary_y=False)
+
+    fig2.add_trace(go.Scatter(x=(telem['2CHTRPZT'].times - time_zero.secs) /
+                              3600, y=telem['2CHTRPZT'].vals, name='CEA Temp'))
+
+    fig2.add_trace(go.Scatter(x=(telem['2FHTRMZT'].times - time_zero.secs) /
+                              3600, y=telem['2FHTRMZT'].vals, name='FEA Temp'))
 
     fig2.add_vline(x=0, line_width=1, line_color="gray")
 
