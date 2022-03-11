@@ -8,7 +8,7 @@ import Ska.engarchive.fetch as fetch
 
 def are_we_in_comm(verbose=False, cadence=2, fake_comm=False):
     # Always be fetching from MAUDE
-    fetch.data_source.set('maude allow_subset=True')
+    fetch.data_source.set('maude allow_subset=True highrate=True')
 
     # These fetches are really fast. Slow the cadence a bit.
     time.sleep(cadence)  # cadence is in seconds here

@@ -7,9 +7,8 @@ plt.style.use('ggplot')
 # Grab the ggplot colors so you can manually set them
 
 
-def styleplots():
+def styleplots(labelsizes=8):
     plt.style.use('ggplot')
-    labelsizes = 8
     # plt.rcParams['font.sans-serif'] = 'Arial'
     plt.rcParams['font.size'] = labelsizes
 
