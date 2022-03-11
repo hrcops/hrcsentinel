@@ -55,7 +55,7 @@ def make_interactives(telem_start, time_zero, old_telem=None):
     fig.update_layout(
         title=f'Interactive Voltages | Updated {dt.datetime.now().strftime("%b %d %H:%M:%S")}',
         xaxis_title="Hours Relative to start of CAP",
-        yaxis_title="Bus Volgages (V)",
+        yaxis_title="Bus Voltages (V)",
         font=dict(size=12),
         template="plotly",
         xaxis_range=[-0.5, 3],
