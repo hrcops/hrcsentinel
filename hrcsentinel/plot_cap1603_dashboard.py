@@ -19,7 +19,7 @@ import plot_stylers
 import event_times
 
 
-def update_plot(telem_start, time_zero, iteration_count, old_telem=None, save_path=None, hrcmonitor=False):
+def update_plot(telem_start, time_zero, iteration_count, old_telem=None, save_path=None, monitor=False):
     """ Uses Python's global scope """
 
     weight = 2.0
@@ -31,6 +31,9 @@ def update_plot(telem_start, time_zero, iteration_count, old_telem=None, save_pa
     elif not in_comm:
         comm_status_text = 'NOT IN COMM'
         comm_status_color = plot_stylers.red
+
+    # heartbeat.py currently resets to remove the highrate=True flag. You need to reset!
+    fetch.data_source.set('maude allow_subset=False highrate=True')
 
     msidlist = ['2P15VBVL', '2N15VBVL', '2P05VBVL', '2FHTRMZT', '2CHTRPZT']
     telem = fetch.MSIDset(msidlist, start=telem_start)
@@ -107,7 +110,7 @@ def update_plot(telem_start, time_zero, iteration_count, old_telem=None, save_pa
     if save_path is not None:
         plt.savefig(save_path, dpi=300)
 
-        if hrcmonitor is True:
+        if monitor is True:
             scp_file_to_hrcmonitor(
                 file_to_scp=save_path, destination='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/cap1603.png')
 
@@ -120,7 +123,7 @@ def parse_args():
     argparser = argparse.ArgumentParser()
 
     argparser.add_argument('--freeze', action='store_true')
-    argparser.add_argument('--hrcmonitor', action='store_true',
+    argparser.add_argument('--monitor', action='store_true',
                            help='Save every iteration as a PNG and SCP it to HRCmonitor')
     argparser.add_argument('--debug', action='store_true')
 
@@ -149,7 +152,7 @@ def main():
 
     # msidlist = ['2P15VBVL', '2N15VBVL']
 
-    telem_start = '2022:065'
+    telem_start = '2022:070'
     time_zero = CxoTime.now()  # fake for testing
     time_zero = CxoTime('2022:070:11:15')  # CAP start
     iteration_count = 0
@@ -160,17 +163,17 @@ def main():
 
         iteration_count += 1
 
-        if args.hrcmonitor is True:
+        if args.monitor is True:
             save_path = f'/Users/grant/Desktop/cap1603_plots/{iteration_count}_dashboard.png'
-        elif args.hrcmonitor is False:
+        elif args.monitor is False:
             save_path = None
 
-        update_plot_kwargs = {'telem_start': convert_to_doy(dt.datetime.now()),
+        update_plot_kwargs = {'telem_start': telem_start,
                               'time_zero': time_zero,
                               'iteration_count': iteration_count,
                               'old_telem': old_telem,
                               'save_path': save_path,
-                              'hrcmonitor': args.hrcmonitor}
+                              'monitor': args.monitor}
 
         drawnow(update_plot, stop_on_close=True,
                 show_once=args.freeze, confirm=args.debug, **update_plot_kwargs)

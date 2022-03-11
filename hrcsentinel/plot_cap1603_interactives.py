@@ -1,10 +1,17 @@
 #!/usr/bin/env/python
 
 import os
+import time
+import argparse
+
 import matplotlib.pyplot as plt
+import plotly.io as pio
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+
+
 from cheta import fetch_sci as fetch
 from kadi import events, cmds
-
 from cxotime import CxoTime
 from Chandra.Time import DateTime as chandraDateTime
 from chandratime import convert_to_doy
@@ -13,61 +20,37 @@ import datetime as dt
 import event_times
 from plot_helpers import scp_file_to_hrcmonitor
 
-import plotly.io as pio
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-
 
 def format_dates(cheta_dates):
     return np.array([dt.datetime.strptime(d, '%Y:%j:%H:%M:%S.%f') for d in CxoTime(cheta_dates).date])
 
 
-def main():
+def make_interactives(telem_start, time_zero, old_telem=None):
 
-    sideb_reset_2020 = chandraDateTime(event_times.time_of_cap_1543)
-
-    old_N15 = fetch.MSID('2N15VBVL', start=convert_to_doy(event_times.time_of_cap_1543),
-                         stop=convert_to_doy(event_times.time_of_cap_1543 + dt.timedelta(days=2)))
-
-    old_P15 = fetch.MSID('2P15VBVL', start=convert_to_doy(event_times.time_of_cap_1543),
-                         stop=convert_to_doy(event_times.time_of_cap_1543 + dt.timedelta(days=2)))
-
-    old_cea_temp = fetch.MSID('2CHTRPZT', start=convert_to_doy(event_times.time_of_cap_1543),
-                              stop=convert_to_doy(event_times.time_of_cap_1543 + dt.timedelta(days=2)))
-
-    old_fea_temp = fetch.MSID('2FHTRMZT', start=convert_to_doy(event_times.time_of_cap_1543),
-                              stop=convert_to_doy(event_times.time_of_cap_1543 + dt.timedelta(days=2)))
-
-    times_old = (old_N15.times - sideb_reset_2020.secs) / 3600
-
-    # t_ref_2022 = DateTime(760799927.93)
-    # t_ref_2020 = DateTime('2020:237:03:45:28.577')
-    # fetch.data_source.set('maude allow_subset=False highrate=True')
-    # old_cea = fetch.MSID('2CEAHVPT', '2020:235', '2020:240')
-    # old_fea = fetch.MSID('2FHTRMZT', '2020:235', '2020:240')
-
-    # old_N15 = fetch.MSID('2N15VAVL', '2020:235', '2020:240')
-    # old_P15 = fetch.MSID('2P15VAVL', '2020:235', '2020:240')
-    # fetch.data_source.set('maude')
-    # new_cea = fetch.MSID('2CEAHVPT', '2022:039', '2022:041')
-    # new_fea = fetch.MSID('2FHTRMZT', '2022:039', '2022:041')
-
-    # new_N15 = fetch.MSID('2N15VBVL', '2022:039', '2022:041')
-    # new_P15 = fetch.MSID('2P15VBVL', '2022:039', '2022:041')
+    msidlist = ['2P15VBVL', '2N15VBVL', '2P05VBVL', '2FHTRMZT', '2CHTRPZT']
+    telem = fetch.MSIDset(msidlist, start=telem_start)
 
     fig = make_subplots()
     # ts_new = new_cea.times - t_ref_2022.secs
     # ts_old = old_cea.times - t_ref_2020.secs
 
-    fig.add_trace(go.Scatter(x=times_old, y=old_N15.vals,
-                             name='+15 V 2020 Behavior', line=dict(color='gray', width=2)), secondary_y=False)
-    fig.add_trace(go.Scatter(x=times_old, y=old_P15.vals,
-                             name='-15V 2020 Behavior', line=dict(color='gray', width=2)), secondary_y=False)
+    if old_telem is not None:
+        sideb_reset_2020 = chandraDateTime(event_times.time_of_cap_1543)
+        fig.add_trace(go.Scatter(x=(old_telem['old_N15'].times - sideb_reset_2020.secs) / 3600, y=old_telem['old_N15'].vals,
+                                 name='+15 V 2020 Behavior', line=dict(color='gray', width=2)), secondary_y=False)
+        fig.add_trace(go.Scatter(x=(old_telem['old_P15'].times - sideb_reset_2020.secs) / 3600, y=old_telem['old_P15'].vals,
+                                 name='-15V 2020 Behavior', line=dict(color='gray', width=2)), secondary_y=False)
+
+    fig.add_trace(go.Scatter(x=(telem['2P15VBVL'].times - time_zero.secs) /
+                  3600, y=telem['2P15VBVL'].vals, name='+15V 2P15VBVL (Now)'))
+
+    fig.add_trace(go.Scatter(x=(telem['2N15VBVL'].times - time_zero.secs) /
+                  3600, y=telem['2N15VBVL'].vals, name='-15V DWELL RATE 2N15VBVL'))
     # fig.add_trace(go.Scatter(x=ts_old, y=old_cea.vals,
     #                          name='2020 2CEAHVPT', line=dict(width=4)), secondary_y=False)
 
     fig.update_layout(
-        title="Interactive Voltages (updates every ~20 seconds)",
+        title=f'Interactive Voltages | Updated {dt.datetime.now().strftime("%b %d %H:%M:%S")}',
         xaxis_title="Hours Relative to start of CAP",
         yaxis_title="Bus Volgages (V)",
         font=dict(size=12),
@@ -93,10 +76,11 @@ def main():
     # ts_new = new_cea.times - t_ref_2022.secs
     # ts_old = old_cea.times - t_ref_2020.secs
 
-    fig2.add_trace(go.Scatter(x=times_old, y=old_cea_temp.vals,
-                              name='CEA 2020 Behavior', line=dict(color='gray', width=2)), secondary_y=False)
-    fig2.add_trace(go.Scatter(x=times_old, y=old_fea_temp.vals,
-                              name='FEA 2020 Behavior', line=dict(color='gray', width=2)), secondary_y=False)
+    if old_telem is not None:
+        fig2.add_trace(go.Scatter(x=(old_telem['old_cea_temp'].times - sideb_reset_2020.secs) / 3600, y=old_telem['old_cea_temp'].vals,
+                                  name='CEA 2020 Behavior', line=dict(color='gray', width=2)), secondary_y=False)
+        fig2.add_trace(go.Scatter(x=(old_telem['old_fea_temp'].times - sideb_reset_2020.secs) / 3600, y=old_telem['old_fea_temp'].vals,
+                                  name='FEA 2020 Behavior', line=dict(color='gray', width=2)), secondary_y=False)
     # fig.add_trace(go.Scatter(x=ts_old, y=old_cea.vals,
     #                          name='2020 2CEAHVPT', line=dict(width=4)), secondary_y=False)
 
@@ -109,19 +93,81 @@ def main():
                         showarrow=False)
 
     fig2.update_layout(
-        title="Interactive Temperatures",
+        title=f'Interactive Temperatures | Updated {dt.datetime.now().strftime("%b %d %H:%M:%S")}',
         xaxis_title="Hours Relative to start of CAP",
         yaxis_title="Temperatures (C)",
         font=dict(size=12),
         template="plotly",
         xaxis_range=[-0.5, 3],
-        yaxis_range=[-10, 25],
+        yaxis_range=[-10, 10],
         legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01)
     )
 
     out_html_file = '/Users/grant/Desktop/cap1603_plotly_temperatures.html'
     fig2.write_html(out_html_file, auto_open=True, full_html=False)
     scp_file_to_hrcmonitor(file_to_scp=out_html_file)
+
+
+def get_old_telem():
+
+    sideb_reset_2020 = chandraDateTime(event_times.time_of_cap_1543)
+    old_N15 = fetch.MSID('2N15VBVL', start=convert_to_doy(event_times.time_of_cap_1543),
+                         stop=convert_to_doy(event_times.time_of_cap_1543 + dt.timedelta(days=1)))
+    old_P15 = fetch.MSID('2P15VBVL', start=convert_to_doy(event_times.time_of_cap_1543),
+                         stop=convert_to_doy(event_times.time_of_cap_1543 + dt.timedelta(days=1)))
+    old_cea_temp = fetch.MSID('2CHTRPZT', start=convert_to_doy(event_times.time_of_cap_1543),
+                              stop=convert_to_doy(event_times.time_of_cap_1543 + dt.timedelta(days=1)))
+    old_fea_temp = fetch.MSID('2FHTRMZT', start=convert_to_doy(event_times.time_of_cap_1543),
+                              stop=convert_to_doy(event_times.time_of_cap_1543 + dt.timedelta(days=1)))
+    times_old = (old_N15.times - sideb_reset_2020.secs) / 3600
+
+    old_telem = {'old_N15': old_N15,
+                 'old_P15': old_P15,
+                 'old_cea_temp': old_cea_temp,
+                 'old_fea_temp': old_fea_temp,
+                 'times_old': times_old}
+
+    return old_telem
+
+
+def parse_args():
+
+    argparser = argparse.ArgumentParser()
+
+    argparser.add_argument('--monitor', action='store_true')
+
+    args = argparser.parse_args()
+
+    return args
+
+
+def main():
+
+    args = parse_args()
+
+    fetch.data_source.set('maude allow_subset=False highrate=True')
+
+    telem_start = '2022:070'
+    time_zero = CxoTime.now()  # fake for testing
+    time_zero = CxoTime('2022:070:11:15')  # CAP start
+
+    old_telem = get_old_telem()
+
+    if args.monitor is False:
+        make_interactives(telem_start, time_zero, old_telem=old_telem)
+
+    elif args.monitor is True:
+
+        sleep_period_seconds = 30
+
+        while True:
+            make_interactives(telem_start, time_zero, old_telem=old_telem)
+            time.sleep(30)
+
+            for i in range(0, sleep_period_seconds):
+                print('Refreshing Plotly plots in {} seconds...'.format(
+                    sleep_period_seconds-i), end="\r", flush=True)
+                time.sleep(1)  # sleep for 1 second per iteration
 
 
 if __name__ == '__main__':

@@ -14,7 +14,10 @@ from Chandra.Time import DateTime
 from cheta import fetch
 from matplotlib import pyplot as plt
 
+import argparse
+
 import plot_stylers
+from plot_helpers import drawnow
 from chandratime import (calc_time_to_next_comm, convert_chandra_time,
                          convert_to_doy)
 from goes_proxy import get_goes_proxy
@@ -41,7 +44,7 @@ def grab_orbit_metadata(plot_start=dt.date.today() - dt.timedelta(days=5)):
     return orbits, comms, comm_start_times, radzone_start_times, radzone_stop_times
 
 
-def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/', plot_start=dt.date.today() - dt.timedelta(days=5), plot_stop=dt.date.today() + dt.timedelta(days=3), show_plot=False, custom_save_name=None, figure_size=(16, 8), save_dpi=300, debug_prints=False):
+def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/', plot_start=dt.date.today() - dt.timedelta(days=5), plot_stop=dt.date.today() + dt.timedelta(days=3), custom_ylims=None, show_plot=False, custom_save_name=None, figure_size=(16, 8), save_dpi=300, debug_prints=False):
 
     fetch.data_source.set('maude allow_subset=False')
 
@@ -75,7 +78,10 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
     ax.set_ylabel(r'Event Rates (counts s$^{-1}$)', fontsize=10)
     ax.set_xlabel('Date', fontsize=10)
     ax.set_yscale('log')  # symlog will show zero but it's kinda not needed
-    ax.set_ylim(10, 2000000)
+    if custom_ylims is None:
+        ax.set_ylim(10, 2000000)
+    elif custom_ylims is not None:
+        ax.set_ylim(custom_ylims[0], custom_ylims[1])
     ax.set_xlim(plot_start, plot_stop)
     ax.set_title('Shield & Detector Rates as of {} EST'.format(dt.datetime.now(
     ).strftime("%Y-%b-%d %H:%M:%S")), color='slategray', size=10, pad=20)
@@ -116,12 +122,26 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
         plt.show()
 
     # Cleanup
-    del data, goes_times, goes_rates
-    plt.close('all')
-    fetch.data_source.set('cxc')
+    args = parse_args()
+    if args.monitor is False:
+        plt.close('all')
+        fetch.data_source.set('cxc')
+
+
+def parse_args():
+
+    argparser = argparse.ArgumentParser()
+
+    argparser.add_argument('--monitor', action='store_true')
+
+    args = argparser.parse_args()
+
+    return args
 
 
 if __name__ == "__main__":
+
+    args = parse_args()
 
     hostname = socket.gethostname().split('.')[0]
 
@@ -137,7 +157,18 @@ if __name__ == "__main__":
     else:
         sys.exit('Error: Hostname {} not recognized'.format(hostname))
 
-    print('Updating Shield Plot...')
-    make_shield_plot(fig_save_directory=fig_save_directory, show_plot=True)
-    plt.show()
-    print('Done')
+    if args.monitor is False:
+        print('Creating a single Shield Plot...')
+        make_shield_plot(fig_save_directory=fig_save_directory, show_plot=True)
+        plt.show()
+        print('Done')
+    elif args.monitor is True:
+
+        plot_kwargs = {'fig_save_directory': fig_save_directory,
+                       'show_plot': False,
+                       'plot_start': dt.date.today() - dt.timedelta(days=1),
+                       'custom_ylims': (2000, 7000)
+                       }
+        plt.ion()
+        while True:
+            drawnow(make_shield_plot, **plot_kwargs)
