@@ -28,6 +28,7 @@ evening_pass_time = dt.datetime(2020, 8, 24, 21, 20)
 tuesday_community_brief = dt.datetime(2020, 8, 25, 13, 0)
 wednesday_community_brief = dt.datetime(2020, 8, 26, 13, 0)
 
+sideA_reset = dt.datetime(2020, 8, 27, 0, 00)
 cap_step_2 = dt.datetime(2020, 8, 27, 0, 13)
 cap_step_5 = dt.datetime(2020, 8, 27, 0, 24)
 cap_step_8 = dt.datetime(2020, 8, 27, 0, 40)

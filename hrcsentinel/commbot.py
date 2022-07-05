@@ -100,7 +100,7 @@ def grab_critical_telemetry(start=CxoTime.now() - 60 * u.s):
     hrc_i_voltage = (
         critical_msids['2IMTPAST'].vals[-1], critical_msids['2IMBPAST'].vals[-1])
     # HALF voltage for HRC-I is 42/53
-    # FULL voltage for HRC-S is 79/91
+    # FULL voltage for HRC-I is 79/91
     hrc_s_voltage = (
         critical_msids['2SPTPAST'].vals[-1], critical_msids['2SPBPAST'].vals[-1])
     # HALF voltage for HRC-S is 43/54 (top/bottom)

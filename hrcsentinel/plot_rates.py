@@ -64,12 +64,12 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
             plot_start), sampling='full', max_fetch_Mb=100000, max_output_Mb=100000, quiet=True)
         # ax.plot(data[msid].times, data[msid].vals, label=msid)
         ax.plot_date(convert_chandra_time(
-            data[msid].times), data[msid].vals, marker='o', markersize=1.5, label=namelist[i])
+            data[msid].times), data[msid].vals, marker='o', fmt="", markersize=1.5, label=namelist[i])
 
     # Try to plot the GOES proxy rates. Don't die if it fails.
     try:
         goes_times, goes_rates = get_goes_proxy()
-        ax.plot_date(goes_times, goes_rates, marker=None, linestyle='-',
+        ax.plot_date(goes_times, goes_rates, marker=None, fmt="", linestyle='-',
                      alpha=0.8, zorder=1, label='GOES-16 Proxy')
     except Exception:
         # this is very bad practice
@@ -121,11 +121,11 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
     if show_plot is True:
         plt.show()
 
-    # Cleanup
-    args = parse_args()
-    if args.monitor is False:
-        plt.close('all')
-        fetch.data_source.set('cxc')
+    # # Cleanup
+    # args = parse_args()
+    # if args.monitor is False:
+    #     plt.close('all')
+    #     fetch.data_source.set('cxc')
 
 
 def parse_args():
