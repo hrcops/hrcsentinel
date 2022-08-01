@@ -13,7 +13,6 @@ from cheta import fetch
 from cxotime import CxoTime
 
 import plot_stylers
-from chandratime import calc_time_to_next_comm
 from heartbeat import are_we_in_comm
 from plot_dashboard import (comm_status_stamp, make_ancillary_plots,
                             make_realtime_plot)

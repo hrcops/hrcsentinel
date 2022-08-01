@@ -21,8 +21,7 @@ import event_times
 import msidlists
 # HRCSentinel stuff
 import plot_stylers
-from chandratime import (calc_time_to_next_comm, convert_chandra_time,
-                         convert_to_doy)
+from chandratime import convert_chandra_time, convert_to_doy
 from commbot import convert_bus_current_to_dn
 from plot_motors import make_motor_plots
 from plot_rates import make_shield_plot

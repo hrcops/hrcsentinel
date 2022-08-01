@@ -4,44 +4,74 @@ import datetime as dt
 import socket
 import sys
 import time
+import yaml
+import subprocess
 
 import numpy as np
 import pytz
 import requests
 from astropy.table import Table
 from astropy.time import Time
-from Chandra.Time import DateTime
+from Chandra.Time import DateTime as cxcDateTime
 from cheta import fetch
 from matplotlib import pyplot as plt
+import matplotlib.dates as mdate
+from Ska.Matplotlib import cxctime2plotdate as cxc2pd
 
 import argparse
 
 import plot_stylers
 from plot_helpers import drawnow
-from chandratime import (calc_time_to_next_comm, convert_chandra_time,
-                         convert_to_doy)
+from chandratime import convert_chandra_time, convert_to_doy
 from goes_proxy import get_goes_proxy
+
+
+def get_comms(DSN_COMMS_FILE='/proj/sot/ska/data/dsn_summary/dsn_summary.yaml'):
+    """
+    Get the list of comm passes from the DSN summary file. SCP it if necessary.
+    """
+    try:
+        comms_table = yaml.safe_load(open(DSN_COMMS_FILE, 'r'))
+    except FileNotFoundError:
+        print('DSN summary file not found. SCPing from SOT...')
+
+        subprocess.run(
+            ["scp", "tremblay@kady.cfa.harvard.edu:/proj/sot/ska/data/dsn_summary/dsn_summary.yaml", "./dsn_summary.yaml"])
+        comms_table = yaml.safe_load(open('dsn_summary.yaml', 'r'))
+    return comms_table
 
 
 def grab_orbit_metadata(plot_start=dt.date.today() - dt.timedelta(days=5)):
 
     # Grab the metadata (orbit, obsid, and radzone info) for the specified time period
     # This may well fail. You should wrap this in a try/except block.
-    from kadi import events
-    orbits = events.orbits.filter(
-        start=convert_to_doy(plot_start)).table
-    comms = events.dsn_comms.filter(
-        start=convert_to_doy(plot_start)).table
+    # from kadi import events
+    # orbits = events.orbits.filter(
+    #     start=convert_to_doy(plot_start)).table
 
-    # Radzone t_start is with respect to t_perigee, not t_start!
-    radzone_start_times = convert_chandra_time(
-        orbits['t_perigee'] + orbits['dt_start_radzone'])
-    radzone_stop_times = convert_chandra_time(
-        orbits['t_perigee'] + orbits['dt_stop_radzone'])
+    comms = get_comms()
+    try:
+        from kadi import events
+        orbits = events.orbits.filter(start=convert_to_doy(plot_start)).table
+        radzone_start_times = convert_chandra_time(
+            orbits['t_perigee'] + orbits['dt_start_radzone'])
+        radzone_stop_times = convert_chandra_time(
+            orbits['t_perigee'] + orbits['dt_stop_radzone'])
+    except Exception as e:
+        radzone_start_times = None
+        radzone_stop_times = None
 
-    comm_start_times = convert_chandra_time(comms['tstart'] + 3600)
+    return comms, radzone_start_times, radzone_stop_times
 
-    return orbits, comms, comm_start_times, radzone_start_times, radzone_stop_times
+    # # Radzone t_start is with respect to t_perigee, not t_start!
+    # radzone_start_times = convert_chandra_time(
+    #     orbits['t_perigee'] + orbits['dt_start_radzone'])
+    # radzone_stop_times = convert_chandra_time(
+    #     orbits['t_perigee'] + orbits['dt_stop_radzone'])
+
+    # # comm_start_times = convert_chandra_time(comms['tstart'] + 3600)
+
+    # return orbits, comms, comm_start_times, radzone_start_times, radzone_stop_times
 
 
 def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/', plot_start=dt.date.today() - dt.timedelta(days=5), plot_stop=dt.date.today() + dt.timedelta(days=3), custom_ylims=None, show_plot=False, custom_save_name=None, figure_size=(16, 8), save_dpi=300, debug_prints=False):
@@ -52,10 +82,13 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
     namelist = ['Total Event Rate', 'Valid Event Rate', 'AntiCo Shield Rate']
 
     try:
-        orbits, comms, comm_start_times, radzone_start_times, radzone_stop_times = grab_orbit_metadata(
-            plot_start=plot_start)
-    except Exception:
+        # orbits, comms, comm_start_times, radzone_start_times, radzone_stop_times = grab_orbit_metadata(
+        #     plot_start=plot_start)
+        comms, radzone_start_times, radzone_end_times = grab_orbit_metadata()
+    except OSError as e:
         comms = None
+        if debug_prints:
+            print(e)
 
     fig, ax = plt.subplots(figsize=figure_size)
 
@@ -71,8 +104,10 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
         goes_times, goes_rates = get_goes_proxy()
         ax.plot_date(goes_times, goes_rates, marker=None, fmt="",
                      alpha=0.8, zorder=1, label='GOES-16 Proxy')
-    except Exception:
+    except Exception as e:
         # this is very bad practice
+        if debug_prints:
+            print(e)
         pass
 
     ax.set_ylabel(r'Event Rates (counts s$^{-1}$)', fontsize=10)
@@ -95,17 +130,21 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
     ax.axvline(dt.datetime.now(pytz.utc), color='gray', alpha=0.5)
 
     if comms is not None:
-        for i, (radzone_start, radzone_stop) in enumerate(zip(radzone_start_times, radzone_stop_times)):
-            ax.axvspan(radzone_start, radzone_stop,
-                       alpha=0.3, color='slategray', zorder=1)
-            ax.text((radzone_start + radzone_stop) / 2, 300000, 'Radzone for \n Orbit {}'.format(
-                orbits['orbit_num'][i]), color='slategray', fontsize=6, ha='center', clip_on=True)
+        if radzone_start_times is not None:
+            for i, (radzone_start, radzone_stop) in enumerate(zip(radzone_start_times, radzone_stop_times)):
+                ax.axvspan(radzone_start, radzone_stop,
+                           alpha=0.3, color='slategray', zorder=1)
+                ax.text((radzone_start + radzone_stop) / 2, 300000, 'Radzone for \n Orbit {}'.format(
+                    orbits['orbit_num'][i]), color='slategray', fontsize=6, ha='center', clip_on=True)
 
         for i, comm in enumerate(comms):
-            plt.vlines(x=comm_start_times[i], ymin=80000, ymax=110000,
+            x = mdate.num2date(
+                cxc2pd(cxcDateTime(comm['bot_date']['value']).secs))
+
+            plt.vlines(x=x, ymin=80000, ymax=110000,
                        color='cornflowerblue', alpha=1, zorder=2)
-            ax.text(comm_start_times[i], 120000, 'Comm \n {}'.format(
-                comm['station']), color='cornflowerblue', fontsize=6, ha='center', clip_on=True)
+            ax.text(x, 120000, 'Comm \n {}'.format(
+                comm['station']['value'][:6]), color='cornflowerblue', fontsize=6, ha='center', clip_on=True)
 
     plt.xticks(fontsize=12)
     plt.yticks(fontsize=12)
@@ -133,6 +172,7 @@ def parse_args():
     argparser = argparse.ArgumentParser()
 
     argparser.add_argument('--monitor', action='store_true')
+    argparser.add_argument('--verbose', action='store_true')
 
     args = argparser.parse_args()
 
@@ -159,7 +199,8 @@ if __name__ == "__main__":
 
     if args.monitor is False:
         print('Creating a single Shield Plot...')
-        make_shield_plot(fig_save_directory=fig_save_directory, show_plot=True)
+        make_shield_plot(fig_save_directory=fig_save_directory,
+                         show_plot=True, debug_prints=args.verbose)
         plt.show()
         print('Done')
     elif args.monitor is True:
