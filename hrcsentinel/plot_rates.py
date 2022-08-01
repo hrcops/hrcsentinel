@@ -58,10 +58,11 @@ def grab_orbit_metadata(plot_start=dt.date.today() - dt.timedelta(days=5)):
         radzone_stop_times = convert_chandra_time(
             orbits['t_perigee'] + orbits['dt_stop_radzone'])
     except Exception as e:
+        orbits = None
         radzone_start_times = None
         radzone_stop_times = None
 
-    return comms, radzone_start_times, radzone_stop_times
+    return comms, orbits, radzone_start_times, radzone_stop_times
 
     # # Radzone t_start is with respect to t_perigee, not t_start!
     # radzone_start_times = convert_chandra_time(
@@ -84,7 +85,7 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
     try:
         # orbits, comms, comm_start_times, radzone_start_times, radzone_stop_times = grab_orbit_metadata(
         #     plot_start=plot_start)
-        comms, radzone_start_times, radzone_stop_times = grab_orbit_metadata()
+        comms, orbits, radzone_start_times, radzone_stop_times = grab_orbit_metadata()
     except OSError as e:
         comms = None
         radzone_start_times = None
