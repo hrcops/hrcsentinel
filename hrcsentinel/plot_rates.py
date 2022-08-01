@@ -69,7 +69,7 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
     # Try to plot the GOES proxy rates. Don't die if it fails.
     try:
         goes_times, goes_rates = get_goes_proxy()
-        ax.plot_date(goes_times, goes_rates, marker=None, fmt="", linestyle='-',
+        ax.plot_date(goes_times, goes_rates, marker=None, fmt="",
                      alpha=0.8, zorder=1, label='GOES-16 Proxy')
     except Exception:
         # this is very bad practice
@@ -85,7 +85,7 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
     ax.set_xlim(plot_start, plot_stop)
     ax.set_title('Shield & Detector Rates as of {} EST'.format(dt.datetime.now(
     ).strftime("%Y-%b-%d %H:%M:%S")), color='slategray', size=10, pad=20)
-    ax.axhline(60000, color=plot_stylers.red, linestyle='-',
+    ax.axhline(60000, color=plot_stylers.red,
                linewidth=2, label='SCS 107 Limit')
     ax.legend(prop={'size': 12}, loc=2)
     ax.legend(markerscale=6)
