@@ -39,8 +39,10 @@ def comm_status_stamp(comm_status, code_start_time, hostname, fig_save_directory
 
         commreport = 'Not in Comm'
         # and (try to) figure out when the next comm is:
-        comm_fetch_success, next_comm_string = calc_time_to_next_comm(
-            debug_prints=debug_prints)
+        # comm_fetch_success, next_comm_string = calc_time_to_next_comm(
+        #     debug_prints=debug_prints)
+
+        comm_fetch_success = False
 
         if comm_fetch_success:
             subtext = f'Next Comm should be in {next_comm_string}'
