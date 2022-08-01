@@ -143,8 +143,8 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
                             plot_start), sampling=sampling, max_fetch_Mb=100000, max_output_Mb=100000, quiet=True)
                         ax_resets = ax.twinx()
                         ax_resets.plot_date(convert_chandra_time(
-                            fifo_resets['2FIFOAVR'].times), fifo_resets['2FIFOAVR'].vals, linestyle='solid', linewidth=0.5, marker=None, fmt="", alpha=0.7,  color=plot_stylers.blue, label='FIFO Reset', zorder=0, rasterized=True)
-                        ax_resets.plot_date(convert_chandra_time(format_changes['CCSDSTMF'].times), format_changes['CCSDSTMF'].vals, linestyle='solid',
+                            fifo_resets['2FIFOAVR'].times), fifo_resets['2FIFOAVR'].vals, linewidth=0.5, marker=None, fmt="", alpha=0.7,  color=plot_stylers.blue, label='FIFO Reset', zorder=0, rasterized=True)
+                        ax_resets.plot_date(convert_chandra_time(format_changes['CCSDSTMF'].times), format_changes['CCSDSTMF'].vals,
                                             linewidth=0.5, marker=None, fmt="", alpha=0.7,  color=plot_stylers.purple, label='Format Changes', zorder=0, rasterized=True)
                         ax_resets.tick_params(labelright='off')
                         ax_resets.set_yticks([])
