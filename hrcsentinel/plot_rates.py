@@ -87,6 +87,8 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
         comms, radzone_start_times, radzone_stop_times = grab_orbit_metadata()
     except OSError as e:
         comms = None
+        radzone_start_times = None
+        radzone_stop_times = None
         if debug_prints:
             print(e)
 
