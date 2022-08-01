@@ -175,7 +175,7 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
 
                 if plotnum == 11:
                     # then we're plotting AntiCo shield rate, not pitch, so log it
-                    ax.set_yscale('log')
+                    ax.set_yscale('symlog')
 
             if plotnum == 2:
                 # Then this is the Bus Current plot. Overplot the CAUTION and WARNING limits
@@ -186,7 +186,7 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
 
             if plotnum == 10:
                 # then this is the shield/det event rate plot and it's better in log y
-                ax.set_yscale('log')
+                ax.set_yscale('symlog')
 
             # Set all limits
             ax.set_xlim(plot_start, plot_stop)
