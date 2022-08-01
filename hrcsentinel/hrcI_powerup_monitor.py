@@ -18,8 +18,8 @@ from plot_stylers import *
 
 import pytz
 
-from hrcsentinel import hrccore as hrc
-hrc.styleplots()
+# from hrcsentinel import hrccore as hrc
+# hrc.styleplots()
 labelsizes = 12
 plt.rcParams['axes.titlesize'] = labelsizes
 plt.rcParams['axes.labelsize'] = labelsizes

@@ -135,19 +135,22 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
                 ax.axvline(dt.datetime.now(pytz.utc), color='gray', alpha=0.5)
 
                 if plotnum == 11:
-                    # then this is the Pitch plot, and I want to underplot spacecraft pitch
-                    fifo_resets = fetch.get_telem('2FIFOAVR', start=convert_to_doy(
-                        plot_start), sampling=sampling, max_fetch_Mb=100000, max_output_Mb=100000, quiet=True)
-                    format_changes = fetch.get_telem('CCSDSTMF', start=convert_to_doy(
-                        plot_start), sampling=sampling, max_fetch_Mb=100000, max_output_Mb=100000, quiet=True)
-                    ax_resets = ax.twinx()
-                    ax_resets.plot_date(convert_chandra_time(
-                        fifo_resets['2FIFOAVR'].times), fifo_resets['2FIFOAVR'].vals, linestyle='solid', linewidth=0.5, marker=None, fmt="", alpha=0.7,  color=plot_stylers.blue, label='FIFO Reset', zorder=0, rasterized=True)
-                    ax_resets.plot_date(convert_chandra_time(format_changes['CCSDSTMF'].times), format_changes['CCSDSTMF'].vals, linestyle='solid',
-                                        linewidth=0.5, marker=None, fmt="", alpha=0.7,  color=plot_stylers.purple, label='Format Changes', zorder=0, rasterized=True)
-                    ax_resets.tick_params(labelright='off')
-                    ax_resets.set_yticks([])
-                    ax_resets.legend(prop={'size': 8}, loc=3)
+                    try:
+                        # then this is the Pitch plot, and I want to underplot spacecraft pitch
+                        fifo_resets = fetch.get_telem('2FIFOAVR', start=convert_to_doy(
+                            plot_start), sampling=sampling, max_fetch_Mb=100000, max_output_Mb=100000, quiet=True)
+                        format_changes = fetch.get_telem('CCSDSTMF', start=convert_to_doy(
+                            plot_start), sampling=sampling, max_fetch_Mb=100000, max_output_Mb=100000, quiet=True)
+                        ax_resets = ax.twinx()
+                        ax_resets.plot_date(convert_chandra_time(
+                            fifo_resets['2FIFOAVR'].times), fifo_resets['2FIFOAVR'].vals, linestyle='solid', linewidth=0.5, marker=None, fmt="", alpha=0.7,  color=plot_stylers.blue, label='FIFO Reset', zorder=0, rasterized=True)
+                        ax_resets.plot_date(convert_chandra_time(format_changes['CCSDSTMF'].times), format_changes['CCSDSTMF'].vals, linestyle='solid',
+                                            linewidth=0.5, marker=None, fmt="", alpha=0.7,  color=plot_stylers.purple, label='Format Changes', zorder=0, rasterized=True)
+                        ax_resets.tick_params(labelright='off')
+                        ax_resets.set_yticks([])
+                        ax_resets.legend(prop={'size': 8}, loc=3)
+                    except ValueError:
+                        continue
 
             # Do mission-wide tweaking
             elif missionwide is True:
