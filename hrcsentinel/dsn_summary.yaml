@@ -4,51 +4,6 @@
     value: TKG PASS
   bot:
     label: BOT
-    value: 1915
-  bot_date:
-    label: BOT date
-    value: 2022:210:19:15:00.000
-  bot_time:
-    label: BOT time
-    value: 1659122100
-  bot_year_day:
-    label: BOT year
-    value: 2022 210.802
-  eot:
-    label: EOT
-    value: 2015
-  eot_date:
-    label: EOT date
-    value: 2022:210:20:15:00.000
-  eot_time:
-    label: EOT time
-    value: 1659125700
-  eot_year_day:
-    label: EOT year
-    value: 2022 210.844
-  lga:
-    label: LGA
-    value: ''
-  sched_support_time:
-    label: Support (GMT)
-    value: 210/1815-2030
-  site:
-    label: Site
-    value: MADRID
-  soe:
-    label: SOE
-    value: A
-  station:
-    label: Station
-    value: DSS-54
-  track_local:
-    label: Track time (local)
-    value: 1515-1615 EDT, Fri 29 Jul
-- activity:
-    label: Activity
-    value: TKG PASS
-  bot:
-    label: BOT
     value: 0225
   bot_date:
     label: BOT date
@@ -1169,3 +1124,48 @@
   track_local:
     label: Track time (local)
     value: 0650-0750 EDT, Mon  8 Aug
+- activity:
+    label: Activity
+    value: TKG PASS
+  bot:
+    label: BOT
+    value: 1905
+  bot_date:
+    label: BOT date
+    value: 2022:220:19:05:00.000
+  bot_time:
+    label: BOT time
+    value: 1659985500
+  bot_year_day:
+    label: BOT year
+    value: 2022 220.795
+  eot:
+    label: EOT
+    value: 2005
+  eot_date:
+    label: EOT date
+    value: 2022:220:20:05:00.000
+  eot_time:
+    label: EOT time
+    value: 1659989100
+  eot_year_day:
+    label: EOT year
+    value: 2022 220.837
+  lga:
+    label: LGA
+    value: ''
+  sched_support_time:
+    label: Support (GMT)
+    value: 220/1805-2020
+  site:
+    label: Site
+    value: MADRID
+  soe:
+    label: SOE
+    value: A
+  station:
+    label: Station
+    value: DSS-54
+  track_local:
+    label: Track time (local)
+    value: 1505-1605 EDT, Mon  8 Aug

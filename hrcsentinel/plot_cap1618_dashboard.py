@@ -92,7 +92,7 @@ def update_plot(telem_start, time_zero, iteration_count, old_telem=None, save_pa
                  old_telem['2FHTRMZT'].vals, color='gray', alpha=0.1, zorder=1)
 
     for ax in [ax1, ax2]:
-        ax.set_xlim(-0.5, 3.5)
+        ax.set_xlim(-1, 3.5)
         if ax == ax1:
             ax.set_ylim(-16, 16)
         if ax == ax2:
@@ -108,20 +108,20 @@ def update_plot(telem_start, time_zero, iteration_count, old_telem=None, save_pa
         # Give the "now" label a white background because it's gonna overlap things...
         # nowtext.set_bbox(dict(facecolor='white', alpha=1.0, edgecolor='white'))
 
-        ax.legend(prop={'size': 10}, loc=3)
+        ax.legend(prop={'size': 10}, loc='lower right')
 
-        obs_start = CxoTime('2022:213:18:34:55').secs - time_zero.secs
+        bot_start = CxoTime('2022:213:18:10:00').secs - time_zero.secs
         maneuver = CxoTime('2022:213:18:00:14').secs - time_zero.secs
 
         comm_end = CxoTime('2022:213:21:10:00').secs - time_zero.secs
 
-        ax.axvline(obs_start/3600, color=plot_stylers.red, alpha=0.5)
+        ax.axvline(bot_start/3600, color=plot_stylers.red, alpha=0.5)
         ax.axvline(comm_end/3600, color=plot_stylers.purple, alpha=0.5)
 
         ax.axvline(maneuver/3600, color=plot_stylers.red, alpha=0.5)
 
-        ax.text(obs_start/3600, ax.get_ylim()
-                [1], 'Capella Start', color=plot_stylers.red, ha='left', fontsize=8)
+        ax.text(bot_start/3600, ax.get_ylim()
+                [1], 'BOT', color=plot_stylers.red, ha='left', fontsize=8)
 
         ax.text(comm_end/3600, ax.get_ylim()
                 [1], 'EOT', color=plot_stylers.purple, ha='right', fontsize=8)
@@ -181,7 +181,8 @@ def main():
 
     telem_start = '2022:213'
     # time_zero = CxoTime.now()  # fake for testing
-    time_zero = CxoTime('2022:213:18:10:00')  # CAP start
+    time_zero = CxoTime('2022:213:18:34:55')  # CAP start
+
     iteration_count = 0
 
     # Current chandra time at script start is CxoTime.now().secs

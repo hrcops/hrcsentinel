@@ -11,7 +11,6 @@ from plotly.subplots import make_subplots
 
 
 from cheta import fetch_sci as fetch
-from kadi import events, cmds
 from cxotime import CxoTime
 from Chandra.Time import DateTime as chandraDateTime
 from chandratime import convert_to_doy
@@ -65,9 +64,9 @@ def make_interactives(telem_start, time_zero, old_telem=None):
 
     fig.add_vline(x=0, line_width=1, line_color="gray")
 
-    fig.add_vline(x=3, line_width=1, line_color="gray")
+    fig.add_vline(x=2.6, line_width=1, line_color="gray")
 
-    fig.add_annotation(x=3, y=26,
+    fig.add_annotation(x=2.6, y=26,
                        text="EOT",
                        showarrow=False)
 
@@ -96,9 +95,9 @@ def make_interactives(telem_start, time_zero, old_telem=None):
 
     fig2.add_vline(x=0, line_width=1, line_color="gray")
 
-    fig2.add_vline(x=3, line_width=1, line_color="gray")
+    fig2.add_vline(x=2.6, line_width=1, line_color="gray")
 
-    fig2.add_annotation(x=3, y=11,
+    fig2.add_annotation(x=2.6, y=11,
                         text="EOT",
                         showarrow=False)
 
@@ -159,7 +158,7 @@ def main():
 
     telem_start = '2022:213'
     # time_zero = CxoTime.now()  # fake for testing
-    time_zero = CxoTime('2022:213:18:10:00')  # CAP start
+    time_zero = CxoTime('2022:213:18:34:55')  # CAP start
     iteration_count = 0
 
     # old_telem = get_old_telem()
