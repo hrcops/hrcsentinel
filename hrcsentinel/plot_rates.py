@@ -18,6 +18,8 @@ from matplotlib import pyplot as plt
 import matplotlib.dates as mdate
 from Ska.Matplotlib import cxctime2plotdate as cxc2pd
 
+from kadi import events
+
 import argparse
 
 import plot_stylers
@@ -41,6 +43,14 @@ def get_comms(DSN_COMMS_FILE='/proj/sot/ska/data/dsn_summary/dsn_summary.yaml'):
     return comms_table
 
 
+def get_radzones():
+    """
+    Constuct a list of complete radiation zones using kadi events
+    """
+    radzones = events.rad_zones.filter(start=cxcDateTime() - 5, stop=None)
+    return [(x.start, x.stop) for x in radzones]
+
+
 def grab_orbit_metadata(plot_start=dt.date.today() - dt.timedelta(days=5)):
 
     # Grab the metadata (orbit, obsid, and radzone info) for the specified time period
@@ -51,7 +61,6 @@ def grab_orbit_metadata(plot_start=dt.date.today() - dt.timedelta(days=5)):
 
     comms = get_comms()
     try:
-        from kadi import events
         orbits = events.orbits.filter(start=convert_to_doy(plot_start)).table
         radzone_start_times = convert_chandra_time(
             orbits['t_perigee'] + orbits['dt_start_radzone'])
@@ -83,13 +92,17 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
     namelist = ['Total Event Rate', 'Valid Event Rate', 'AntiCo Shield Rate']
 
     try:
-        # orbits, comms, comm_start_times, radzone_start_times, radzone_stop_times = grab_orbit_metadata(
-        #     plot_start=plot_start)
-        comms, orbits, radzone_start_times, radzone_stop_times = grab_orbit_metadata()
+        comms = get_comms()
     except OSError as e:
         comms = None
-        radzone_start_times = None
-        radzone_stop_times = None
+        if debug_prints:
+            print(e)
+
+    try:
+        radzones = get_radzones()
+
+    except OSError as e:
+        radzones = None
         if debug_prints:
             print(e)
 
@@ -134,13 +147,6 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
         'US/Eastern')), color='gray', alpha=0.5)
 
     if comms is not None:
-        if radzone_start_times is not None:
-            for i, (radzone_start, radzone_stop) in enumerate(zip(radzone_start_times, radzone_stop_times)):
-                ax.axvspan(radzone_start, radzone_stop,
-                           alpha=0.3, color='slategray', zorder=1)
-                ax.text((radzone_start + radzone_stop) / 2, 300000, 'Radzone for \n Orbit {}'.format(
-                    orbits['orbit_num'][i]), color='slategray', fontsize=6, ha='center', clip_on=True)
-
         for i, comm in enumerate(comms):
             x = mdate.num2date(
                 cxc2pd(cxcDateTime(comm['bot_date']['value']).secs))
@@ -149,6 +155,17 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
                        color='cornflowerblue', alpha=1, zorder=2)
             ax.text(x, 120000, 'Comm \n {}'.format(
                 comm['station']['value'][:6]), color='cornflowerblue', fontsize=6, ha='center', clip_on=True)
+
+    if radzones is not None:
+
+        for i, (radzone_start, radzone_stop) in enumerate(radzones):
+            t0 = cxcDateTime(radzone_start).secs
+            t1 = cxcDateTime(radzone_stop).secs
+
+            ax.axvspan(t0, t1,
+                       alpha=0.3, color='slategray', zorder=1)
+            ax.text((t0 + t1) / 2, 300000, 'Radzone', color='slategray',
+                    fontsize=6, ha='center', clip_on=True)
 
     plt.xticks(fontsize=12)
     plt.yticks(fontsize=12)

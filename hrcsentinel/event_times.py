@@ -7,22 +7,21 @@ import matplotlib.dates as mdate
 
 from chandratime import convert_chandra_time, convert_to_doy
 
+# GENERAL TIMES
+
 # Use today's date, plus 2 days
-end_date = dt.date.today() + dt.timedelta(days=2)
+today_plus_two_days = dt.date.today() + dt.timedelta(days=2)
 
-
-time_of_2022_anomaly = dt.datetime(2022, 2, 9, 13, 17, 38)
+# THE FIRST ANOMALY
+oneweek_pre_anomaly = dt.datetime(2020, 8, 18, 0)
+oneday_pre_anomaly = dt.datetime(2020, 8, 23, 0)
 
 sunday_pass = dt.datetime(2020, 8, 24, 2, 30)
 sunday_pass_end = dt.datetime(2020, 8, 24, 3, 27, 34)
 
-oneweek_pre_anomaly = dt.datetime(2020, 8, 18, 0)
-oneday_pre_anomaly = dt.datetime(2020, 8, 23, 0)
-
-eventdate = mdate.num2date(convert_chandra_time([714627954.9676153660]))
+morning_pass_time = dt.datetime(2020, 8, 24, 13, 45)
 fa6_heater_poweroff = dt.datetime(2020, 8, 24, 14, 38)
 hrc_poweroff_date = dt.datetime(2020, 8, 24, 15, 7, 26)
-morning_pass_time = dt.datetime(2020, 8, 24, 13, 45)
 evening_pass_time = dt.datetime(2020, 8, 24, 21, 20)
 
 tuesday_community_brief = dt.datetime(2020, 8, 25, 13, 0)
@@ -48,5 +47,7 @@ human_time_of_second_shutdown = mdate.num2date(
 
 # B-side swap
 time_of_cap_1543 = dt.datetime(2020, 8, 31, 17, 50)
-
 time_of_cap_1545a = dt.datetime(2020, 9, 7, 23, 54)
+
+# B-side anomaly =(
+b_side_anomaly_time = dt.datetime(2022, 2, 9, 13, 17, 38)

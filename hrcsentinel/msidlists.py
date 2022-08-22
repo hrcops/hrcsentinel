@@ -272,7 +272,7 @@ dashboard_limits_anomaly = [(-20, 30),
                             (40, 190)
                             ]
 
-dashboard_msids_missionwide = [["2P24VBVL", "2P15VBVL", "2N15VBVL", "2P05VBVL"],
+dashboard_msids_missionwide = [["2P24VAVL", "2P15VAVL", "2N15VAVL", "2P05VAVL"],
                                ["2PRBSVL"],
                                ["2PRBSCR"],
                                ["2PMT1T", "2PMT2T"],

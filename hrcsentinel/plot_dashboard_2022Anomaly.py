@@ -219,9 +219,9 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
                 dashboard_tiles[plotnum]), color='slategray', loc='center')
 
             if separate_plots is True:
-                ax.text(event_times.time_of_2022_anomaly, ax.get_ylim()[1],
+                ax.text(event_times.b_side_anomaly_time, ax.get_ylim()[1],
                         'Time of Anomaly', fontsize=8, color='slategray', zorder=3)
-                ax.axvline(event_times.time_of_2022_anomaly,
+                ax.axvline(event_times.b_side_anomaly_time,
                            color='red', alpha=0.5)
                 # plt.show()
                 plt.savefig(
