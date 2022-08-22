@@ -5,6 +5,7 @@ import datetime as dt
 import socket
 import sys
 import time
+import pytz
 import traceback
 import gc
 
@@ -100,7 +101,7 @@ def main():
 
     if args.test is True:
         print('Running HRCMonitor in TEST mode. We will try to make all plots just once...')
-        test_start_time = dt.datetime.now()
+        test_start_time = dt.datetime.now(tz=pytz.timezone('US/Eastern'))
         five_days_ago = dt.date.today() - dt.timedelta(days=5)
         two_days_hence = dt.date.today() + dt.timedelta(days=2)
 
@@ -128,7 +129,8 @@ def main():
 
             # Generate the first comm status stamp and create code start date
             if iteration_counter == 0:
-                code_start_time = dt.datetime.now()
+                code_start_time = dt.datetime.now(
+                    tz=pytz.timezone('US/Eastern'))
 
             comm_status_stamp(comm_status=in_comm, fig_save_directory=fig_save_directory,
                               code_start_time=code_start_time, hostname=hostname, debug_prints=args.debug)
@@ -158,7 +160,7 @@ def main():
                     fetch.data_source.set('maude allow_subset=False')
                     # Refresh the plots every 20th iteration out-of-comm
                     print("Performing out-of-comm plot refresh at {}                                      ".format(
-                        dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), flush=True)
+                        dt.datetime.now(tz=pytz.timezone('US/Eastern')).strftime("%Y-%b-%d %H:%M:%S")), flush=True)
                     sys.stdout.write("\033[K")
                     five_days_ago = dt.date.today() - dt.timedelta(days=5)
                     two_days_hence = dt.date.today() + dt.timedelta(days=2)
@@ -185,7 +187,7 @@ def main():
                 if in_comm_counter == 5:
                     # Then create the mission-wide status plots
                     print("Refreshing longviews (Iteration {}) at {}".format(
-                        iteration_counter, dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), flush=True)
+                        iteration_counter, dt.datetime.now(tz=pytz.timezone('US/Eastern')).strftime("%Y-%b-%d %H:%M:%S")), flush=True)
                     make_ancillary_plots(fig_save_directory)
                     plt.close('all')
                     sys.stdout.write("\033[K")
@@ -196,7 +198,7 @@ def main():
                     fetch.data_source.set('cxc')
 
                 print("Refreshing dashboard (Iteration {}) at {}".format(
-                    iteration_counter, dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), flush=True)
+                    iteration_counter, dt.datetime.now(tz=pytz.timezone('US/Eastern')).strftime("%Y-%b-%d %H:%M:%S")), flush=True)
 
                 five_days_ago = dt.date.today() - dt.timedelta(days=5)
                 two_days_hence = dt.date.today() + dt.timedelta(days=2)

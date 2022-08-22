@@ -121,16 +121,17 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
     elif custom_ylims is not None:
         ax.set_ylim(custom_ylims[0], custom_ylims[1])
     ax.set_xlim(plot_start, plot_stop)
-    ax.set_title('Shield & Detector Rates as of {} EST'.format(dt.datetime.now(
-    ).strftime("%Y-%b-%d %H:%M:%S")), color='slategray', size=10, pad=20)
+    ax.set_title("Shield & Detector Rates as of {} EST".format(dt.datetime.now(tz=pytz.timezone(
+        'US/Eastern')).strftime('%Y-%b-%d %H:%M:%S')), color='slategray', size=10, pad=20)
     ax.axhline(60000, color=plot_stylers.red,
                linewidth=2, label='SCS 107 Limit')
     ax.legend(prop={'size': 12}, loc=2)
     ax.legend(markerscale=6)
 
-    ax.text(dt.datetime.now(pytz.utc), ax.get_ylim()[1],
+    ax.text(dt.datetime.now(tz=pytz.timezone('US/Eastern')), ax.get_ylim()[1],
             'Now', fontsize=12, color='slategray', zorder=3, ha='center')
-    ax.axvline(dt.datetime.now(pytz.utc), color='gray', alpha=0.5)
+    ax.axvline(dt.datetime.now(tz=pytz.timezone(
+        'US/Eastern')), color='gray', alpha=0.5)
 
     if comms is not None:
         if radzone_start_times is not None:

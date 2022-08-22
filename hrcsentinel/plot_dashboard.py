@@ -32,7 +32,7 @@ def comm_status_stamp(comm_status, code_start_time, hostname, fig_save_directory
 
     if comm_status is True:
         commreport = f'In Comm!'
-        subtext = f'Comm appears to have started at {dt.datetime.now().strftime("%H:%M:%S")}'
+        subtext = f"Comm appears to have started at {dt.datetime.now(tz=pytz.timezone('US/Eastern')).strftime(' % H: % M: % S')}"
         textcolor = 'steelblue'
     elif comm_status is False:
 
@@ -49,7 +49,8 @@ def comm_status_stamp(comm_status, code_start_time, hostname, fig_save_directory
             subtext = ''
         textcolor = 'slategray'
 
-    code_uptime = dt.datetime.now() - code_start_time
+    code_uptime = dt.datetime.now(
+        tz=pytz.timezone('US/Eastern')) - code_start_time
 
     fig = plt.figure(figsize=(8, 2))
     plt.axis('off')
@@ -211,10 +212,10 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
     # Title the top of the figure
     if missionwide is False:
         plt.suptitle(t='Latest Bus Current: {} DN ({} A) | Updated as of {} EST'.format(convert_bus_current_to_dn(latest_bus_current), np.round(
-            latest_bus_current, 2),  dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), color='slategray', size=6)
+            latest_bus_current, 2),  dt.datetime.now(tz=pytz.timezone('US/Eastern')).strftime("%Y-%b-%d %H:%M:%S")), color='slategray', size=6)
     elif missionwide is True:
         plt.suptitle(t='Updated as of {} EST'.format(
-            dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), color='slategray', size=6)
+            dt.datetime.now(tz=pytz.timezone('US/Eastern')).strftime("%Y-%b-%d %H:%M:%S")), color='slategray', size=6)
 
     if fig_save_directory is not None:
         # Then the user wants to save the figure

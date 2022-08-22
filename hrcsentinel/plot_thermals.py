@@ -124,7 +124,7 @@ def make_thermal_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/h
 
     if counter is not None:
         ax.set_title('HRC Thermistor MSIDs (Daily Means) | Updated as of {} EST'.format(
-            dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), color='slategray', size=10)
+            dt.datetime.now(tz=pytz.timezone('US/Eastern')).strftime("%Y-%b-%d %H:%M:%S")), color='slategray', size=10)
     else:
         ax.set_title(
             "HRC Thermistor Temperatures (Daily Averages) Over the Mission Lifetime", color='slategray', size=6)
@@ -135,9 +135,9 @@ def make_thermal_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/h
 
     # ax.legend(loc=2, prop={'size': 13})
 
-    ax.axvline(dt.datetime.now(pytz.utc),
+    ax.axvline(dt.datetime.now(tz=pytz.timezone('US/Eastern')),
                color='gray', alpha=0.5)
-    ax.text(dt.datetime.now(pytz.utc), ax.get_ylim()[1]+0.3,
+    ax.text(dt.datetime.now(tz=pytz.timezone('US/Eastern')), ax.get_ylim()[1]+0.3,
             'Now', fontsize=10, color='slategray')
 
     ax.set_xlim(dt.datetime(2001, 1, 1),
@@ -185,7 +185,7 @@ def make_thermal_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/h
 
     if counter is not None:
         ax.set_title('Moving Average Thermal Trends | Updated as of {} EST'.format(
-            dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")), color='slategray', size=10)
+            dt.datetime.now(tz=pytz.timezone('US/Eastern')).strftime("%Y-%b-%d %H:%M:%S")), color='slategray', size=10)
     else:
         ax.set_title(
             "HRC Thermistor Temperatures (Moving Averages) Over the Mission Lifetime", color='slategray', size=6)
@@ -196,10 +196,10 @@ def make_thermal_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/h
     plt.xticks(fontsize=10)
     plt.yticks(fontsize=10)
 
-    ax.axvline(dt.datetime.now(pytz.utc),
+    ax.axvline(dt.datetime.now(tz=pytz.timezone('US/Eastern')),
                color='gray', alpha=0.5)
 
-    ax.text(dt.datetime.now(pytz.utc), ax.get_ylim()[1]+0.3,
+    ax.text(dt.datetime.now(tz=pytz.timezone('US/Eastern')), ax.get_ylim()[1]+0.3,
             'Now', fontsize=10, color='slategray')
 
     ax.set_xlim(dt.datetime(2001, 1, 1),
