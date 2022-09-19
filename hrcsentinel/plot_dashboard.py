@@ -32,7 +32,7 @@ def comm_status_stamp(comm_status, code_start_time, hostname, fig_save_directory
 
     if comm_status is True:
         commreport = f'In Comm!'
-        subtext = f"Comm appears to have started at {dt.datetime.now(tz=pytz.timezone('US/Eastern')).strftime(' % H: % M: % S')}"
+        subtext = f"Comm appears to have started at {dt.datetime.now(tz=pytz.timezone('US/Eastern')).strftime('%Y %b %d %H:%M:%S')}"
         textcolor = 'steelblue'
     elif comm_status is False:
 
