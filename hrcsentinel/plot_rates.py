@@ -207,9 +207,9 @@ if __name__ == "__main__":
     hostname = socket.gethostname().split('.')[0]
 
     allowed_hosts = {'han-v': '/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/',
+                     'gravity' : '/Users/grant/Desktop/',
                      'symmetry': '/Users/grant/Desktop/',
-                     'semaphore': '/Users/grant/Desktop/',
-                     'MacBook-Pro': '/Users/grant/Desktop/'}
+                     'semaphore': '/Users/grant/Desktop/'}
 
     if hostname in allowed_hosts:
         fig_save_directory = allowed_hosts[hostname]

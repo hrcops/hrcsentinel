@@ -68,6 +68,7 @@ def main():
     chatty = args.report_errors  # Will be True if user set --report_errors
 
     allowed_hosts = {'han-v': '/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/',
+                     'gravity' : '/Users/grant/Desktop/',
                      'symmetry': '/Users/grant/Desktop/',
                      'semaphore': '/Users/grant/Desktop/'}
 
