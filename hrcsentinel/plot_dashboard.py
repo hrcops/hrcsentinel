@@ -28,7 +28,7 @@ from plot_rates import make_shield_plot
 from plot_thermals import make_thermal_plots
 
 
-def comm_status_stamp(comm_status, code_start_time, hostname, fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/', debug_prints=False):
+def comm_status_stamp(comm_status, code_start_time, hostname, fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/', debug_prints=False) -> None:
 
     if comm_status is True:
         commreport = f'In Comm!'
@@ -67,7 +67,7 @@ def comm_status_stamp(comm_status, code_start_time, hostname, fig_save_directory
     plt.close('all')
 
 
-def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), plot_stop=dt.date.today() + dt.timedelta(days=2), sampling='full', current_hline=False, date_format=mdate.DateFormatter('%d %H'), force_limits=False, missionwide=False, fig_save_directory=None, show_in_gui=False, use_cheta=False):
+def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), plot_stop=dt.date.today() + dt.timedelta(days=2), sampling='full', current_hline=False, date_format=mdate.DateFormatter('%d %H'), force_limits=False, missionwide=False, fig_save_directory=None, show_in_gui=False, use_cheta=False) -> None:
     plotnum = -1
 
     fig = plt.figure(figsize=(16, 6), constrained_layout=True)
@@ -309,7 +309,7 @@ def parse_args():
     return args
 
 
-def main():
+def main() -> None:
     # Enable this thing to run on the command line for on-demand plots with specific date ranges
 
     # Force a gui backend

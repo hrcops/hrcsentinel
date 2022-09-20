@@ -7,6 +7,9 @@ import time
 import yaml
 import subprocess
 
+import urllib.request
+import json
+
 import numpy as np
 import pytz
 import requests
@@ -59,19 +62,28 @@ def grab_orbit_metadata(plot_start=dt.date.today() - dt.timedelta(days=5)):
     # orbits = events.orbits.filter(
     #     start=convert_to_doy(plot_start)).table
 
-    comms = get_comms()
-    try:
-        orbits = events.orbits.filter(start=convert_to_doy(plot_start)).table
-        radzone_start_times = convert_chandra_time(
-            orbits['t_perigee'] + orbits['dt_start_radzone'])
-        radzone_stop_times = convert_chandra_time(
-            orbits['t_perigee'] + orbits['dt_stop_radzone'])
-    except Exception as e:
-        orbits = None
-        radzone_start_times = None
-        radzone_stop_times = None
+    # comms = get_comms()
 
-    return comms, orbits, radzone_start_times, radzone_stop_times
+    with urllib.request.urlopen(f"https://kadi.cfa.harvard.edu/api/ska_api/kadi/events/orbits/filter?start={convert_to_doy(plot_start)}&stop={convert_to_doy(dt.date.today() + dt.timedelta(days=3))}") as url:
+        orbits = json.load(url)
+
+    with urllib.request.urlopen(f"https://kadi.cfa.harvard.edu/api/ska_api/kadi/events/dsn_comms/filter?start={convert_to_doy(plot_start)}&stop={convert_to_doy(dt.date.today()+ dt.timedelta(days=3))}") as url:
+        comms = json.load(url)
+
+    return orbits, comms
+
+    # try:
+    #     orbits = events.orbits.filter(start=convert_to_doy(plot_start)).table
+    #     radzone_start_times = convert_chandra_time(
+    #         orbits['t_perigee'] + orbits['dt_start_radzone'])
+    #     radzone_stop_times = convert_chandra_time(
+    #         orbits['t_perigee'] + orbits['dt_stop_radzone'])
+    # except Exception as e:
+    #     orbits = None
+    #     radzone_start_times = None
+    #     radzone_stop_times = None
+
+    # return comms, orbits, radzone_start_times, radzone_stop_times
 
     # # Radzone t_start is with respect to t_perigee, not t_start!
     # radzone_start_times = convert_chandra_time(
@@ -91,20 +103,20 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
     msidlist = ['2TLEV1RT', '2VLEV1RT', '2SHEV1RT']
     namelist = ['Total Event Rate', 'Valid Event Rate', 'AntiCo Shield Rate']
 
-    try:
-        comms = get_comms()
-    except OSError as e:
-        comms = None
-        if debug_prints:
-            print(e)
+    # try:
+    #     comms = get_comms()
+    # except OSError as e:
+    #     comms = None
+    #     if debug_prints:
+    #         print(e)
 
-    try:
-        radzones = get_radzones()
+    # try:
+    #     radzones = get_radzones()
 
-    except OSError as e:
-        radzones = None
-        if debug_prints:
-            print(e)
+    # except OSError as e:
+    #     radzones = None
+    #     if debug_prints:
+    #         print(e)
 
     fig, ax = plt.subplots(figsize=figure_size)
 
@@ -146,25 +158,35 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
     ax.axvline(dt.datetime.now(tz=pytz.timezone(
         'US/Eastern')), color='gray', alpha=0.5)
 
+    orbits, comms = grab_orbit_metadata(plot_start)
+
     if comms is not None:
         for i, comm in enumerate(comms):
             x = mdate.num2date(
-                cxc2pd(cxcDateTime(comm['bot_date']['value']).secs))
+                cxc2pd(cxcDateTime(comm['tstart']).secs))
 
             plt.vlines(x=x, ymin=80000, ymax=110000,
                        color='cornflowerblue', alpha=1, zorder=2)
             ax.text(x, 120000, 'Comm \n {}'.format(
-                comm['station']['value'][:6]), color='cornflowerblue', fontsize=6, ha='center', clip_on=True)
+                comm['station'][:6]), color='cornflowerblue', fontsize=6, ha='center', clip_on=True)
 
-    if radzones is not None:
+    if orbits is not None:
 
-        for i, (radzone_start, radzone_stop) in enumerate(radzones):
-            t0 = cxcDateTime(radzone_start).secs
-            t1 = cxcDateTime(radzone_stop).secs
+        for i, orbit in enumerate(orbits):
 
-            ax.axvspan(t0, t1,
+            # # Radzone t_start is with respect to t_perigee, not t_start!
+            # clean this up!
+            radzone_start = convert_chandra_time(
+                [orbit['t_perigee'] + orbit['dt_start_radzone']])[0]
+            radzone_stop = convert_chandra_time(
+                [orbit['t_perigee'] + orbit['dt_stop_radzone']])[0]
+
+            # t0 = cxcDateTime(radzone_start).secs
+            # t1 = cxcDateTime(radzone_stop).secs
+
+            ax.axvspan(radzone_start, radzone_stop,
                        alpha=0.3, color='slategray', zorder=1)
-            ax.text((t0 + t1) / 2, 300000, 'Radzone', color='slategray',
+            ax.text((radzone_start + radzone_stop) / 2, 300000, 'Radzone', color='slategray',
                     fontsize=6, ha='center', clip_on=True)
 
     plt.xticks(fontsize=12)
@@ -180,12 +202,6 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
 
     if show_plot is True:
         plt.show()
-
-    # # Cleanup
-    # args = parse_args()
-    # if args.monitor is False:
-    #     plt.close('all')
-    #     fetch.data_source.set('cxc')
 
 
 def parse_args():
@@ -207,7 +223,7 @@ if __name__ == "__main__":
     hostname = socket.gethostname().split('.')[0]
 
     allowed_hosts = {'han-v': '/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/',
-                     'gravity' : '/Users/grant/Desktop/',
+                     'gravity': '/Users/grant/Desktop/',
                      'symmetry': '/Users/grant/Desktop/',
                      'semaphore': '/Users/grant/Desktop/'}
 
