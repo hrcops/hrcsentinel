@@ -63,21 +63,25 @@ def main():
         in_comm = are_we_in_comm(verbose=False, cadence=5)
 
         if in_comm:
-            reference_telem = audit_telemetry(start=CxoTime.now() - 60 * u.s)
-            time.sleep(3)
-            latest_telem = audit_telemetry(start=CxoTime.now() - 60 * u.s)
+            try:
+                reference_telem = audit_telemetry(
+                    start=CxoTime.now() - 60 * u.s)
+                time.sleep(3)
+                latest_telem = audit_telemetry(start=CxoTime.now() - 60 * u.s)
 
-            print(f'Iteration {iteration}: {latest_telem} V')
+                print(f'Iteration {iteration}: {latest_telem} V')
 
-            if iteration == 0:
-                send_slack_message(
-                    f'Comm Bot started with +15 V reference value of: {reference_telem} V ', channel='#hrc-s_side_a_test_aug2022_cap1618')
+                if iteration == 0:
+                    send_slack_message(
+                        f'Comm Bot started with +15 V reference value of: {reference_telem} V ', channel='#hrc-i_side_a_checkout_aug2022-cap1631')
 
-            if latest_telem != reference_telem:
-                send_slack_message(
-                    f'WARNING: the +15V Bus Voltage has changed from {reference_telem} V to {latest_telem} V. Check this!', channel='#hrc-s_side_a_test_aug2022_cap1618')
+                if latest_telem < 14.0:
+                    send_slack_message(
+                        f'WARNING: the +15V Bus Voltage looks bad ({latest_telem} V) Check this!', channel='#hrc-i_side_a_checkout_aug2022-cap1631')
 
-            iteration += 1
+                iteration += 1
+            except:
+                continue
 
 
 if __name__ == '__main__':
