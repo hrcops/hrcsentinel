@@ -21,7 +21,7 @@ import pytz
 import matplotlib.dates as mdate
 from matplotlib import gridspec
 
-from chandratime import convert_chandra_time, convert_to_doy
+from chandratime import convert_chandra_time_legacy, convert_to_doy
 
 
 import matplotlib.pyplot as plt

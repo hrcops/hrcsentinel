@@ -16,7 +16,7 @@ import requests
 from cheta import fetch_sci as fetch
 from cxotime import CxoTime
 
-from chandratime import (convert_chandra_time, convert_to_doy)
+from chandratime import (convert_chandra_time_legacy, convert_to_doy)
 from heartbeat import are_we_in_comm
 
 import psutil

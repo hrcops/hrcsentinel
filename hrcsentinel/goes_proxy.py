@@ -8,7 +8,7 @@ import requests
 from astropy.table import Table
 from astropy.time import Time
 
-from chandratime import convert_chandra_time
+from chandratime import convert_chandra_time_legacy
 
 # Globals
 
@@ -128,7 +128,7 @@ def get_goes_proxy():
     parsed_goes_data, bad_goes_data = format_proton_data(
         raw_goes_data, descrs=descrs)
 
-    goes_times = convert_chandra_time(parsed_goes_data['time'])
+    goes_times = convert_chandra_time_legacy(parsed_goes_data['time'])
     goes_rates = parsed_goes_data['hrc_shield']
 
     return goes_times, goes_rates

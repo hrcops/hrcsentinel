@@ -1,7 +1,7 @@
 import urllib.request
 import json
 
-from chandratime import convert_chandra_time, convert_to_doy
+from chandratime import convert_chandra_time_legacy, convert_to_doy
 import datetime as dt
 
 

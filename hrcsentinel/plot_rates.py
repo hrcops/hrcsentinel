@@ -1,6 +1,7 @@
 #!/usr/bin/env conda run -n ska3 python
 import collections
 import datetime as dt
+from pickle import TUPLE1
 import socket
 import sys
 import time
@@ -19,6 +20,7 @@ from Chandra.Time import DateTime as cxcDateTime
 from cheta import fetch
 from matplotlib import pyplot as plt
 import matplotlib.dates as mdate
+from matplotlib.patches import Rectangle
 from Ska.Matplotlib import cxctime2plotdate as cxc2pd
 
 from kadi import events
@@ -27,96 +29,40 @@ import argparse
 
 import plot_stylers
 from plot_helpers import drawnow
-from chandratime import convert_chandra_time, convert_to_doy
+from chandratime import convert_chandra_time_legacy, convert_chandra_time_new, convert_to_doy
 from goes_proxy import get_goes_proxy
 
 
-def get_comms(DSN_COMMS_FILE='/proj/sot/ska/data/dsn_summary/dsn_summary.yaml'):
-    """
-    Get the list of comm passes from the DSN summary file. SCP it if necessary.
-    """
-    try:
-        comms_table = yaml.safe_load(open(DSN_COMMS_FILE, 'r'))
-    except FileNotFoundError:
-        print('DSN summary file not found. SCPing from SOT...')
-
-        subprocess.run(
-            ["scp", "tremblay@kady.cfa.harvard.edu:/proj/sot/ska/data/dsn_summary/dsn_summary.yaml", "./dsn_summary.yaml"])
-        comms_table = yaml.safe_load(open('dsn_summary.yaml', 'r'))
-    return comms_table
-
-
-def get_radzones():
-    """
-    Constuct a list of complete radiation zones using kadi events
-    """
-    radzones = events.rad_zones.filter(start=cxcDateTime() - 5, stop=None)
-    return [(x.start, x.stop) for x in radzones]
-
-
 def grab_orbit_metadata(plot_start=dt.date.today() - dt.timedelta(days=5)):
+    '''
+    Use the web-Kadi API to grab orbit metadata.
+    This allows us to query Kadi and avoid the events.db3 update hiccup
 
-    # Grab the metadata (orbit, obsid, and radzone info) for the specified time period
-    # This may well fail. You should wrap this in a try/except block.
-    # from kadi import events
-    # orbits = events.orbits.filter(
-    #     start=convert_to_doy(plot_start)).table
+    See here for web-Kadi: https://kadi.cfa.harvard.edu/api/
+    '''
+    metadata = {}
 
-    # comms = get_comms()
+    for event in ("orbits", "dsn_comms"):
 
-    with urllib.request.urlopen(f"https://kadi.cfa.harvard.edu/api/ska_api/kadi/events/orbits/filter?start={convert_to_doy(plot_start)}&stop={convert_to_doy(dt.date.today() + dt.timedelta(days=3))}") as url:
-        orbits = json.load(url)
+        with urllib.request.urlopen(f"https://kadi.cfa.harvard.edu/api/ska_api/kadi/events/{event}/filter?start={convert_to_doy(plot_start)}&stop={convert_to_doy(dt.date.today() + dt.timedelta(days=3))}") as url:
+            metadata[event] = json.load(url)
 
-    with urllib.request.urlopen(f"https://kadi.cfa.harvard.edu/api/ska_api/kadi/events/dsn_comms/filter?start={convert_to_doy(plot_start)}&stop={convert_to_doy(dt.date.today()+ dt.timedelta(days=3))}") as url:
-        comms = json.load(url)
-
-    return orbits, comms
-
-    # try:
-    #     orbits = events.orbits.filter(start=convert_to_doy(plot_start)).table
-    #     radzone_start_times = convert_chandra_time(
-    #         orbits['t_perigee'] + orbits['dt_start_radzone'])
-    #     radzone_stop_times = convert_chandra_time(
-    #         orbits['t_perigee'] + orbits['dt_stop_radzone'])
-    # except Exception as e:
-    #     orbits = None
-    #     radzone_start_times = None
-    #     radzone_stop_times = None
-
-    # return comms, orbits, radzone_start_times, radzone_stop_times
-
-    # # Radzone t_start is with respect to t_perigee, not t_start!
-    # radzone_start_times = convert_chandra_time(
-    #     orbits['t_perigee'] + orbits['dt_start_radzone'])
-    # radzone_stop_times = convert_chandra_time(
-    #     orbits['t_perigee'] + orbits['dt_stop_radzone'])
-
-    # # comm_start_times = convert_chandra_time(comms['tstart'] + 3600)
-
-    # return orbits, comms, comm_start_times, radzone_start_times, radzone_stop_times
+    return metadata
 
 
 def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/', plot_start=dt.date.today() - dt.timedelta(days=5), plot_stop=dt.date.today() + dt.timedelta(days=3), custom_ylims=None, show_plot=False, custom_save_name=None, figure_size=(16, 8), save_dpi=300, debug_prints=False):
+
+    # Get the metadata. Don't die if it fails.
+    try:
+        metadata = grab_orbit_metadata(plot_start=plot_start)
+    except Exception as e:
+        print('Error grabbing orbit metadata: {}'.format(e))
+        metadata = None
 
     fetch.data_source.set('maude allow_subset=False')
 
     msidlist = ['2TLEV1RT', '2VLEV1RT', '2SHEV1RT']
     namelist = ['Total Event Rate', 'Valid Event Rate', 'AntiCo Shield Rate']
-
-    # try:
-    #     comms = get_comms()
-    # except OSError as e:
-    #     comms = None
-    #     if debug_prints:
-    #         print(e)
-
-    # try:
-    #     radzones = get_radzones()
-
-    # except OSError as e:
-    #     radzones = None
-    #     if debug_prints:
-    #         print(e)
 
     fig, ax = plt.subplots(figsize=figure_size)
 
@@ -124,7 +70,7 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
         data = fetch.get_telem(msid, start=convert_to_doy(
             plot_start), sampling='full', max_fetch_Mb=100000, max_output_Mb=100000, quiet=True)
         # ax.plot(data[msid].times, data[msid].vals, label=msid)
-        ax.plot_date(convert_chandra_time(
+        ax.plot_date(convert_chandra_time_legacy(
             data[msid].times), data[msid].vals, marker='o', fmt="", markersize=1.5, label=namelist[i])
 
     # Try to plot the GOES proxy rates. Don't die if it fails.
@@ -150,44 +96,58 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
         'US/Eastern')).strftime('%Y-%b-%d %H:%M:%S')), color='slategray', size=10, pad=20)
     ax.axhline(60000, color=plot_stylers.red,
                linewidth=2, label='SCS 107 Limit')
-    ax.legend(prop={'size': 12}, loc=2)
-    ax.legend(markerscale=6)
 
     ax.text(dt.datetime.now(tz=pytz.timezone('US/Eastern')), ax.get_ylim()[1],
             'Now', fontsize=12, color='slategray', zorder=3, ha='center')
     ax.axvline(dt.datetime.now(tz=pytz.timezone(
         'US/Eastern')), color='gray', alpha=0.5)
 
-    orbits, comms = grab_orbit_metadata(plot_start)
+    if metadata is not None:
 
-    if comms is not None:
-        for i, comm in enumerate(comms):
-            x = mdate.num2date(
-                cxc2pd(cxcDateTime(comm['tstart']).secs))
+        for i, comm in enumerate(metadata["dsn_comms"]):
 
-            plt.vlines(x=x, ymin=80000, ymax=110000,
-                       color='cornflowerblue', alpha=1, zorder=2)
-            ax.text(x, 120000, 'Comm \n {}'.format(
-                comm['station'][:6]), color='cornflowerblue', fontsize=6, ha='center', clip_on=True)
+            comm_start_raw = comm['tstart'] + 3600
+            comm_stop_raw = comm['tstop']
 
-    if orbits is not None:
+            comm_start = convert_chandra_time_new(comm_start_raw)
+            comm_stop = convert_chandra_time_new(comm_stop_raw)
+            comm_midpoint = convert_chandra_time_new(
+                (comm_stop_raw + comm_start_raw) / 2)
 
-        for i, orbit in enumerate(orbits):
+            # comm_midpoint = mdate.num2date((cxc2pd(cxcDateTime(
+            #     comm['tstart']).secs) + cxc2pd(cxcDateTime(comm['tstop']).secs)) / 2)
+
+            # we assume call-up to bot is 1 hour here. rough.
+            comm_duration = np.round((comm['dur'] - 3600) / 3600, 1)
+
+            ax.axvspan(comm_start, comm_stop, ymin=0.65, ymax=0.76,
+                       alpha=0.3, color='cornflowerblue', zorder=2)
+
+            # ax.add_patch(Rectangle((1, 1), 2, 6))
+
+            ax.text(comm_midpoint, 120000, f"Comm \n {comm['station'][:6]} \n ~{comm_duration} hr",
+                    color='cornflowerblue', fontsize=6, ha='center', clip_on=True)
+
+        for i, orbit in enumerate(metadata["orbits"]):
 
             # # Radzone t_start is with respect to t_perigee, not t_start!
-            # clean this up!
-            radzone_start = convert_chandra_time(
-                [orbit['t_perigee'] + orbit['dt_start_radzone']])[0]
-            radzone_stop = convert_chandra_time(
-                [orbit['t_perigee'] + orbit['dt_stop_radzone']])[0]
 
-            # t0 = cxcDateTime(radzone_start).secs
-            # t1 = cxcDateTime(radzone_stop).secs
+            radzone_start_raw = orbit['t_perigee'] + orbit['dt_start_radzone']
+            radzone_stop_raw = orbit['t_perigee'] + orbit['dt_stop_radzone']
+
+            radzone_start = convert_chandra_time_new(radzone_start_raw)
+            radzone_stop = convert_chandra_time_new(radzone_stop_raw)
+
+            radzone_midpoint = convert_chandra_time_new(
+                (radzone_stop_raw + radzone_start_raw) / 2)
 
             ax.axvspan(radzone_start, radzone_stop,
                        alpha=0.3, color='slategray', zorder=1)
-            ax.text((radzone_start + radzone_stop) / 2, 300000, 'Radzone', color='slategray',
+            ax.text(radzone_midpoint, 300000, f"Radzone for \n Orbit {orbit['orbit_num']}", color='slategray',
                     fontsize=6, ha='center', clip_on=True)
+
+    ax.legend(prop={'size': 12}, loc='lower left')
+    ax.legend(markerscale=6)
 
     plt.xticks(fontsize=12)
     plt.yticks(fontsize=12)
