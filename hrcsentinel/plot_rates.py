@@ -8,6 +8,7 @@ import subprocess
 import sys
 import time
 import urllib.request
+from urllib.error import HTTPError
 from pickle import TUPLE1
 
 import matplotlib.dates as mdate
@@ -37,25 +38,38 @@ def grab_orbit_metadata(plot_start=dt.date.today() - dt.timedelta(days=5)):
 
     See here for web-Kadi: https://kadi.cfa.harvard.edu/api/
     '''
-    metadata = {}
+    orbit_metadata = {}
 
     for event in ("orbits", "dsn_comms"):
 
-        with urllib.request.urlopen(f"https://kadi.cfa.harvard.edu/api/ska_api/kadi/events/{event}/filter?start={convert_to_doy(plot_start)}&stop={convert_to_doy(dt.date.today() + dt.timedelta(days=3))}") as url:
-            metadata[event] = json.load(url)
+        request_string = f"https://kadi.cfa.harvard.edu/api/ska_api/kadi/events/{event}/filter?start={convert_to_doy(plot_start)}&stop={convert_to_doy(dt.date.today() + dt.timedelta(days=3))}"
 
-    return metadata
+        with urllib.request.urlopen(request_string, timeout=40) as url:
+            orbit_metadata[event] = json.load(url)
+
+        time.sleep(10)
+
+    return orbit_metadata
 
 
 def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/', plot_start=dt.date.today() - dt.timedelta(days=5), plot_stop=dt.date.today() + dt.timedelta(days=3), custom_ylims=None, show_plot=False, custom_save_name=None, figure_size=(16, 8), save_dpi=300, debug_prints=False):
 
-    # Get the metadata. Don't die if it fails.
-    try:
-        metadata = grab_orbit_metadata(plot_start=plot_start)
-    except Exception as e:
-        # This is bad practice but I don't give a !@#$%
-        print('Error grabbing orbit metadata: {}'.format(e))
-        metadata = None
+    # Get the metadata. Don't die if it fails. Try three times.
+    attempts = 0
+    while attempts <= 3:
+        try:
+            orbit_metadata = grab_orbit_metadata(plot_start=plot_start)
+            break
+
+        except HTTPError as shit:
+            attempts += 1
+            time.sleep(10)  # give the server a few to chill...
+            print(
+                f'Got 500 Error from Kadi server ({shit}). Trying again...')
+
+    if attempts > 3:
+        # then give up
+        orbit_metadata = None
 
     fetch.data_source.set('maude allow_subset=False')
 
@@ -98,9 +112,9 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
     ax.axvline(dt.datetime.now(tz=pytz.timezone(
         'US/Eastern')), color='gray', alpha=0.5)
 
-    if metadata is not None:
+    if orbit_metadata is not None:
 
-        for i, comm in enumerate(metadata["dsn_comms"]):
+        for i, comm in enumerate(orbit_metadata["dsn_comms"]):
 
             comm_start_raw = comm['tstart'] + 3600
             comm_stop_raw = comm['tstop']
@@ -124,7 +138,7 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
             ax.text(comm_midpoint, 120000, f"Comm \n {comm['station'][:6]} \n ~{comm_duration} hr",
                     color='cornflowerblue', fontsize=6, ha='center', clip_on=True)
 
-        for i, orbit in enumerate(metadata["orbits"]):
+        for i, orbit in enumerate(orbit_metadata["orbits"]):
 
             # # Radzone t_start is with respect to t_perigee, not t_start!
 
