@@ -1,22 +1,20 @@
 #!/usr/bin/env conda run -n ska3 python
 
-import time
 import argparse
-from cheta import fetch_sci as fetch
-
-
-import numpy as np
 import datetime as dt
+import time
+
 import matplotlib.pyplot as plt
-
-from cxotime import CxoTime
+import numpy as np
 from Chandra.Time import DateTime as chandraDateTime
-from chandratime import convert_to_doy
+from cheta import fetch_sci as fetch
+from cxotime import CxoTime
 
+import event_times
+import plot_stylers
+from chandratime import convert_to_doy
 from heartbeat import are_we_in_comm
 from plot_helpers import drawnow, figure, scp_file_to_hrcmonitor
-import plot_stylers
-import event_times
 
 
 def update_plot(telem_start, time_zero, iteration_count, old_telem=None, save_path=None, monitor=False):

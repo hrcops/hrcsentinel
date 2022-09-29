@@ -1,36 +1,33 @@
 #!/usr/bin/env conda run -n ska3 python
+import argparse
 import collections
 import datetime as dt
-from pickle import TUPLE1
+import json
 import socket
+import subprocess
 import sys
 import time
-import yaml
-import subprocess
-
 import urllib.request
-import json
+from pickle import TUPLE1
 
+import matplotlib.dates as mdate
 import numpy as np
 import pytz
 import requests
+import yaml
 from astropy.table import Table
 from astropy.time import Time
 from Chandra.Time import DateTime as cxcDateTime
 from cheta import fetch
+from kadi import events
 from matplotlib import pyplot as plt
-import matplotlib.dates as mdate
 from matplotlib.patches import Rectangle
 from Ska.Matplotlib import cxctime2plotdate as cxc2pd
 
-from kadi import events
-
-import argparse
-
 import plot_stylers
-from plot_helpers import drawnow
-from chandratime import convert_chandra_time_legacy, convert_chandra_time_new, convert_to_doy
+from chandratime import cxctime_to_datetime, convert_to_doy
 from goes_proxy import get_goes_proxy
+from plot_helpers import drawnow
 
 
 def grab_orbit_metadata(plot_start=dt.date.today() - dt.timedelta(days=5)):
@@ -56,6 +53,7 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
     try:
         metadata = grab_orbit_metadata(plot_start=plot_start)
     except Exception as e:
+        # This is bad practice but I don't give a !@#$%
         print('Error grabbing orbit metadata: {}'.format(e))
         metadata = None
 
@@ -70,7 +68,7 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
         data = fetch.get_telem(msid, start=convert_to_doy(
             plot_start), sampling='full', max_fetch_Mb=100000, max_output_Mb=100000, quiet=True)
         # ax.plot(data[msid].times, data[msid].vals, label=msid)
-        ax.plot_date(convert_chandra_time_legacy(
+        ax.plot_date(cxctime_to_datetime(
             data[msid].times), data[msid].vals, marker='o', fmt="", markersize=1.5, label=namelist[i])
 
     # Try to plot the GOES proxy rates. Don't die if it fails.
@@ -79,10 +77,8 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
         ax.plot_date(goes_times, goes_rates, marker=None, fmt="",
                      alpha=0.8, zorder=1, label='GOES-16 Proxy')
     except Exception as e:
-        # this is very bad practice
-        if debug_prints:
-            print(e)
-        pass
+        # This is bad practice but I don't give a !@#$%
+        print('Error grabbing GOES proxy: {}'.format(e))
 
     ax.set_ylabel(r'Event Rates (counts s$^{-1}$)', fontsize=10)
     ax.set_xlabel('Date', fontsize=10)
@@ -109,9 +105,9 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
             comm_start_raw = comm['tstart'] + 3600
             comm_stop_raw = comm['tstop']
 
-            comm_start = convert_chandra_time_new(comm_start_raw)
-            comm_stop = convert_chandra_time_new(comm_stop_raw)
-            comm_midpoint = convert_chandra_time_new(
+            comm_start = cxctime_to_datetime(comm_start_raw)
+            comm_stop = cxctime_to_datetime(comm_stop_raw)
+            comm_midpoint = cxctime_to_datetime(
                 (comm_stop_raw + comm_start_raw) / 2)
 
             # comm_midpoint = mdate.num2date((cxc2pd(cxcDateTime(
@@ -135,10 +131,10 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
             radzone_start_raw = orbit['t_perigee'] + orbit['dt_start_radzone']
             radzone_stop_raw = orbit['t_perigee'] + orbit['dt_stop_radzone']
 
-            radzone_start = convert_chandra_time_new(radzone_start_raw)
-            radzone_stop = convert_chandra_time_new(radzone_stop_raw)
+            radzone_start = cxctime_to_datetime(radzone_start_raw)
+            radzone_stop = cxctime_to_datetime(radzone_stop_raw)
 
-            radzone_midpoint = convert_chandra_time_new(
+            radzone_midpoint = cxctime_to_datetime(
                 (radzone_stop_raw + radzone_start_raw) / 2)
 
             ax.axvspan(radzone_start, radzone_stop,
