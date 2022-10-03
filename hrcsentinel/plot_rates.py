@@ -56,9 +56,16 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
 
     # Get the metadata. Don't die if it fails. Try three times.
     attempts = 0
-    while attempts <= 3:
+    max_attempts = 4  # how many times to try to get the metadata
+    while attempts <= max_attempts:
         try:
             orbit_metadata = grab_orbit_metadata(plot_start=plot_start)
+            # Save that successfully fetched orbit metadata as a json file for loading just in case
+            with open("last_orbit_metadata.json", "w") as orbit_metadata_json_file:
+                json.dump(orbit_metadata, orbit_metadata_json_file)
+            using_stale_orbit_metadata = False
+            print(
+                f'Successfully fetched orbit metadata and saved it as last_orbit_metadata.json.')
             break
 
         except HTTPError as shit:
@@ -67,9 +74,16 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
             print(
                 f'Got 500 Error from Kadi server ({shit}). Trying again...')
 
-    if attempts > 3:
-        # then give up
-        orbit_metadata = None
+    if attempts > max_attempts:
+        # then give up and try to load the json file
+        try:
+            with open("last_orbit_metadata.json", "r") as orbit_metadata_json_file:
+                orbit_metadata = json.load(orbit_metadata_json_file)
+            using_stale_orbit_metadata = True
+
+        except Exception as e:
+            print(f'Could not load orbit metadata from json file: {e}')
+            orbit_metadata = None
 
     fetch.data_source.set('maude allow_subset=False')
 
@@ -102,8 +116,12 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
     elif custom_ylims is not None:
         ax.set_ylim(custom_ylims[0], custom_ylims[1])
     ax.set_xlim(plot_start, plot_stop)
-    ax.set_title("Shield & Detector Rates as of {} EST".format(dt.datetime.now(tz=pytz.timezone(
-        'US/Eastern')).strftime('%Y-%b-%d %H:%M:%S')), color='slategray', size=10, pad=20)
+    if using_stale_orbit_metadata:
+        ax.set_title("Shield & Detector Rates as of {} EST | Orbit metadata is out-of-date".format(dt.datetime.now(tz=pytz.timezone(
+            'US/Eastern')).strftime('%Y-%b-%d %H:%M:%S')), color='slategray', size=12, pad=20)
+    else:
+        ax.set_title("Shield & Detector Rates as of {} EST".format(dt.datetime.now(tz=pytz.timezone(
+            'US/Eastern')).strftime('%Y-%b-%d %H:%M:%S')), color='slategray', size=12, pad=20)
     ax.axhline(60000, color=plot_stylers.red,
                linewidth=2, label='SCS 107 Limit')
 
