@@ -19,8 +19,8 @@ from cxotime import CxoTime
 from chandratime import convert_to_doy
 from heartbeat import are_we_in_comm
 
-import psutil
-process = psutil.Process(os.getpid())
+# import psutil
+# process = psutil.Process(os.getpid())
 
 
 def audit_telemetry(start):
@@ -38,20 +38,6 @@ def audit_telemetry(start):
 
     return latest_telem
 
-    # values_since_comm_start = fetch.get_telem(
-    #     list(critical_msidlist.keys()), start=start, quiet=True, unit_system='eng')
-
-    # for msid in list(critical_msidlist.keys()):
-    #     out_of_limit_mask = (values_since_comm_start[msid].vals < critical_msidlist[msid][0]) or (
-    #         values_since_comm_start[msid].vals > critical_msidlist[msid][1])
-    #     if sum(out_of_limit_mask) > 0:
-    #         send_slack_message(
-    #             f'TEST{msid}: {values_since_comm_start[out_of_limit_mask][0]}. This is beyond CAUTION/WARN limit of {critical_msidlist[msid]}', channel=channel)
-
-    #     if sum(out_of_limit_mask) > 3:
-    #         send_slack_message(
-    #             f'{msid} shows out-of-green-range values: {values_since_comm_start[out_of_limit_mask][0]}. This is beyond CAUTION/WARN limit of {critical_msidlist[msid]}', channel=channel)
-
 
 def main():
 
@@ -61,6 +47,9 @@ def main():
 
     while True:
         in_comm = are_we_in_comm(verbose=False, cadence=5)
+
+        if not in_comm:
+            print(f'Not in comm')
 
         if in_comm:
             try:
@@ -73,14 +62,15 @@ def main():
 
                 if iteration == 0:
                     send_slack_message(
-                        f'Comm Bot started with +15 V reference value of: {reference_telem} V ', channel='#hrc-i_side_a_checkout_aug2022-cap1631')
+                        f'Comm Bot started with +15 V reference value of: {reference_telem} V ', channel='#hrc-s_side_a_checkout_sep2022_cap1636')
 
                 if latest_telem < 14.0:
                     send_slack_message(
-                        f'WARNING: the +15V Bus Voltage looks bad ({latest_telem} V) Check this!', channel='#hrc-i_side_a_checkout_aug2022-cap1631')
+                        f'WARNING: the +15V Bus Voltage looks bad ({latest_telem} V) Check this!', channel='#hrc-s_side_a_checkout_sep2022_cap1636')
 
                 iteration += 1
-            except:
+            except Exception as e:
+                print(e)
                 continue
 
 

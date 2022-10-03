@@ -36,9 +36,9 @@ def main():
         scpimage(destination=working_dir)
 
         if iteration == 0:
-            # Load the image in Vger/JS9 only once
-            os.system(f'vger {image} &')
-            # Make sure you have a copy of the image to start with...
+            #     # Load the image in Vger/JS9 only once
+            #     os.system(f'vger {image} &')
+            #     # Make sure you have a copy of the image to start with...
             copyfile(image, refimage)
 
         imgdata = fits.getdata(image)
@@ -57,8 +57,8 @@ def main():
 
         iteration += 1
 
-        # Reresh the image in ds9, preserving regions and view state
-        os.system('js9 refresh')
+        # # Reresh the image in ds9, preserving regions and view state
+        # os.system('js9 refresh')
 
         plt.draw()
         copyfile(image, refimage)

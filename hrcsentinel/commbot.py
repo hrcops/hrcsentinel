@@ -52,6 +52,8 @@ def send_slack_message(message, channel='#comm_passes', blocks=None):
     # split off .local just in case the VPN puts that there
     elif socket.gethostname().split('.')[0] == 'symmetry':
         slackbot_token_path = '/Users/grant/.slackbot/slackbot_oauth_token'
+    elif socket.gethostname().split('.')[0] == 'gravity':
+        slackbot_token_path = '/Users/grant/.slackbot/slackbot_oauth_token'
     else:
         sys.exit('I do not recognize the hostname {}. Exiting.'.format(
             socket.gethostname()))
