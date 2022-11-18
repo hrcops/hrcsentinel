@@ -7,12 +7,12 @@ import sys
 import time
 import pytz
 import traceback
-import gc
 
 import matplotlib
 from cheta import fetch
 from cxotime import CxoTime
 
+from global_configuration import allowed_hosts
 import plot_stylers
 from heartbeat import are_we_in_comm
 from plot_dashboard import (comm_status_stamp, make_ancillary_plots,
@@ -66,11 +66,6 @@ def main():
     args = get_args()
     fake_comm = args.fake_comm
     chatty = args.report_errors  # Will be True if user set --report_errors
-
-    allowed_hosts = {'han-v': '/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/',
-                     'gravity': '/Users/grant/Desktop/',
-                     'symmetry': '/Users/grant/Desktop/',
-                     'semaphore': '/Users/grant/Desktop/'}
 
     if hostname in allowed_hosts:
         fig_save_directory = allowed_hosts[hostname]

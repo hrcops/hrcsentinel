@@ -25,6 +25,7 @@ from matplotlib import pyplot as plt
 from matplotlib.patches import Rectangle
 from Ska.Matplotlib import cxctime2plotdate as cxc2pd
 
+from global_configuration import allowed_hosts
 import plot_stylers
 from chandratime import cxctime_to_datetime, convert_to_doy
 from goes_proxy import get_goes_proxy
@@ -42,6 +43,7 @@ def grab_orbit_metadata(plot_start=dt.date.today() - dt.timedelta(days=5)):
 
     for event in ("orbits", "dsn_comms"):
 
+        print(f"Grabbing {event} from web-Kadi")
         request_string = f"https://kadi.cfa.harvard.edu/api/ska_api/kadi/events/{event}/filter?start={convert_to_doy(plot_start)}&stop={convert_to_doy(dt.date.today() + dt.timedelta(days=3))}"
 
         with urllib.request.urlopen(request_string, timeout=40) as url:
@@ -210,10 +212,6 @@ if __name__ == "__main__":
 
     hostname = socket.gethostname().split('.')[0]
 
-    allowed_hosts = {'han-v': '/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/',
-                     'gravity': '/Users/grant/Desktop/',
-                     'symmetry': '/Users/grant/Desktop/',
-                     'semaphore': '/Users/grant/Desktop/'}
 
     if hostname in allowed_hosts:
         fig_save_directory = allowed_hosts[hostname]
