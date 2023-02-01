@@ -212,7 +212,6 @@ if __name__ == "__main__":
 
     hostname = socket.gethostname().split('.')[0]
 
-
     if hostname in allowed_hosts:
         fig_save_directory = allowed_hosts[hostname]
         print('Recognized host: {}. Plots will be saved to {}'.format(

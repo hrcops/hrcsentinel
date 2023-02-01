@@ -49,6 +49,8 @@ def send_slack_message(message, channel='#comm_passes', blocks=None):
     # Make sure it's readable only to you, i.e. chmod og-rwx slackbot_oauth_token
     if socket.gethostname() == 'han-v.cfa.harvard.edu':
         slackbot_token_path = '/home/tremblay/.slackbot/slackbot_oauth_token'
+    if socket.gethostname() == 'entropy.harvard.edu':
+        slackbot_token_path = '/home/tremblay/.slackbot/slackbot_oauth_token'
     # split off .local just in case the VPN puts that there
     elif socket.gethostname().split('.')[0] == 'symmetry':
         slackbot_token_path = '/Users/grant/.slackbot/slackbot_oauth_token'
