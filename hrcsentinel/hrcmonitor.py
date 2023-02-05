@@ -1,12 +1,13 @@
 #!/usr/bin/env conda run -n ska3 python
 
 import argparse
+import traceback
 import datetime as dt
 import socket
 import sys
 import time
 import pytz
-import traceback
+
 
 import matplotlib
 from cheta import fetch
@@ -14,15 +15,12 @@ from cxotime import CxoTime
 
 from global_configuration import allowed_hosts
 import plot_stylers
-from heartbeat import are_we_in_comm
+from heartbeat import are_we_in_comm, force_timeout, TimeoutException
 from plot_dashboard import (comm_status_stamp, make_ancillary_plots,
                             make_realtime_plot)
 from plot_rates import make_shield_plot
 
 plot_stylers.styleplots()
-
-# Use the new Matplotlib 3.X constrained_layout solver in lieu of tight_layout()
-# plt.rcParams['figure.constrained_layout.use'] = True
 
 
 def get_args():
@@ -119,108 +117,115 @@ def main():
     while True:
 
         try:
+            with force_timeout(600):  # this shouldn't take longer than 10 minutes
 
-            in_comm = are_we_in_comm(
-                verbose=False, cadence=2, fake_comm=fake_comm)
+                in_comm = are_we_in_comm(
+                    verbose=False, cadence=2, fake_comm=fake_comm)
 
-            # Generate the first comm status stamp and create code start date
-            if iteration_counter == 0:
-                code_start_time = dt.datetime.now(
-                    tz=pytz.timezone('US/Eastern'))
+                # Generate the first comm status stamp and create code start date
+                if iteration_counter == 0:
+                    code_start_time = dt.datetime.now(
+                        tz=pytz.timezone('US/Eastern'))
 
-            comm_status_stamp(comm_status=in_comm, fig_save_directory=fig_save_directory,
-                              code_start_time=code_start_time, hostname=hostname, debug_prints=args.debug)
+                comm_status_stamp(comm_status=in_comm, fig_save_directory=fig_save_directory,
+                                  code_start_time=code_start_time, hostname=hostname, debug_prints=args.debug)
 
-            # We ALWAYS update the comm status stamp
-            if not in_comm:
+                # We ALWAYS update the comm status stamp
+                if not in_comm:
 
-                if recently_in_comm:
-                    # Then update the text stamp
-                    comm_status_stamp(comm_status=in_comm, code_start_time=code_start_time,
-                                      fig_save_directory=fig_save_directory, hostname=hostname)
+                    if recently_in_comm:
+                        # Then update the text stamp
+                        comm_status_stamp(comm_status=in_comm, code_start_time=code_start_time,
+                                          fig_save_directory=fig_save_directory, hostname=hostname)
 
-                    make_ancillary_plots(fig_save_directory=fig_save_directory)
-                    plt.close('all')
-                    # Finally, reset the out-of-comm reset counter, because it can get into a state where it doesn't get below 20 again
-                    out_of_comm_refresh_counter = 0
+                        make_ancillary_plots(
+                            fig_save_directory=fig_save_directory)
+                        plt.close('all')
+                        # Finally, reset the out-of-comm reset counter, because it can get into a state where it doesn't get below 20 again
+                        out_of_comm_refresh_counter = 0
 
-                recently_in_comm = False
-                in_comm_counter = 0
-                out_of_comm_refresh_counter += 1
-                print(
-                    f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) Not in Comm.                                  ', end='\r\r\r')
+                    recently_in_comm = False
+                    in_comm_counter = 0
+                    out_of_comm_refresh_counter += 1
+                    print(
+                        f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) Not in Comm.                                  ', end='\r\r\r')
 
-                if out_of_comm_refresh_counter == 20:
+                    if out_of_comm_refresh_counter == 20:
+
+                        # Explicitly set maude each time, because ancillary plots use CXC
+                        fetch.data_source.set('maude allow_subset=False')
+                        # Refresh the plots every 20th iteration out-of-comm
+                        print("Performing out-of-comm plot refresh at {}                                      ".format(
+                            dt.datetime.now(tz=pytz.timezone('US/Eastern')).strftime("%Y-%b-%d %H:%M:%S")), flush=True)
+                        sys.stdout.write("\033[K")
+                        five_days_ago = dt.date.today() - dt.timedelta(days=5)
+                        two_days_hence = dt.date.today() + dt.timedelta(days=2)
+
+                        make_realtime_plot(plot_start=five_days_ago, fig_save_directory=fig_save_directory,
+                                           plot_stop=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'), force_limits=True, show_in_gui=args.show_in_gui)
+
+                        make_ancillary_plots(
+                            fig_save_directory=fig_save_directory)
+                        plt.close('all')
+
+                        # Reset the refresh counter
+                        out_of_comm_refresh_counter = 0
+
+                if in_comm:
+
+                    recently_in_comm = True
+                    in_comm_counter += 1
+
+                    # if in_comm_counter == 1:
+                    #     # Then update the text stamp
+                    #     comm_status_stamp(comm_status=in_comm, code_start_time=code_start_time,
+                    #                       fig_save_directory=fig_save_directory, hostname=hostname)
+
+                    if in_comm_counter == 5:
+                        # Then create the mission-wide status plots
+                        # print("Refreshing longviews (Iteration {}) at {}".format(
+                        #     iteration_counter, dt.datetime.now(tz=pytz.timezone('US/Eastern')).strftime("%Y-%b-%d %H:%M:%S")), flush=True)
+                        make_ancillary_plots(fig_save_directory)
+                        plt.close('all')
+                        sys.stdout.write("\033[K")
 
                     # Explicitly set maude each time, because ancillary plots use CXC
                     fetch.data_source.set('maude allow_subset=False')
-                    # Refresh the plots every 20th iteration out-of-comm
-                    print("Performing out-of-comm plot refresh at {}                                      ".format(
-                        dt.datetime.now(tz=pytz.timezone('US/Eastern')).strftime("%Y-%b-%d %H:%M:%S")), flush=True)
-                    sys.stdout.write("\033[K")
+                    if args.force_cheta:
+                        fetch.data_source.set('cxc')
+
+                    print("Refreshing dashboard (Iteration {}) at {}".format(
+                        iteration_counter, dt.datetime.now(tz=pytz.timezone('US/Eastern')).strftime("%Y-%b-%d %H:%M:%S")), flush=True)
+
                     five_days_ago = dt.date.today() - dt.timedelta(days=5)
                     two_days_hence = dt.date.today() + dt.timedelta(days=2)
 
                     make_realtime_plot(plot_start=five_days_ago, fig_save_directory=fig_save_directory,
                                        plot_stop=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'), force_limits=True, show_in_gui=args.show_in_gui)
 
-                    make_ancillary_plots(fig_save_directory=fig_save_directory)
-                    plt.close('all')
+                    make_shield_plot(fig_save_directory=fig_save_directory,
+                                     plot_start=five_days_ago, plot_stop=two_days_hence, debug_prints=args.debug)
 
-                    # Reset the refresh counter
-                    out_of_comm_refresh_counter = 0
-
-            if in_comm:
-
-                recently_in_comm = True
-                in_comm_counter += 1
-
-                # if in_comm_counter == 1:
-                #     # Then update the text stamp
-                #     comm_status_stamp(comm_status=in_comm, code_start_time=code_start_time,
-                #                       fig_save_directory=fig_save_directory, hostname=hostname)
-
-                if in_comm_counter == 5:
-                    # Then create the mission-wide status plots
-                    print("Refreshing longviews (Iteration {}) at {}".format(
-                        iteration_counter, dt.datetime.now(tz=pytz.timezone('US/Eastern')).strftime("%Y-%b-%d %H:%M:%S")), flush=True)
-                    make_ancillary_plots(fig_save_directory)
-                    plt.close('all')
+                    print('Saved Current Status Plots to {}'.format(
+                        fig_save_directory), end="\r", flush=True)
+                    # Clear the command line manually
                     sys.stdout.write("\033[K")
 
-                # Explicitly set maude each time, because ancillary plots use CXC
-                fetch.data_source.set('maude allow_subset=False')
-                if args.force_cheta:
-                    fetch.data_source.set('cxc')
+                    plt.close('all')
 
-                print("Refreshing dashboard (Iteration {}) at {}".format(
-                    iteration_counter, dt.datetime.now(tz=pytz.timezone('US/Eastern')).strftime("%Y-%b-%d %H:%M:%S")), flush=True)
+                    sleep_period_seconds = 3
 
-                five_days_ago = dt.date.today() - dt.timedelta(days=5)
-                two_days_hence = dt.date.today() + dt.timedelta(days=2)
+                    for i in range(0, sleep_period_seconds):
+                        # you need to flush this print statement
+                        print('Refreshing plots in {} seconds...'.format(
+                            sleep_period_seconds-i), end="\r", flush=True)
+                        time.sleep(1)  # sleep for 1 second per iteration
 
-                make_realtime_plot(plot_start=five_days_ago, fig_save_directory=fig_save_directory,
-                                   plot_stop=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'), force_limits=True, show_in_gui=args.show_in_gui)
+                iteration_counter += 1
 
-                make_shield_plot(fig_save_directory=fig_save_directory,
-                                 plot_start=five_days_ago, plot_stop=two_days_hence, debug_prints=args.debug)
-
-                print('Saved Current Status Plots to {}'.format(
-                    fig_save_directory), end="\r", flush=True)
-                # Clear the command line manually
-                sys.stdout.write("\033[K")
-
-                plt.close('all')
-
-                sleep_period_seconds = 3
-
-                for i in range(0, sleep_period_seconds):
-                    # you need to flush this print statement
-                    print('Refreshing plots in {} seconds...'.format(
-                        sleep_period_seconds-i), end="\r", flush=True)
-                    time.sleep(1)  # sleep for 1 second per iteration
-
-            iteration_counter += 1
+        except TimeoutException as e:
+            print(f"Funtion timed out! Pressing on...")
+            continue
 
         except Exception as e:
             # Then reset the out_of_comm_refresh_counter because it might be higher than 20

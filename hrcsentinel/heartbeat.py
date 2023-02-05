@@ -5,6 +5,25 @@ from astropy import units as u
 from cxotime import CxoTime
 import Ska.engarchive.fetch as fetch
 
+from contextlib import contextmanager
+import signal
+
+
+class TimeoutException(Exception):
+    pass
+
+
+@contextmanager
+def force_timeout(seconds):
+    def signal_handler(signum, frame):
+        raise TimeoutException("Timed out! Pressing on...")
+    signal.signal(signal.SIGALRM, signal_handler)
+    signal.alarm(seconds)
+    try:
+        yield
+    finally:
+        signal.alarm(0)
+
 
 def are_we_in_comm(verbose=False, cadence=2, fake_comm=False):
     # Always be fetching from MAUDE

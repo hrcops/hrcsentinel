@@ -16,7 +16,7 @@ from cheta import fetch_sci as fetch
 from cxotime import CxoTime
 
 from chandratime import convert_to_doy
-from heartbeat import are_we_in_comm
+from heartbeat import are_we_in_comm, force_timeout, TimeoutException
 
 import psutil
 process = psutil.Process(os.getpid())
@@ -209,83 +209,89 @@ def main():
     while True:
 
         try:
-            in_comm = are_we_in_comm(
-                verbose=False, cadence=2, fake_comm=fake_comm)
+            # if this takes longer than 120 sec, something is wrong, so just press on
+            with force_timeout(120):
+                in_comm = are_we_in_comm(
+                    verbose=False, cadence=2, fake_comm=fake_comm)
 
-            if not in_comm:
-                if recently_in_comm:
-                    # We might have just had a loss in telemetry. Try again after waiting for a minute
-                    time.sleep(60)
-                    in_comm = are_we_in_comm(verbose=False, cadence=2)
-                    if in_comm:
-                        continue
+                if not in_comm:
+                    if recently_in_comm:
+                        # We might have just had a loss in telemetry. Try again after waiting for a minute
+                        time.sleep(60)
+                        in_comm = are_we_in_comm(verbose=False, cadence=2)
+                        if in_comm:
+                            continue
 
-                    # Assuming the end of comm is real, then comm has recently ended and we need to report that.
-                    try:
+                        # Assuming the end of comm is real, then comm has recently ended and we need to report that.
+                        try:
+                            telem = grab_critical_telemetry(
+                                start=CxoTime.now() - 1800 * u.s)
+                        except Exception as e:
+                            telem = None
+                            if chatty:
+                                print('MAUDE exception: {}'.format(e))
+                            continue
+                        if telem is not None:
+                            if telem['Error State'] is False:
+                                message = f"It appears that COMM has ended as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}` \n\n HRC was *{telem['HRC observing status']}* \n Last telemetry was in `{telem['Format']}` \n\n *HRC-I* was {telem['HRC-I Status']} \n *HRC-S* was {telem['HRC-S Status']} \n\n *Shields were {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n\n *HRC-I* Voltage Steps were (Top/Bottom) = `{telem['HRC-I Voltage Steps'][0]}/{telem['HRC-I Voltage Steps'][1]}` \n *HRC-S* Voltage Steps were (Top/Bottom) = `{telem['HRC-S Voltage Steps'][0]}/{telem['HRC-S Voltage Steps'][1]}`  \n\n *Bus Current* was `{telem['Bus Current (DN)']} DN` (`{telem['Bus Current (A)']} A`)  \n\n *FEA Temperature* was `{telem['FEA Temp']} C` \n *CEA Temperature* was `{telem['CEA Temp']} C` "
+                            elif telem['Error State'] is True:
+                                message = f"It appears that COMM has ended as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}` \n\n WARNING: HRC State Errors Detected! \n\n Last telemetry was in `{telem['Format']}` \n\n *HRC-I* was {telem['HRC-I Status']} \n *HRC-S* was {telem['HRC-S Status']} \n\n *Shields were {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n\n *HRC-I* Voltage Steps were (Top/Bottom) = `{telem['HRC-I Voltage Steps'][0]}/{telem['HRC-I Voltage Steps'][1]}` \n *HRC-S* Voltage Steps were (Top/Bottom) = `{telem['HRC-S Voltage Steps'][0]}/{telem['HRC-S Voltage Steps'][1]}`  \n\n *Bus Current* was `{telem['Bus Current (DN)']} DN` (`{telem['Bus Current (A)']} A`)  \n\n *FEA Temperature* was `{telem['FEA Temp']} C` \n *CEA Temperature* was `{telem['CEA Temp']} C` "
+                        elif telem is None:
+                            message = f"It appears that COMM has ended as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}` \n\n Currently having trouble querying telemetry; wait to see if the problem resolves, otherwise contact Grant!"
+                        send_slack_message(message, channel=bot_slack_channel)
+
+                    recently_in_comm = False
+                    in_comm_counter = 0
+                    print(
+                        f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) Not in Comm.                                ', end='\r')
+                if in_comm:
+                    if fake_comm:
+                        # two days to make sure we grab previous comm
+                        start_time = CxoTime.now() - 2 * u.d
+                    elif not fake_comm:
+                        start_time = CxoTime.now() - 300 * u.s  # 300 sec to make the grab really small
+
+                    if in_comm_counter == 0:
+                        # Then start the clock on the comm pass
+                        comm_start_timestamp = CxoTime.now()
+
+                    recently_in_comm = True
+                    in_comm_counter += 1
+                    telemetry_audit_counter += 1
+
+                    time.sleep(5)  # Wait a few seconds for MAUDE to refresh
+                    latest_vcdu = fetch.Msid(
+                        'CVCDUCTR', start=start_time).vals[-1]
+
+                    print(
+                        f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")} | VCDU {latest_vcdu} | #{in_comm_counter}) In Comm.', end='\r')
+
+                    if in_comm_counter == 5:
+                        # Now we've waited ~half a minute or so for MAUDE to update
                         telem = grab_critical_telemetry(
-                            start=CxoTime.now() - 1800 * u.s)
-                    except Exception as e:
-                        telem = None
-                        if chatty:
-                            print('MAUDE exception: {}'.format(e))
-                        continue
-                    if telem is not None:
+                            start=CxoTime.now() - 8 * u.h)
+
+                        # Craft a message string using this latest elemetry
                         if telem['Error State'] is False:
-                            message = f"It appears that COMM has ended as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}` \n\n HRC was *{telem['HRC observing status']}* \n Last telemetry was in `{telem['Format']}` \n\n *HRC-I* was {telem['HRC-I Status']} \n *HRC-S* was {telem['HRC-S Status']} \n\n *Shields were {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n\n *HRC-I* Voltage Steps were (Top/Bottom) = `{telem['HRC-I Voltage Steps'][0]}/{telem['HRC-I Voltage Steps'][1]}` \n *HRC-S* Voltage Steps were (Top/Bottom) = `{telem['HRC-S Voltage Steps'][0]}/{telem['HRC-S Voltage Steps'][1]}`  \n\n *Bus Current* was `{telem['Bus Current (DN)']} DN` (`{telem['Bus Current (A)']} A`)  \n\n *FEA Temperature* was `{telem['FEA Temp']} C` \n *CEA Temperature* was `{telem['CEA Temp']} C` "
+                            message = f"We are now *IN COMM* as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}`. \n\n HRC is *{telem['HRC observing status']}*  \n Telemetry Format = `{telem['Format']}` \n\n *HRC-I* is {telem['HRC-I Status']} \n *HRC-S* is {telem['HRC-S Status']} \n\n *Shields are {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n\n *HRC-I* Voltage Steps (Top/Bottom) = `{telem['HRC-I Voltage Steps'][0]}/{telem['HRC-I Voltage Steps'][1]}` \n *HRC-S* Voltage Steps (Top/Bottom) = `{telem['HRC-S Voltage Steps'][0]}/{telem['HRC-S Voltage Steps'][1]}`  \n \n *Total Event* Rate = `{telem['TE Rate']} cps`   \n *Valid Event* Rate = `{telem['VE Rate']} cps`  \n \n *Bus Current* is `{telem['Bus Current (DN)']} DN` (`{telem['Bus Current (A)']} A`) \n \n *FEA Temperature* is `{telem['FEA Temp']} C`\n *CEA Temperature* is `{telem['CEA Temp']} C`"
                         elif telem['Error State'] is True:
-                            message = f"It appears that COMM has ended as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}` \n\n WARNING: HRC State Errors Detected! \n\n Last telemetry was in `{telem['Format']}` \n\n *HRC-I* was {telem['HRC-I Status']} \n *HRC-S* was {telem['HRC-S Status']} \n\n *Shields were {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n\n *HRC-I* Voltage Steps were (Top/Bottom) = `{telem['HRC-I Voltage Steps'][0]}/{telem['HRC-I Voltage Steps'][1]}` \n *HRC-S* Voltage Steps were (Top/Bottom) = `{telem['HRC-S Voltage Steps'][0]}/{telem['HRC-S Voltage Steps'][1]}`  \n\n *Bus Current* was `{telem['Bus Current (DN)']} DN` (`{telem['Bus Current (A)']} A`)  \n\n *FEA Temperature* was `{telem['FEA Temp']} C` \n *CEA Temperature* was `{telem['CEA Temp']} C` "
-                    elif telem is None:
-                        message = f"It appears that COMM has ended as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}` \n\n Currently having trouble querying telemetry; wait to see if the problem resolves, otherwise contact Grant!"
-                    send_slack_message(message, channel=bot_slack_channel)
+                            message = f"*WARNING*! We are now *IN COMM*, and *ERRORS with HRC are detected*: \n\n Telemetry Format = `{telem['Format']}` \n\n *HRC-I* is {telem['HRC-I Status']} \n *HRC-S* is {telem['HRC-S Status']} \n\n *Shields are {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n\n *HRC-I* Voltage Steps (Top/Bottom) = `{telem['HRC-I Voltage Steps'][0]}/{telem['HRC-I Voltage Steps'][1]}` \n *HRC-S* Voltage Steps (Top/Bottom) = `{telem['HRC-S Voltage Steps'][0]}/{telem['HRC-S Voltage Steps'][1]}`  \n \n *Total Event* Rate = `{telem['TE Rate']} cps`   \n *Valid Event* Rate = `{telem['VE Rate']} cps`  \n \n *Bus Current* is `{telem['Bus Current (DN)']} DN` (`{telem['Bus Current (A)']} A`) \n \n *FEA Temperature* is `{telem['FEA Temp']} C`\n *CEA Temperature* is `{telem['CEA Temp']} C`"
+                        # Send the message using our slack bot
+                        send_slack_message(message, channel=bot_slack_channel)
+                        # do a first audit of the telemetry upon announcement
 
-                recently_in_comm = False
-                in_comm_counter = 0
-                print(
-                    f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) Not in Comm.                                ', end='\r')
-            if in_comm:
-                if fake_comm:
-                    # two days to make sure we grab previous comm
-                    start_time = CxoTime.now() - 2 * u.d
-                elif not fake_comm:
-                    start_time = CxoTime.now() - 300 * u.s  # 300 sec to make the grab really small
+                    if telemetry_audit_counter == 10:
+                        # Reset the audit counter
+                        telemetry_audit_counter = 0
+                        # Now we've waited a minute. Let's audit the telemetry and send amessage.
+                        # Check starting from the beginning of comm. We always check an ever-expanding
+                        # chunk of telemetry. This is a BIT redundant, but not bad.
+                        # audit_telemetry(start=comm_start_timestamp,
+                        #                 channel=bot_slack_channel)
 
-                if in_comm_counter == 0:
-                    # Then start the clock on the comm pass
-                    comm_start_timestamp = CxoTime.now()
-
-                recently_in_comm = True
-                in_comm_counter += 1
-                telemetry_audit_counter += 1
-
-                time.sleep(5)  # Wait a few seconds for MAUDE to refresh
-                latest_vcdu = fetch.Msid(
-                    'CVCDUCTR', start=start_time).vals[-1]
-
-                print(
-                    f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")} | VCDU {latest_vcdu} | #{in_comm_counter}) In Comm.', end='\r')
-
-                if in_comm_counter == 5:
-                    # Now we've waited ~half a minute or so for MAUDE to update
-                    telem = grab_critical_telemetry(
-                        start=CxoTime.now() - 8 * u.h)
-
-                    # Craft a message string using this latest elemetry
-                    if telem['Error State'] is False:
-                        message = f"We are now *IN COMM* as of `{CxoTime.now().strftime('%m/%d/%Y %H:%M:%S')}`. \n\n HRC is *{telem['HRC observing status']}*  \n Telemetry Format = `{telem['Format']}` \n\n *HRC-I* is {telem['HRC-I Status']} \n *HRC-S* is {telem['HRC-S Status']} \n\n *Shields are {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n\n *HRC-I* Voltage Steps (Top/Bottom) = `{telem['HRC-I Voltage Steps'][0]}/{telem['HRC-I Voltage Steps'][1]}` \n *HRC-S* Voltage Steps (Top/Bottom) = `{telem['HRC-S Voltage Steps'][0]}/{telem['HRC-S Voltage Steps'][1]}`  \n \n *Total Event* Rate = `{telem['TE Rate']} cps`   \n *Valid Event* Rate = `{telem['VE Rate']} cps`  \n \n *Bus Current* is `{telem['Bus Current (DN)']} DN` (`{telem['Bus Current (A)']} A`) \n \n *FEA Temperature* is `{telem['FEA Temp']} C`\n *CEA Temperature* is `{telem['CEA Temp']} C`"
-                    elif telem['Error State'] is True:
-                        message = f"*WARNING*! We are now *IN COMM*, and *ERRORS with HRC are detected*: \n\n Telemetry Format = `{telem['Format']}` \n\n *HRC-I* is {telem['HRC-I Status']} \n *HRC-S* is {telem['HRC-S Status']} \n\n *Shields are {telem['Shield State']}* with a count rate of `{telem['Shield Rate']} cps` \n\n *HRC-I* Voltage Steps (Top/Bottom) = `{telem['HRC-I Voltage Steps'][0]}/{telem['HRC-I Voltage Steps'][1]}` \n *HRC-S* Voltage Steps (Top/Bottom) = `{telem['HRC-S Voltage Steps'][0]}/{telem['HRC-S Voltage Steps'][1]}`  \n \n *Total Event* Rate = `{telem['TE Rate']} cps`   \n *Valid Event* Rate = `{telem['VE Rate']} cps`  \n \n *Bus Current* is `{telem['Bus Current (DN)']} DN` (`{telem['Bus Current (A)']} A`) \n \n *FEA Temperature* is `{telem['FEA Temp']} C`\n *CEA Temperature* is `{telem['CEA Temp']} C`"
-                    # Send the message using our slack bot
-                    send_slack_message(message, channel=bot_slack_channel)
-                    # do a first audit of the telemetry upon announcement
-
-                if telemetry_audit_counter == 10:
-                    # Reset the audit counter
-                    telemetry_audit_counter = 0
-                    # Now we've waited a minute. Let's audit the telemetry and send amessage.
-                    # Check starting from the beginning of comm. We always check an ever-expanding
-                    # chunk of telemetry. This is a BIT redundant, but not bad.
-                    # audit_telemetry(start=comm_start_timestamp,
-                    #                 channel=bot_slack_channel)
+        except TimeoutException as e:
+            print(f"Funtion timed out! Pressing on...")
+            continue
 
         except Exception as e:
             # MAUDE queries fail regularly as TM is streaming in (mismatched array sizes as data is being populated), 404s, etc.
@@ -294,14 +300,15 @@ def main():
             if chatty:
                 # Then we want a verbose error message, because we're obviously in testing mode
                 print(f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) ERROR: {e}')
-                print("Heres the traceback:")
-                print(traceback.format_exc())
+                # print("Heres the traceback:")
+                # print(traceback.format_exc())
                 print(
                     f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) Pressing on ...')
             elif not chatty:
+                pass
                 # Then we're likely in operational mode. Ignore the errors on the command line.
-                print(
-                    f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) ERROR encountered! Use --report_errors to display them.                                               ', end='\r\r\r')
+                # print(
+                #     f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) ERROR encountered! Use --report_errors to display them.                                               ', end='\r\r\r')
             if in_comm_counter > 0:
                 # Reset the comm counter to make the error "not count"
                 in_comm_counter -= 1
