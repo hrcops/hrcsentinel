@@ -15,7 +15,7 @@ from cxotime import CxoTime
 
 from global_configuration import allowed_hosts
 import plot_stylers
-from heartbeat import are_we_in_comm, force_timeout, TimeoutException
+from heartbeat import are_we_in_comm, timestamp_string, force_timeout, TimeoutException
 from plot_dashboard import (comm_status_stamp, make_ancillary_plots,
                             make_realtime_plot)
 from plot_rates import make_shield_plot
@@ -67,12 +67,11 @@ def main():
 
     if hostname in allowed_hosts:
         fig_save_directory = allowed_hosts[hostname]
-        print('Recognized host: {}. Plots will be saved to {}'.format(
-            hostname, fig_save_directory))
+        print(f'({timestamp_string()}) Recognized host: {hostname}. Plots will be saved to {fig_save_directory}')
 
     else:
-        sys.exit('Hostname {} is not recognized. Exiting.'.format(
-            hostname))
+        sys.exit(
+            f'({timestamp_string()}) Hostname {hostname} is not recognized. Exiting.')
 
     if args.show_in_gui is False:
         # Then we're on a headless machine and you should use agg
@@ -85,7 +84,8 @@ def main():
     import matplotlib.pyplot as plt
     from matplotlib import gridspec
     if chatty:
-        print("Using Matplotlib backend:", matplotlib.get_backend())
+        print(f"({timestamp_string()}) Using Matplotlib backend:",
+              matplotlib.get_backend())
 
     # Initial settings
     recently_in_comm = False
@@ -94,23 +94,23 @@ def main():
     iteration_counter = 0
 
     if args.test is True:
-        print('Running HRCMonitor in TEST mode. We will try to make all plots just once...')
+        print(f'({timestamp_string()}) Running HRCMonitor in TEST mode. We will try to make all plots just once...')
         test_start_time = dt.datetime.now(tz=pytz.timezone('US/Eastern'))
         five_days_ago = dt.date.today() - dt.timedelta(days=5)
         two_days_hence = dt.date.today() + dt.timedelta(days=2)
 
-        print('Testing creation of the Comm Status stamp...')
+        print(f'({timestamp_string()}) Testing creation of the Comm Status stamp...')
         comm_status_stamp(comm_status=False, fig_save_directory=fig_save_directory,
                           code_start_time=test_start_time, hostname=hostname, debug_prints=True)
 
-        print('Testing realtime plots...')
+        print(f'({timestamp_string()}) Testing realtime plots...')
         make_realtime_plot(plot_start=five_days_ago, fig_save_directory=fig_save_directory,
                            plot_stop=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'), force_limits=True, show_in_gui=args.show_in_gui)
 
-        print('Testing ancillary plots...')
+        print(f'({timestamp_string()}) Testing ancillary plots...')
         make_ancillary_plots(fig_save_directory=fig_save_directory)
         plt.close('all')
-        print('Tests completed. Exiting.')
+        print(f'({timestamp_string()}) Tests completed. Exiting.')
         sys.exit()
 
     # Loop infinitely :)
@@ -148,15 +148,15 @@ def main():
                     in_comm_counter = 0
                     out_of_comm_refresh_counter += 1
                     print(
-                        f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) Not in Comm.                                  ', end='\r\r\r')
+                        f'({timestamp_string()}) Not in Comm.                                  ', end='\r\r\r')
 
                     if out_of_comm_refresh_counter == 20:
 
                         # Explicitly set maude each time, because ancillary plots use CXC
                         fetch.data_source.set('maude allow_subset=False')
                         # Refresh the plots every 20th iteration out-of-comm
-                        print("Performing out-of-comm plot refresh at {}                                      ".format(
-                            dt.datetime.now(tz=pytz.timezone('US/Eastern')).strftime("%Y-%b-%d %H:%M:%S")), flush=True)
+                        print(
+                            f"({timestamp_string()}) Performing out-of-comm plot refresh...                              ", flush=True)
                         sys.stdout.write("\033[K")
                         five_days_ago = dt.date.today() - dt.timedelta(days=5)
                         two_days_hence = dt.date.today() + dt.timedelta(days=2)
@@ -194,8 +194,8 @@ def main():
                     if args.force_cheta:
                         fetch.data_source.set('cxc')
 
-                    print("Refreshing dashboard (Iteration {}) at {}".format(
-                        iteration_counter, dt.datetime.now(tz=pytz.timezone('US/Eastern')).strftime("%Y-%b-%d %H:%M:%S")), flush=True)
+                    print(
+                        f"({timestamp_string()}) Refreshing dashboard (Iteration {iteration_counter})", flush=True)
 
                     five_days_ago = dt.date.today() - dt.timedelta(days=5)
                     two_days_hence = dt.date.today() + dt.timedelta(days=2)
@@ -206,8 +206,8 @@ def main():
                     make_shield_plot(fig_save_directory=fig_save_directory,
                                      plot_start=five_days_ago, plot_stop=two_days_hence, debug_prints=args.debug)
 
-                    print('Saved Current Status Plots to {}'.format(
-                        fig_save_directory), end="\r", flush=True)
+                    print(
+                        f'({timestamp_string()}) Saved Current Status Plots to {fig_save_directory}', end="\r", flush=True)
                     # Clear the command line manually
                     sys.stdout.write("\033[K")
 
@@ -217,27 +217,28 @@ def main():
 
                     for i in range(0, sleep_period_seconds):
                         # you need to flush this print statement
-                        print('Refreshing plots in {} seconds...'.format(
-                            sleep_period_seconds-i), end="\r", flush=True)
+                        print(
+                            f'({timestamp_string()}) Refreshing plots in {sleep_period_seconds-i} seconds...', end="\r", flush=True)
                         time.sleep(1)  # sleep for 1 second per iteration
 
                 iteration_counter += 1
 
         except TimeoutException as e:
-            print(f"Funtion timed out! Pressing on...")
+            print(f"({timestamp_string()}) Funtion timed out! Pressing on...")
             continue
 
         except Exception as e:
             # Then reset the out_of_comm_refresh_counter because it might be higher than 20
             out_of_comm_refresh_counter = 0
             if chatty:
-                print("ERROR on Iteration {}: {}".format(iteration_counter, e))
+                print(
+                    f"({timestamp_string()}) ERROR on Iteration {iteration_counter}: {e}")
                 print("Heres the traceback:")
                 print(traceback.format_exc())
-                print("Pressing on...")
+                print(f"({timestamp_string()}) Pressing on...")
             elif not chatty:
                 print(
-                    f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) ERROR encountered! Use --report_errors to display them.                              ', end='\r\r\r')
+                    f'({timestamp_string()}) ERROR encountered! Use --report_errors to display them.                              ', end='\r\r\r')
             continue
 
 

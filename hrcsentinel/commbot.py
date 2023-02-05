@@ -16,7 +16,7 @@ from cheta import fetch_sci as fetch
 from cxotime import CxoTime
 
 from chandratime import convert_to_doy
-from heartbeat import are_we_in_comm, force_timeout, TimeoutException
+from heartbeat import are_we_in_comm, timestamp_string, force_timeout, TimeoutException
 
 import psutil
 process = psutil.Process(os.getpid())
@@ -243,7 +243,7 @@ def main():
                     recently_in_comm = False
                     in_comm_counter = 0
                     print(
-                        f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) Not in Comm.                                ', end='\r')
+                        f'({timestamp_string()}) Not in Comm.                                ', end='\r')
                 if in_comm:
                     if fake_comm:
                         # two days to make sure we grab previous comm
@@ -264,7 +264,7 @@ def main():
                         'CVCDUCTR', start=start_time).vals[-1]
 
                     print(
-                        f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")} | VCDU {latest_vcdu} | #{in_comm_counter}) In Comm.', end='\r')
+                        f'({timestamp_string()} | VCDU {latest_vcdu} | #{in_comm_counter}) In Comm.', end='\r')
 
                     if in_comm_counter == 5:
                         # Now we've waited ~half a minute or so for MAUDE to update
@@ -299,11 +299,11 @@ def main():
 
             if chatty:
                 # Then we want a verbose error message, because we're obviously in testing mode
-                print(f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) ERROR: {e}')
+                print(f'({timestamp_string()}) ERROR: {e}')
                 # print("Heres the traceback:")
                 # print(traceback.format_exc())
                 print(
-                    f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) Pressing on ...')
+                    f'({timestamp_string()}) Pressing on ...')
             elif not chatty:
                 pass
                 # Then we're likely in operational mode. Ignore the errors on the command line.

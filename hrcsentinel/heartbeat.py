@@ -2,6 +2,7 @@
 
 import time
 from astropy import units as u
+import datetime as dt
 from cxotime import CxoTime
 import Ska.engarchive.fetch as fetch
 
@@ -50,6 +51,12 @@ def are_we_in_comm(verbose=False, cadence=2, fake_comm=False):
                 f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) Not in Comm.                                 ', end='\r\r\r')
 
     return in_comm
+
+
+def timestamp_string():
+    # return CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")
+    # return dt.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
+    return dt.datetime.now().strftime("%m/%d/%Y %I:%M:%S %p") + f" {dt.datetime.now().astimezone().tzinfo}"
 
 
 def main():
