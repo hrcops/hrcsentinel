@@ -3,6 +3,7 @@
 import time
 from astropy import units as u
 import datetime as dt
+import pytz
 from cxotime import CxoTime
 import Ska.engarchive.fetch as fetch
 
@@ -56,7 +57,7 @@ def are_we_in_comm(verbose=False, cadence=2, fake_comm=False):
 def timestamp_string():
     # return CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")
     # return dt.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
-    return dt.datetime.now().strftime("%m/%d/%Y %I:%M:%S %p") + f" {dt.datetime.now().astimezone().tzinfo}"
+    return dt.datetime.now(pytz.timezone('US/Eastern')).strftime("%m/%d/%Y %I:%M:%S %p") + f" {dt.datetime.now(pytz.timezone('US/Eastern')).astimezone().tzinfo}"
 
 
 def main():

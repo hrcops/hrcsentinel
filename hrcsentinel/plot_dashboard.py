@@ -130,9 +130,10 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
 
             if missionwide is False:
                 # Then add labels
-                ax.text(dt.datetime.now(pytz.utc), ax.get_ylim()[1],
+                ax.text(dt.datetime.now(tz=pytz.timezone('US/Eastern')), ax.get_ylim()[1],
                         'Now', fontsize=6, color='slategray', zorder=3)
-                ax.axvline(dt.datetime.now(pytz.utc), color='gray', alpha=0.5)
+                ax.axvline(dt.datetime.now(tz=pytz.timezone(
+                    'US/Eastern')), color='gray', alpha=0.5)
 
                 if plotnum == 11:
                     try:
