@@ -24,7 +24,7 @@ from chandratime import cxctime_to_datetime, convert_to_doy
 
 
 import matplotlib.pyplot as plt
-plt.switch_backend('agg')
+# plt.switch_backend('agg')
 
 
 def make_motor_plots(counter=None, fig_save_directory='/Users/grant/Desktop/'):

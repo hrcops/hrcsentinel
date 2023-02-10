@@ -4,7 +4,6 @@ import argparse
 import datetime as dt
 import sys
 
-import matplotlib
 import matplotlib.dates as mdate
 import matplotlib.pyplot as plt
 import numpy as np

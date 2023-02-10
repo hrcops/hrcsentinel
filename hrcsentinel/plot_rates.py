@@ -1,16 +1,13 @@
 #!/usr/bin/env conda run -n ska3 python
 import os
 import argparse
-import collections
 import datetime as dt
 import json
 import socket
-import subprocess
 import sys
 import time
 import urllib.request
 from urllib.error import HTTPError
-from pickle import TUPLE1
 
 import matplotlib.dates as mdate
 import numpy as np
@@ -35,23 +32,9 @@ from plot_helpers import drawnow
 from heartbeat import timestamp_string
 
 
-def get_comms(dsn_comms_file):
-    """
-    Get the list of comm passes from the DSN summary file.
-    """
-    comms = yaml.safe_load(open(dsn_comms_file, 'r'))
-    return comms
 
 
-def get_radzones():
-    """
-    Constuct a list of complete radiation zones using kadi events
-    """
-    radzones = events.rad_zones.filter(start=cxcDateTime() - 5, stop=None)
-    return [(x.start, x.stop) for x in radzones]
-
-
-def grab_orbit_metadata_from_web(plot_start=dt.date.today() - dt.timedelta(days=5)):
+def grab_orbit_metadata(plot_start=dt.date.today() - dt.timedelta(days=5)):
     '''
     Use the web-Kadi API to grab orbit metadata.
     This allows us to query Kadi and avoid the events.db3 update hiccup
@@ -80,8 +63,8 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
         dsn_comms_file = '/proj/sot/ska/data/dsn_summary/dsn_summary.yaml'
         if os.path.exists(dsn_comms_file):
             # then we are either on the HEAD network, or it has been mounted via MacFuse (or something)
-            radzones = get_radzones()
-            comms = get_comms(dsn_comms_file)
+            get_radzones()
+            get_comms(dsn_comms_file)
     except:
         print(f'({timestamp_string()}) Error in KADI fetch... pressing on...')
 
@@ -90,7 +73,7 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
     max_attempts = 4  # how many times to try to get the metadata
     while attempts <= max_attempts:
         try:
-            orbit_metadata = grab_orbit_metadata_from_web(
+            orbit_metadata = grab_orbit_metadata(
                 plot_start=plot_start)
             # Save that successfully fetched orbit metadata as a json file for loading just in case
             with open("last_orbit_metadata.json", "w") as orbit_metadata_json_file:
