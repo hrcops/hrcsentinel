@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from commbot import send_slack_message
+from monitor_comms import send_slack_message
 import os
 import argparse
 import datetime as dt

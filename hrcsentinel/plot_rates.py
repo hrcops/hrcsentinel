@@ -32,8 +32,6 @@ from plot_helpers import drawnow
 from heartbeat import timestamp_string
 
 
-
-
 def grab_orbit_metadata(plot_start=dt.date.today() - dt.timedelta(days=5)):
     '''
     Use the web-Kadi API to grab orbit metadata.
@@ -56,19 +54,11 @@ def grab_orbit_metadata(plot_start=dt.date.today() - dt.timedelta(days=5)):
 
 
 def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/', plot_start=dt.date.today() - dt.timedelta(days=5), plot_stop=dt.date.today() + dt.timedelta(days=3), custom_ylims=None, show_plot=False, custom_save_name=None, figure_size=(16, 8), save_dpi=300, debug_prints=False):
+    '''
+    Create a shield plot. Fix this.
+    '''
 
-    # TODO: MAKE PLOT USE THIS FILE ONLY IF IT SUCCESSFULLY FINDS IT
-    # Try to load the DSN comms
-    try:
-        dsn_comms_file = '/proj/sot/ska/data/dsn_summary/dsn_summary.yaml'
-        if os.path.exists(dsn_comms_file):
-            # then we are either on the HEAD network, or it has been mounted via MacFuse (or something)
-            get_radzones()
-            get_comms(dsn_comms_file)
-    except:
-        print(f'({timestamp_string()}) Error in KADI fetch... pressing on...')
-
-    # Get the metadata. Don't die if it fails. Try three times.
+    # Get the orbit metadata. Don't die if it fails. Try three times.
     attempts = 0
     max_attempts = 4  # how many times to try to get the metadata
     while attempts <= max_attempts:

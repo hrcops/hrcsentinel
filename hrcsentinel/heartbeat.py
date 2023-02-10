@@ -27,6 +27,8 @@ def force_timeout(seconds):
         signal.alarm(0)
 
 
+
+
 def are_we_in_comm(verbose=False, cadence=2, fake_comm=False):
     # Always be fetching from MAUDE
     fetch.data_source.set('maude allow_subset=True')

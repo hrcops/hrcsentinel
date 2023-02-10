@@ -19,13 +19,16 @@ import event_times
 import msidlists
 import plot_stylers
 from chandratime import convert_to_doy, cxctime_to_datetime
-from commbot import convert_bus_current_to_dn
+from monitor_comms import convert_bus_current_to_dn
 from plot_motors import make_motor_plots
 from plot_rates import make_shield_plot
 from plot_thermals import make_thermal_plots
 
 
 def comm_status_stamp(comm_status, code_start_time, hostname, fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/', debug_prints=False) -> None:
+    '''
+    Make the comm status stamp
+    '''
 
     if comm_status is True:
         commreport = f'In Comm!'

@@ -23,6 +23,9 @@ process = psutil.Process(os.getpid())
 
 
 def audit_telemetry(start, channel=None):
+    '''
+    Not used right now
+    '''
 
     print(f'({CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")}) TELEMETRY AUDIT', end='\r')
 
@@ -44,6 +47,9 @@ def audit_telemetry(start, channel=None):
 
 
 def send_slack_message(message, channel='#comm_passes', blocks=None):
+    '''
+    Send a slack message to the HRCOps channel
+    '''
 
     # I run this on both the HEAD LAN and my home machine
     # Make sure it's readable only to you, i.e. chmod og-rwx slackbot_oauth_token
@@ -80,6 +86,9 @@ def send_slack_message(message, channel='#comm_passes', blocks=None):
 
 
 def grab_critical_telemetry(start=CxoTime.now() - 60 * u.s):
+    '''
+    Grab the major telemetry you need from Cheta
+    '''
 
     critical_msidlist = ['CCSDSTMF', '2SHEV1RT', '2PRBSCR',
                          '2FHTRMZT', '2CHTRPZT', '2IMTPAST', '2IMBPAST', '2SPTPAST', '2SPBPAST', '2TLEV1RT', '2VLEV1RT']
