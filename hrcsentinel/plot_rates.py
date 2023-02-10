@@ -32,6 +32,8 @@ from chandratime import cxctime_to_datetime, convert_to_doy
 from goes_proxy import get_goes_proxy
 from plot_helpers import drawnow
 
+from heartbeat import timestamp_string
+
 
 def get_comms(dsn_comms_file):
     """
@@ -74,11 +76,14 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
 
     # TODO: MAKE PLOT USE THIS FILE ONLY IF IT SUCCESSFULLY FINDS IT
     # Try to load the DSN comms
-    dsn_comms_file = '/proj/sot/ska/data/dsn_summary/dsn_summary.yaml'
-    if os.path.exists(dsn_comms_file):
-        # then we are either on the HEAD network, or it has been mounted via MacFuse (or something)
-        radzones = get_radzones()
-        comms = get_comms(dsn_comms_file)
+    try:
+        dsn_comms_file = '/proj/sot/ska/data/dsn_summary/dsn_summary.yaml'
+        if os.path.exists(dsn_comms_file):
+            # then we are either on the HEAD network, or it has been mounted via MacFuse (or something)
+            radzones = get_radzones()
+            comms = get_comms(dsn_comms_file)
+    except:
+        print(f'({timestamp_string()}) Error in KADI fetch... pressing on...')
 
     # Get the metadata. Don't die if it fails. Try three times.
     attempts = 0

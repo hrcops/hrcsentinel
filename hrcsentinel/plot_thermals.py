@@ -7,7 +7,6 @@ import os
 import sys
 import shutil
 import time
-import pytz
 import traceback
 
 from Ska.engarchive import fetch_sci as fetch
@@ -120,7 +119,6 @@ def make_thermal_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/h
     plt.yticks(fontsize=10)
     ax.set_ylim(0, 40)
 
-    # ax.set_xlim(dt.date(2018, 10, 6), dt.date(2018, 10, 30))
 
     if counter is not None:
         ax.set_title('HRC Thermistor MSIDs (Daily Means) | Updated as of {} EST'.format(

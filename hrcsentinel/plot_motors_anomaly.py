@@ -17,7 +17,6 @@ import Chandra.Time
 from astropy.table import Table
 
 import datetime as dt
-import pytz
 import matplotlib.dates as mdate
 from matplotlib import gridspec
 

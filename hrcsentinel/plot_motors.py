@@ -17,7 +17,6 @@ import Chandra.Time
 from astropy.table import Table
 
 import datetime as dt
-import pytz
 import matplotlib.dates as mdate
 from matplotlib import gridspec
 
@@ -72,10 +71,10 @@ def make_motor_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/hrc
 
             # ax.set_ylabel(motor_dashboard_units[plotnum])
 
-            ax.axvline(dt.datetime.now(pytz.utc),
+            ax.axvline(dt.datetime.now(tz=pytz.timezone('US/Eastern')),
                        color='gray', alpha=0.5)
 
-            ax.text(dt.datetime.now(pytz.utc), ax.get_ylim()[1],
+            ax.text(dt.datetime.now(tz=pytz.timezone('US/Eastern')), ax.get_ylim()[1],
                     'Now', fontsize=6, color='slategray')
 
             plt.gca().xaxis.set_major_formatter(date_format)
