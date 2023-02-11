@@ -8,4 +8,4 @@ script_to_run = 'monitor_comms.py'
 
 
 os.system(
-    f'gnome-terminal -- bash -c "{skainit_string}; cd {hrcsentinel_directory}; python {script_to_run}"')
+    f'gnome-terminal --title "CommBot" -- bash -c "{skainit_string}; cd {hrcsentinel_directory}; python {script_to_run}"')
