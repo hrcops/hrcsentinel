@@ -2,12 +2,10 @@
 
 import os
 import argparse
-import datetime as dt
 import json
 import socket
 import sys
 import time
-import traceback
 
 import astropy.units as u
 import numpy as np
@@ -133,7 +131,6 @@ def grab_critical_telemetry(start=CxoTime.now() - 60 * u.s):
 
     expected_status = ['OFF', 'at HALF voltage', 'at FULL voltage']
 
-    hrc_telem_status = None
     hrc_i_status = None
     hrc_s_status = None
 
@@ -262,7 +259,7 @@ def main():
 
                     if in_comm_counter == 0:
                         # Then start the clock on the comm pass
-                        comm_start_timestamp = CxoTime.now()
+                        CxoTime.now()
 
                     recently_in_comm = True
                     in_comm_counter += 1
@@ -298,7 +295,7 @@ def main():
                         # audit_telemetry(start=comm_start_timestamp,
                         #                 channel=bot_slack_channel)
 
-        except TimeoutException as e:
+        except TimeoutException:
             print(f"Funtion timed out! Pressing on...")
             continue
 

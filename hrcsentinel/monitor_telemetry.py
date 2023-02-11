@@ -223,7 +223,7 @@ def main():
 
                 iteration_counter += 1
 
-        except TimeoutException as e:
+        except TimeoutException:
             print(f"({timestamp_string()}) Funtion timed out! Pressing on...")
             continue
 

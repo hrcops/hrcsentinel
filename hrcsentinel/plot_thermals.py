@@ -3,11 +3,7 @@
 from msidlists import *
 import pandas as pd
 import numpy as np
-import os
 import sys
-import shutil
-import time
-import traceback
 
 from Ska.engarchive import fetch_sci as fetch
 import Chandra.Time
