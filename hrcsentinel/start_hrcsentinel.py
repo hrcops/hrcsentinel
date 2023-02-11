@@ -1,11 +1,11 @@
-#!/usr/bin/env conda run -n ska3 python
+#!/usr/bin/env python
 
-'''
-Open three gnome terminals, each with a different conda environment.
-'''
+import os
+
+hrcsentinel_directory = '/home/tremblay/HRCOps/hrcsentinel/hrcsentinel'
+skainit_string = 'source /proj/sot/ska3/flight/bin/ska_envs.sh'
+script_to_run = 'monitor_comms.py'
 
 
-def open_gnome_terminal(conda_env):
-    import subprocess
-    subprocess.Popen(['gnome-terminal', '--', 'conda',
-                     'run', '-n', conda_env, 'python'])
+os.system(
+    f'gnome-terminal -- bash -c "{skainit_string}; cd {hrcsentinel_directory}; python {script_to_run}"')
