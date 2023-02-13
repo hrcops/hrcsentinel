@@ -9,7 +9,9 @@ import time
 import pytz
 
 
-import matplotlib
+import matplotlib.dates as mdate
+import matplotlib.pyplot as plt
+from matplotlib import gridspec
 from cheta import fetch
 from cxotime import CxoTime
 
@@ -80,9 +82,6 @@ def main():
     #     backend = 'MacOSX'
     # matplotlib.use(backend, force=True)
 
-    import matplotlib.dates as mdate
-    import matplotlib.pyplot as plt
-    from matplotlib import gridspec
     if chatty:
         print(f"({timestamp_string()}) Using Matplotlib backend:",
               matplotlib.get_backend())
@@ -165,7 +164,7 @@ def main():
                                            plot_stop=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'), force_limits=True, show_in_gui=args.show_in_gui)
 
                         make_ancillary_plots(
-                            fig_save_directory=fig_save_directory)
+                            fig_save_directory=fig_save_directory, show_in_gui=args.show_in_gui)
                         plt.close('all')
 
                         # Reset the refresh counter
@@ -195,7 +194,7 @@ def main():
                         fetch.data_source.set('cxc')
 
                     print(
-                        f"({timestamp_string()}) Refreshing dashboard (Iteration {iteration_counter})", flush=True)
+                        f"({timestamp_string()}) In Comm! Refreshing Dashboard (Iteration {iteration_counter})", flush=True)
 
                     five_days_ago = dt.date.today() - dt.timedelta(days=5)
                     two_days_hence = dt.date.today() + dt.timedelta(days=2)

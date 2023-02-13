@@ -235,7 +235,10 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
     plt.close()
 
 
-def make_ancillary_plots(fig_save_directory):
+def make_ancillary_plots(fig_save_directory, show_in_gui=False):
+    '''
+    Create the thermal and motor plots
+    '''
 
     five_days_ago = dt.date.today() - dt.timedelta(days=5)
     two_days_hence = dt.date.today() + dt.timedelta(days=2)
@@ -243,7 +246,7 @@ def make_ancillary_plots(fig_save_directory):
     fetch.data_source.set('maude allow_subset=True')
     print('Updating Event Rates Plot', end="\r", flush=True)
     make_shield_plot(fig_save_directory=fig_save_directory,
-                     plot_start=five_days_ago, plot_stop=two_days_hence)
+                     plot_start=five_days_ago, plot_stop=two_days_hence, show_in_gui=show_in_gui)
     print('Done', end="\r", flush=True)
     # Clear the command line manually
     sys.stdout.write("\033[K")

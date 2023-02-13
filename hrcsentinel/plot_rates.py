@@ -53,7 +53,7 @@ def grab_orbit_metadata(plot_start=dt.date.today() - dt.timedelta(days=5)):
     return orbit_metadata
 
 
-def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/', plot_start=dt.date.today() - dt.timedelta(days=5), plot_stop=dt.date.today() + dt.timedelta(days=3), custom_ylims=None, show_plot=False, custom_save_name=None, figure_size=(16, 8), save_dpi=300, debug_prints=False):
+def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/', plot_start=dt.date.today() - dt.timedelta(days=5), plot_stop=dt.date.today() + dt.timedelta(days=3), custom_ylims=None, show_plot=False, custom_save_name=None, figure_size=(16, 8), save_dpi=300):
     '''
     Create a shield plot. Fix this.
     '''
@@ -73,11 +73,12 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
             #     f'Successfully fetched orbit metadata and saved it as last_orbit_metadata.json.')
             break
 
-        except HTTPError as shit:
+        except HTTPError:
             attempts += 1
             time.sleep(10)  # give the server a few to chill...
-            print(
-                f'Got 500 Error from Kadi server ({shit}). Trying again...')
+            # You can print this, but it's annoying
+            # print(
+            #     f'({timestamp_string()}) Got 500 Error from Kadi server. Trying again...')
 
     if attempts > max_attempts:
         # then give up and try to load the json file
@@ -85,9 +86,11 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
             with open("last_orbit_metadata.json", "r") as orbit_metadata_json_file:
                 orbit_metadata = json.load(orbit_metadata_json_file)
             using_stale_orbit_metadata = True
+            print(f'({timestamp_string()}) Orbit metadata fetch failed after {max_attempts} attempts. Using stale metadata instead.')
 
         except Exception as e:
-            print(f'Could not load orbit metadata from json file: {e}')
+            print(
+                f'({timestamp_string()}) Could not load orbit metadata from json file: {e}')
             orbit_metadata = None
 
     fetch.data_source.set('maude allow_subset=False')

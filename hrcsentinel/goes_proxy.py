@@ -21,8 +21,8 @@ GOES_7DAY = f'{GOES_URL_ROOT}/differential-protons-7-day.json'
 BAD_VALUE = -1.0e5
 
 # dTypes from the Replan Central hrc_shield.h5 file. See more here: https://github.com/sot/arc/blob/master/get_hrc.py
-descrs = np.dtype([('year', '<i8'), ('month', '<i8'), ('dom', '<i8'), ('hhmm', '<i8'), ('mjd', '<i8'), ('secs', '<i8'), ('p1', '<f8'), ('p2', '<f8'), ('p3', '<f8'), ('p4', '<f8'), ('p5', '<f8'), ('p6', '<f8'), ('p7',
-                                                                                                                                                                                                                   '<f8'), ('p8', '<f8'), ('p9', '<f8'), ('p10', '<f8'), ('p11', '<f8'), ('hrc_shield', '<f8'), ('time', '<f8'), ('p2a', '<f8'), ('p2b', '<f8'), ('p8a', '<f8'), ('p8b', '<f8'), ('p8c', '<f8'), ('satellite', '<i8')])
+data_types = np.dtype([('year', '<i8'), ('month', '<i8'), ('dom', '<i8'), ('hhmm', '<i8'), ('mjd', '<i8'), ('secs', '<i8'), ('p1', '<f8'), ('p2', '<f8'), ('p3', '<f8'), ('p4', '<f8'), ('p5', '<f8'), ('p6', '<f8'), ('p7',
+                                                                                                                                                                                                                       '<f8'), ('p8', '<f8'), ('p9', '<f8'), ('p10', '<f8'), ('p11', '<f8'), ('hrc_shield', '<f8'), ('time', '<f8'), ('p2a', '<f8'), ('p2b', '<f8'), ('p8a', '<f8'), ('p8b', '<f8'), ('p8c', '<f8'), ('satellite', '<i8')])
 
 
 def get_json_data(url):
@@ -46,7 +46,7 @@ def get_json_data(url):
     return dat
 
 
-def format_proton_data(dat, descrs):
+def format_proton_data(dat, data_types):
     """
     Manipulate the data and return them in a desired format
     including columns that the old h5 file format wanted.
@@ -78,7 +78,7 @@ def format_proton_data(dat, descrs):
         [f"{t.hour}{t.minute:02}" for t in times.datetime]).astype(int)
 
     # Take the Table and make it into an ndarray with the supplied type
-    arr = np.ndarray(len(newdat), dtype=descrs)
+    arr = np.ndarray(len(newdat), dtype=data_types)
     for col in arr.dtype.names:
 
         # This gets any channels that were just missing altogether.  Looks like p2 and p11 now
@@ -97,16 +97,24 @@ def format_proton_data(dat, descrs):
 
 
 def calc_hrc_shield(dat):
-    # this is Malgosia's and MTA's proxy model
-    # For GOES earlier than 16 use columns p5, p6, p7
-    # hrc_shield = (6000 * dat['p5'] + 270000 * dat['p6']
-    #               + 100000 * dat['p7']) / 256.
-    # HRC proxy, GOES-16, used until April 2021
-    # hrc_shield = (6000 * dat['p5'] + 270000 * dat['p7']
-    #               + 100000 * dat['p9']) / 256.
-    # HRC proxy model based on fitting the 2SHLDART data
-    # with a combination of GOES-16 channels at the time
-    # of the Sep 2017 flare
+    '''
+    Using the raw GOES data, estimate the particle background rate
+    (in counts per second) that
+    the HRC anticoincidence shield would *probably* see, if it
+    were turned on (which it often isn't).
+
+
+    This is Malgosia's and MTA's proxy model
+    For GOES earlier than 16 use columns p5, p6, p7
+    hrc_shield = (6000 * dat['p5'] + 270000 * dat['p6']
+                  + 100000 * dat['p7']) / 256.
+    HRC proxy, GOES-16, used until April 2021
+    hrc_shield = (6000 * dat['p5'] + 270000 * dat['p7']
+                  + 100000 * dat['p9']) / 256.
+    HRC proxy model based on fitting the 2SHLDART data
+    with a combination of GOES-16 channels at the time
+    of the Sep 2017 flare
+    '''
 
     # ORINIGNAL NORMALIZATION
     # hrc_shield = (143 * dat['p5'] + 64738 * dat['p6']
@@ -125,8 +133,8 @@ def get_goes_proxy():
     raw_goes_data = get_json_data(GOES_7DAY)
 
     # Reformat the table into our standard format
-    parsed_goes_data, bad_goes_data = format_proton_data(
-        raw_goes_data, descrs=descrs)
+    parsed_goes_data, _bad_goes_data = format_proton_data(
+        raw_goes_data, data_types=data_types)
 
     goes_times = cxctime_to_datetime(parsed_goes_data['time'])
     goes_rates = parsed_goes_data['hrc_shield']

@@ -15,34 +15,66 @@ import requests
 from cheta import fetch
 from cxotime import CxoTime
 
-from heartbeat import are_we_in_comm
-
-# Create a loop to see if we're in comm
-
-select_alarm_file()
-# Fetch only the telemetry needed for a quick alarm file selection logic. Use what we have for RTCADS
+from heartbeat import are_we_in_comm, timestamp_string, force_timeout, TimeoutException
+from goes_proxy import get_goes_proxy
 
 
-class BadAlarmFile(Exception):
-    pass
+def audit_telemetry(start_time):
+    '''
+    Audit the most relevant telemetry and send slack warnings if they are out of bounds
+    '''
+
+    # Check the Mission-critical CEA Temperature
+
+    ceatemp = fetch.MSID('2CEAHVPT', start=start_time, stat='full')
+
+    # critical_msidlist = ['CCSDSTMF', '2SHEV1RT', '2PRBSCR', '2FHTRMZT', '2CHTRPZT',
+    #                     '2IMTPAST', '2IMBPAST', '2SPTPAST', '2SPBPAST', '2TLEV1RT', '2VLEV1RT']
+
+    # telem = fetch.MSIDset(
+    #     critical_msidlist, start=CxoTime.now() - 1 * u.hr)
+
+    # for msid in critical_msidlist:
+    #     print(f'Latest {msid} is : {telem[msid].vals[-1]}')
+
+    # try:
+    #     _, goes_rates = get_goes_proxy()
+    #     print(
+    #         f'Latest GOES rate is {int(goes_rates[-1])} CPS')
+    # except:
+    #     continue
 
 
-def parse_alarm_file(path, fname):
-    """Alarm limits are stored in a dictionary indexed by variable name.
-    """
-    alarmfile = path + '/' + fname
-    with open(alarmfile) as afh:
-        ald = dict()
-        for line in afh:
-            if not re.match(r'#', line):
-                pcs = re.split('\t', line)
-                if len(pcs) == 6:
-                    ald[pcs[0]] = dict([('status', int(pcs[1])),
-                                        ('rll', float(pcs[2])),
-                                        ('yll', float(pcs[3])),
-                                        ('yul', float(pcs[4])),
-                                        ('rul', float(pcs[5]))])
-                else:
-                    raise BadAlarmFile(alarmfile)
-        return ald
-    raise BadAlarmFile(alarmfile)
+def main():
+    '''
+    The main event loop. While in comm, check all relevant telemetry for bad values. Just do this explicitly
+
+    '''
+
+    fetch.data_source.set('maude allow_subset=False')
+
+    in_comm_counter = 0
+    out_of_comm_refresh_counter = 0
+
+    # Loop infintely :)
+    while True:
+        try:
+            with force_timeout(600):  # don't let this take longer than 10 minutes
+
+                in_comm = are_we_in_comm(verbose=False, cadence=5)
+
+                if not in_comm:
+                    print(
+                        f'({timestamp_string()}) Not in Comm.                                  ', end='\r\r\r')
+
+                elif in_comm:
+                    print(f"({timestamp_string()})  In Comm!", flush=True)
+
+
+
+        except Exception as e:
+            print(e)
+
+
+if __name__ == "__main__":
+    main()
