@@ -82,10 +82,6 @@ def main():
     #     backend = 'MacOSX'
     # matplotlib.use(backend, force=True)
 
-    if chatty:
-        print(f"({timestamp_string()}) Using Matplotlib backend:",
-              matplotlib.get_backend())
-
     # Initial settings
     recently_in_comm = False
     in_comm_counter = 0

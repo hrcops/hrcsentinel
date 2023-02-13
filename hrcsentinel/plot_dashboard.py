@@ -230,7 +230,7 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
                         dpi=300, rasterized=True)
 
     if show_in_gui:
-        plt.show()
+        plt.show(block=False)
 
     plt.close()
 

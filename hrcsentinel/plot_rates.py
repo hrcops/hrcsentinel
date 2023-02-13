@@ -197,7 +197,7 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
         fig.savefig(custom_save_name, dpi=save_dpi, bbox_inches='tight')
 
     if show_plot is True:
-        plt.show()
+        plt.show(block=False)
 
 
 def parse_args():
