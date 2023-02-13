@@ -53,7 +53,7 @@ def grab_orbit_metadata(plot_start=dt.date.today() - dt.timedelta(days=5)):
     return orbit_metadata
 
 
-def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/', plot_start=dt.date.today() - dt.timedelta(days=5), plot_stop=dt.date.today() + dt.timedelta(days=3), custom_ylims=None, show_plot=False, custom_save_name=None, figure_size=(16, 8), save_dpi=300):
+def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/', plot_start=dt.date.today() - dt.timedelta(days=5), plot_stop=dt.date.today() + dt.timedelta(days=3), custom_ylims=None, show_plot=False, custom_save_name=None, figure_size=(16, 8), save_dpi=300, show_in_gui=False):
     '''
     Create a shield plot. Fix this.
     '''
@@ -196,7 +196,7 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
     elif custom_save_name is not None:
         fig.savefig(custom_save_name, dpi=save_dpi, bbox_inches='tight')
 
-    if show_plot is True:
+    if show_in_gui is True:
         plt.show(block=False)
 
 
