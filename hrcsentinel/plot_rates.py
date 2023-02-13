@@ -61,6 +61,7 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
     # Get the orbit metadata. Don't die if it fails. Try three times.
     attempts = 0
     max_attempts = 4  # how many times to try to get the metadata
+    using_stale_orbit_metadata = True
     while attempts <= max_attempts:
         try:
             orbit_metadata = grab_orbit_metadata(
