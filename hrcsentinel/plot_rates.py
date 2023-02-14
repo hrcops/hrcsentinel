@@ -92,6 +92,8 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
         except Exception as e:
             print(
                 f'({timestamp_string()}) Could not load orbit metadata from json file: {e}')
+            print(
+                f'({timestamp_string()}) This will probably resolve soon, so we will press on.')
             orbit_metadata = None
 
     fetch.data_source.set('maude allow_subset=False')

@@ -295,20 +295,20 @@ def valid_date(s):
 
 
 def parse_args():
-    argparser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser()
 
-    argparser.add_argument('--start', dest="plot_start",  type=valid_date,
+    parser.add_argument('--start', dest="plot_start",  type=valid_date,
                            required=False, help='The Start Date - format YYYY-MM-DD')
-    argparser.add_argument('--stop', dest="plot_stop", type=valid_date,
+    parser.add_argument('--stop', dest="plot_stop", type=valid_date,
                            required=False, help='The Start Date - format YYYY-MM-DD')
-    argparser.add_argument('--sampling', choices=[
+    parser.add_argument('--sampling', choices=[
                            'full', '5min', 'daily'], required=False, default='full', help='Sampling to use instead of full resolution?')
 
-    argparser.add_argument('--use_cheta', action='store_true')
+    parser.add_argument('--use_cheta', action='store_true')
 
-    argparser.add_argument('--force_limits', action='store_true')
+    parser.add_argument('--force_limits', action='store_true')
 
-    args = argparser.parse_args()
+    args = parser.parse_args()
 
     return args
 

@@ -28,28 +28,28 @@ plot_stylers.styleplots()
 def get_args():
     '''Fetch command line args, if given'''
 
-    parser = argparse.ArgumentParser(
+    argparser = argparse.ArgumentParser(
         description='Monitor the VCDU telemetry stream, and update critical status plots whenever we are in comm.')
 
-    parser.add_argument("--fake_comm", help="Trick the code to think we are in comm. Useful for testing. ",
-                        action="store_true")
+    argparser.add_argument("--fake_comm", help="Trick the code to think we are in comm. Useful for testing. ",
+                           action="store_true")
 
-    parser.add_argument("--test", help="Run a full test of the code. ",
-                        action="store_true")
+    argparser.add_argument("--test", help="Run a full test of the code. ",
+                           action="store_true")
 
-    parser.add_argument("--debug", help="Print useful debugging statements ",
-                        action="store_true")
+    argparser.add_argument("--debug", help="Print useful debugging statements ",
+                           action="store_true")
 
-    parser.add_argument("--force_cheta", help="Trick the code pull from Ska/CXC instead of MAUDE with a switch to fetch.data_source.set() ",
-                        action="store_true")
+    argparser.add_argument("--force_cheta", help="Trick the code pull from Ska/CXC instead of MAUDE with a switch to fetch.data_source.set() ",
+                           action="store_true")
 
-    parser.add_argument("--report_errors", help="Print MAUDE exceptions (which are common) to the command line",
-                        action="store_true")
+    argparser.add_argument("--report_errors", help="Print MAUDE exceptions (which are common) to the command line",
+                           action="store_true")
 
-    parser.add_argument("--show_in_gui", help="Show plots with plt.show()",
-                        action="store_true")
+    argparser.add_argument("--show_in_gui", help="Show plots with plt.show()",
+                           action="store_true")
 
-    args = parser.parse_args()
+    args = argparser.parse_args()
     return args
 
 
@@ -81,6 +81,8 @@ def main():
     # elif args.show_in_gui is True:
     #     backend = 'MacOSX'
     # matplotlib.use(backend, force=True)
+
+    print('\033[1mHRCSentinel\033[0m | Telemetry Monitor')
 
     # Initial settings
     recently_in_comm = False

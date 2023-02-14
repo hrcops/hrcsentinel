@@ -12,6 +12,18 @@ the old fashioned way, i.e.: python monitor_comms.py; python monitor_telemetry.p
 
 import os
 import sys
+import argparse
+
+
+def parse_args():
+
+    argparser = argparse.ArgumentParser()
+
+    argparser.add_argument('--iterm', action='store_true')
+
+    args = argparser.parse_args()
+
+    return args
 
 
 scripts_to_run = ['monitor_comms.py', 'monitor_telemetry.py']
@@ -21,6 +33,7 @@ terminal_window_titles = ['Comm Pass Monitor | HRCSentinel',
 HRCSENTINEL_DIRECTORY_HEAD = '/home/tremblay/HRCOps/hrcsentinel/hrcsentinel'
 SKAINIT_STRING = 'source /proj/sot/ska3/flight/bin/ska_envs.sh'
 
+args = parse_args()
 
 if os.path.exists(HRCSENTINEL_DIRECTORY_HEAD):
 
@@ -34,7 +47,8 @@ elif sys.platform == 'darwin':
     # then you are on macOS and presumably on a self-managed machine
     # See if you're on one of Grant's machines, which will have iTerm2 (and its python package) installed
 
-    try:
+    if args.iterm is True:
+
         import iterm2
         print('Starting HRCSentinel using iTerm2...')
 
@@ -66,5 +80,7 @@ elif sys.platform == 'darwin':
 
         iterm2.run_until_complete(iterm_main)
 
-    except:
-        pass
+    elif args.iterm is False:
+        for title, script in zip(terminal_window_titles, scripts_to_run):
+            os.system(
+                f"osascript -e 'tell app \"Terminal\" to do script \"skainit && cd /Users/grant/HRCOps/hrcsentinel/hrcsentinel && clear  && python {script}\"'")

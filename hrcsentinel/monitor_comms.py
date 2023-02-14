@@ -195,6 +195,8 @@ def get_args():
 
 def main():
 
+    print('\033[1mHRCSentinel\033[0m | DSN Pass Monitor')
+
     fetch.data_source.set('maude allow_subset=True')
 
     args = get_args()
