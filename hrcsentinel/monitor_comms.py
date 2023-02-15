@@ -194,6 +194,9 @@ def get_args():
 
 
 def main():
+    '''
+    The main event loop
+    '''
 
     print('\033[1mHRCSentinel\033[0m | DSN Pass Monitor')
 
@@ -272,7 +275,7 @@ def main():
                         'CVCDUCTR', start=start_time).vals[-1]
 
                     print(
-                        f'({timestamp_string()} | VCDU {latest_vcdu} | #{in_comm_counter}) In Comm.', end='\r')
+                        f'({timestamp_string()} | VCDU {latest_vcdu} | #{in_comm_counter}) In Comm!', end='\r')
 
                     if in_comm_counter == 5:
                         # Now we've waited ~half a minute or so for MAUDE to update
@@ -287,6 +290,13 @@ def main():
                         # Send the message using our slack bot
                         send_slack_message(message, channel=bot_slack_channel)
                         # do a first audit of the telemetry upon announcement
+
+                        # Check for a recent SCS 107
+                        safemodes = fetch.get_telem(
+                            'COSCS107S')  # check for SCS 107
+                        if safemodes['COSCS107S'].vals[-1] == 'DISA':
+                            send_slack_message(
+                                'WARNING: SCS 107 may have run! Check telemetry immediately!', channel=bot_slack_channel)
 
                     if telemetry_audit_counter == 10:
                         # Reset the audit counter

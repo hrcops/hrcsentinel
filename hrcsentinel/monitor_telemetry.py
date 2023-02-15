@@ -201,7 +201,7 @@ def main():
                                        plot_stop=two_days_hence, sampling='full', date_format=mdate.DateFormatter('%m-%d'), force_limits=True, show_in_gui=args.show_in_gui)
 
                     make_shield_plot(fig_save_directory=fig_save_directory,
-                                     plot_start=five_days_ago, plot_stop=two_days_hence, debug_prints=args.debug)
+                                     plot_start=five_days_ago, plot_stop=two_days_hence)
 
                     print(
                         f'({timestamp_string()}) Saved Current Status Plots to {fig_save_directory}                               ', end="\r", flush=True)
