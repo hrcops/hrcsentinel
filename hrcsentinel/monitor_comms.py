@@ -293,7 +293,7 @@ def main():
 
                         # Check for a recent SCS 107
                         safemodes = fetch.get_telem(
-                            'COSCS107S')  # check for SCS 107
+                            'COSCS107S', quiet=True)  # check for SCS 107
                         if safemodes['COSCS107S'].vals[-1] == 'DISA':
                             send_slack_message(
                                 'WARNING: SCS 107 may have run! Check telemetry immediately!', channel=bot_slack_channel)
