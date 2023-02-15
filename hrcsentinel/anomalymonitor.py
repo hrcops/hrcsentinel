@@ -40,7 +40,9 @@ def audit_telemetry(start):
 
 
 def main():
-
+    '''
+    Loop!
+    '''
     fetch.data_source.set('maude allow_subset=True')
 
     iteration = 0

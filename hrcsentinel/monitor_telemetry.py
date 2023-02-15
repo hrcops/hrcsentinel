@@ -145,7 +145,7 @@ def main():
                     in_comm_counter = 0
                     out_of_comm_refresh_counter += 1
                     print(
-                        f'({timestamp_string()}) Not in Comm.                                  ', end='\r\r\r')
+                        f'({timestamp_string()}) Not in Comm.                                                 ', end='\r\r\r')
 
                     if out_of_comm_refresh_counter == 20:
 

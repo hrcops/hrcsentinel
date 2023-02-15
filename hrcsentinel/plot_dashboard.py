@@ -23,6 +23,7 @@ from monitor_comms import convert_bus_current_to_dn
 from plot_motors import make_motor_plots
 from plot_rates import make_shield_plot
 from plot_thermals import make_thermal_plots
+from heartbeat import timestamp_string
 
 
 def comm_status_stamp(comm_status, code_start_time, hostname, fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/', debug_prints=False) -> None:
@@ -100,8 +101,8 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
                 data = fetch.get_telem(msid, start=convert_to_doy(
                     plot_start), sampling=sampling, max_fetch_Mb=100000, max_output_Mb=100000, quiet=True)
 
-                print('Fetching from {} at {} resolution: {}'.format(
-                    convert_to_doy(plot_start), sampling, msid), end='\r', flush=True)
+                print(
+                    f'({timestamp_string()}) Fetching from {convert_to_doy(plot_start)} at {sampling} resolution: {msid}', end='\r', flush=True)
                 # Clear the command line manually
                 sys.stdout.write("\033[K")
 
@@ -298,11 +299,11 @@ def parse_args():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--start', dest="plot_start",  type=valid_date,
-                           required=False, help='The Start Date - format YYYY-MM-DD')
+                        required=False, help='The Start Date - format YYYY-MM-DD')
     parser.add_argument('--stop', dest="plot_stop", type=valid_date,
-                           required=False, help='The Start Date - format YYYY-MM-DD')
+                        required=False, help='The Start Date - format YYYY-MM-DD')
     parser.add_argument('--sampling', choices=[
-                           'full', '5min', 'daily'], required=False, default='full', help='Sampling to use instead of full resolution?')
+        'full', '5min', 'daily'], required=False, default='full', help='Sampling to use instead of full resolution?')
 
     parser.add_argument('--use_cheta', action='store_true')
 
