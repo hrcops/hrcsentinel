@@ -60,6 +60,8 @@ def main():
     minutes of sleep to avoid overwhelming MAUDE and wasting cycles.
     '''
 
+    print('\033[1mHRCSentinel\033[0m | Telemetry Monitor')
+
     # split is to get rid of .local or .cfa.harvard.edu
     hostname = socket.gethostname().split('.')[0]
 
@@ -81,8 +83,6 @@ def main():
     # elif args.show_in_gui is True:
     #     backend = 'MacOSX'
     # matplotlib.use(backend, force=True)
-
-    print('\033[1mHRCSentinel\033[0m | Telemetry Monitor')
 
     # Initial settings
     recently_in_comm = False
@@ -153,7 +153,7 @@ def main():
                         fetch.data_source.set('maude allow_subset=False')
                         # Refresh the plots every 20th iteration out-of-comm
                         print(
-                            f"({timestamp_string()}) Performing out-of-comm plot refresh...                              ", flush=True)
+                            f"({timestamp_string()}) Performing out-of-comm plot refresh...                                            ", end="\r", flush=True)
                         sys.stdout.write("\033[K")
                         five_days_ago = dt.date.today() - dt.timedelta(days=5)
                         two_days_hence = dt.date.today() + dt.timedelta(days=2)
@@ -192,7 +192,7 @@ def main():
                         fetch.data_source.set('cxc')
 
                     print(
-                        f"({timestamp_string()}) In Comm! Refreshing Dashboard (Iteration {iteration_counter})", flush=True)
+                        f"({timestamp_string()}) In Comm! Refreshing Dashboard (Iteration {iteration_counter})                                                       ", end="\r", flush=True)
 
                     five_days_ago = dt.date.today() - dt.timedelta(days=5)
                     two_days_hence = dt.date.today() + dt.timedelta(days=2)
@@ -204,7 +204,7 @@ def main():
                                      plot_start=five_days_ago, plot_stop=two_days_hence, debug_prints=args.debug)
 
                     print(
-                        f'({timestamp_string()}) Saved Current Status Plots to {fig_save_directory}', end="\r", flush=True)
+                        f'({timestamp_string()}) Saved Current Status Plots to {fig_save_directory}                               ', end="\r", flush=True)
                     # Clear the command line manually
                     sys.stdout.write("\033[K")
 
