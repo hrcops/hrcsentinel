@@ -1,6 +1,7 @@
 # Random stuff
 dsn_summary.yaml
-last_orbit_metadata.yaml
+last_orbit_metadata.json
+hrcsentinel/last_orbit_metadata.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

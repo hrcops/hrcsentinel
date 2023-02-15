@@ -71,7 +71,7 @@ def main():
 
     if hostname in allowed_hosts:
         fig_save_directory = allowed_hosts[hostname]
-        print(f'({timestamp_string()}) Recognized host: {hostname}. Plots will be saved to {fig_save_directory}')
+        print(f'({timestamp_string()}) Recognized host: {hostname}. Plots will be saved to {fig_save_directory}', end='\r', flush=True)
 
     else:
         sys.exit(
@@ -204,7 +204,7 @@ def main():
                                      plot_start=five_days_ago, plot_stop=two_days_hence)
 
                     print(
-                        f'({timestamp_string()}) Saved Current Status Plots to {fig_save_directory}                               ', end="\r", flush=True)
+                        f'({timestamp_string()}) Saved Current Status Plots to {fig_save_directory}                                    ', end="\r", flush=True)
                     # Clear the command line manually
                     sys.stdout.write("\033[K")
 
@@ -215,13 +215,14 @@ def main():
                     for i in range(0, sleep_period_seconds):
                         # you need to flush this print statement
                         print(
-                            f'({timestamp_string()}) Refreshing plots in {sleep_period_seconds-i} seconds...', end="\r", flush=True)
+                            f'({timestamp_string()}) Refreshing plots in {sleep_period_seconds-i} seconds...                              ', end="\r", flush=True)
                         time.sleep(1)  # sleep for 1 second per iteration
 
                 iteration_counter += 1
 
         except TimeoutException:
-            print(f"({timestamp_string()}) Funtion timed out! Pressing on...")
+            print(
+                f"({timestamp_string()}) Funtion timed out! Pressing on...                             ", end="\r", flush=True)
             continue
 
         except Exception as e:
@@ -235,7 +236,7 @@ def main():
                 print(f"({timestamp_string()}) Pressing on...")
             elif not chatty:
                 print(
-                    f'({timestamp_string()}) ERROR encountered! Use --report_errors to display them.                              ', end='\r\r\r')
+                    f'({timestamp_string()}) ERROR encountered! Use --report_errors to display them.                                   ', end='\r', flush=True)
             continue
 
 
