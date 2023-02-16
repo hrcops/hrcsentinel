@@ -145,7 +145,7 @@ def main():
                     in_comm_counter = 0
                     out_of_comm_refresh_counter += 1
                     print(
-                        f'({timestamp_string()}) Not in Comm.                                          ', end='\r', flush=True)
+                        f'({timestamp_string()}) Not in Comm.', end='\r')
                     sys.stdout.write("\033[K")
 
                     if out_of_comm_refresh_counter == 20:
