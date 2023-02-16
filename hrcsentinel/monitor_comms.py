@@ -220,7 +220,7 @@ def main():
     while True:
 
         try:
-            # if this takes longer than 120 sec, something is wrong, so just press on
+            # if this takes longer than 120 sec, something is wrong, so just try again
             with force_timeout(120):
                 in_comm = are_we_in_comm(
                     verbose=False, cadence=2, fake_comm=fake_comm)

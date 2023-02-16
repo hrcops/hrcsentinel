@@ -203,8 +203,8 @@ def main():
                     make_shield_plot(fig_save_directory=fig_save_directory,
                                      plot_start=five_days_ago, plot_stop=two_days_hence)
 
-                    print(
-                        f'({timestamp_string()}) Saved Current Status Plots to {fig_save_directory}                                    ', end="\r", flush=True)
+                    # print(
+                    #     f'({timestamp_string()}) Saved Current Status Plots to {fig_save_directory}                                    ', end="\r", flush=True)
                     # Clear the command line manually
                     sys.stdout.write("\033[K")
 

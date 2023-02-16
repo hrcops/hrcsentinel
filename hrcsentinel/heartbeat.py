@@ -17,6 +17,13 @@ class TimeoutException(Exception):
 
 @contextmanager
 def force_timeout(seconds):
+    '''
+    For some reason, my MAUDE fetches using the Ska API sometimes
+    timeout on the ssl.do_handshake() call. I'm lazy and don't want
+    to figure it out, so this function will force a timeout of the call
+    after a given number of seconds. If you wrap it in a try/except and a while
+    loop, it will simply try again (which almost always fixes the issue). 
+    '''
     def signal_handler(signum, frame):
         raise TimeoutException("Timed out! Pressing on...")
     signal.signal(signal.SIGALRM, signal_handler)
