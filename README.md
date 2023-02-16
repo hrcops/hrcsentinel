@@ -5,8 +5,16 @@
 __Real-time trending, telemetry auditing, and comm alerts for the *Chandra* High Resolution Camera__
 
 
+## tl;dr
+If you're on the CfA HEAD LAN, run 
+```
+./start_hrcsentienl
+```
 
-`HRCSentinel` is composed of two main components:
+## In more detail
+
+
+`HRCSentinel` is composed of three main components:
 
 * `HRCMonitor`, which continually updates an instrument status dashboard. At this time, we host that dashboard [here](https://icxc.cfa.harvard.edu/hrcops/hrcmonitor/) (SAO VPN required).
 
