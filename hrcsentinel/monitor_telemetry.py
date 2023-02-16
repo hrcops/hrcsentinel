@@ -71,7 +71,7 @@ def main():
 
     if hostname in allowed_hosts:
         fig_save_directory = allowed_hosts[hostname]
-        print(f'({timestamp_string()}) Recognized host: {hostname}. Plots will be saved to {fig_save_directory}', end='\r', flush=True)
+        #print(f'({timestamp_string()}) Recognized host: {hostname}. Plots will be saved to {fig_save_directory}', end='\r', flush=True)
 
     else:
         sys.exit(
@@ -145,7 +145,7 @@ def main():
                     in_comm_counter = 0
                     out_of_comm_refresh_counter += 1
                     print(
-                        f'({timestamp_string()}) Not in Comm.', end='\r')
+                        f'({timestamp_string()}) Not in Comm.    ', end='\r')
                     sys.stdout.write("\033[K")
 
                     if out_of_comm_refresh_counter == 20:
