@@ -87,7 +87,7 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
             with open("last_orbit_metadata.json", "r") as orbit_metadata_json_file:
                 orbit_metadata = json.load(orbit_metadata_json_file)
             using_stale_orbit_metadata = True
-            print(f'({timestamp_string()}) Orbit metadata fetch failed after {max_attempts} attempts. Using stale metadata instead.')
+            print(f'({timestamp_string()}) Orbit metadata fetch failed after {max_attempts} attempts. Using stale metadata instead.', end='\r', flush=True)
 
         except Exception as e:
             print(

@@ -154,7 +154,7 @@ def main():
                         fetch.data_source.set('maude allow_subset=False')
                         # Refresh the plots every 20th iteration out-of-comm
                         print(
-                            f"({timestamp_string()}) Performing out-of-comm plot refresh...                                            ", end="\r", flush=True)
+                            f"({timestamp_string()}) Performing out-of-comm plot refresh...", end="\r", flush=True)
                         sys.stdout.write("\033[K")
                         five_days_ago = dt.date.today() - dt.timedelta(days=5)
                         two_days_hence = dt.date.today() + dt.timedelta(days=2)
@@ -174,10 +174,10 @@ def main():
                     recently_in_comm = True
                     in_comm_counter += 1
 
-                    # if in_comm_counter == 1:
-                    #     # Then update the text stamp
-                    #     comm_status_stamp(comm_status=in_comm, code_start_time=code_start_time,
-                    #                       fig_save_directory=fig_save_directory, hostname=hostname)
+                    if in_comm_counter == 1:
+                        # Then update the text stamp
+                        comm_status_stamp(comm_status=in_comm, code_start_time=code_start_time,
+                                          fig_save_directory=fig_save_directory, hostname=hostname)
 
                     if in_comm_counter == 5:
                         # Then create the mission-wide status plots
