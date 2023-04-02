@@ -225,7 +225,7 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
                            color='red', alpha=0.5)
                 # plt.show()
                 plt.savefig(
-                    f'/Users/grant/Desktop/{plotnum}.pdf', dpi=300, rasterized=True)
+                    f'/Users/grant/Desktop/{plotnum}.pdf', dpi=300)
                 plt.close()
 
     # Title the top of the figure
@@ -242,11 +242,11 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
             if missionwide is False:
                 plt.savefig(fig_save_directory + 'status.png', dpi=300)
                 plt.savefig(fig_save_directory + 'status.pdf',
-                            dpi=300, rasterized=True)
+                            dpi=300)
             elif missionwide is True:
                 plt.savefig(fig_save_directory + 'status_wide.png', dpi=300)
                 plt.savefig(fig_save_directory + 'status_wide.pdf',
-                            dpi=300, rasterized=True)
+                            dpi=300)
 
     if show_in_gui:
         plt.show()
