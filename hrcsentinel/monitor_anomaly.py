@@ -20,37 +20,6 @@ from goes_proxy import get_goes_proxy
 from monitor_comms import send_slack_message
 
 
-def check_safe_modes(start_time, slack_channel=''):
-    '''
-    Check for any current or prior safing actions
-    '''
-    scs_107_state = fetch.MSID('COSCS107S', start=start_time)
-
-
-def audit_telemetry(start_time, iteration_counter=0):
-    '''
-    Audit the most relevant telemetry and send slack warnings if they are out of bounds
-    '''
-
-    # Check the Mission-critical CEA Temperature
-
-    return None
-    # critical_msidlist = ['CCSDSTMF', '2SHEV1RT', '2PRBSCR', '2FHTRMZT', '2CHTRPZT',
-    #                     '2IMTPAST', '2IMBPAST', '2SPTPAST', '2SPBPAST', '2TLEV1RT', '2VLEV1RT']
-
-    # telem = fetch.MSIDset(
-    #     critical_msidlist, start=CxoTime.now() - 1 * u.hr)
-
-    # for msid in critical_msidlist:
-    #     print(f'Latest {msid} is : {telem[msid].vals[-1]}')
-
-    # try:
-    #     _, goes_rates = get_goes_proxy()
-    #     print(
-    #         f'Latest GOES rate is {int(goes_rates[-1])} CPS')
-    # except:
-    #     continue
-
 
 def get_args():
     '''Fetch command line args, if given'''
@@ -82,9 +51,16 @@ def main():
 
     fetch.data_source.set('maude allow_subset=False')
 
+    # Initial settings
+    recently_in_comm = False
     in_comm_counter = 0
     out_of_comm_refresh_counter = 0
     iteration_counter = 0
+
+    lookback_time = CxoTime().now() - 12 * u.hr
+
+    misidlist = ['2C15PALV', '2N15PALV', '2FHTRMZT', '2CHTRPZT']
+
 
     # Loop infintely :)
     while True:
@@ -96,15 +72,47 @@ def main():
 
                 if not in_comm:
                     print(
-                        f'({timestamp_string()}) Not in Comm.                                  ', end='\r\r\r')
+                        f'({timestamp_string()}) Not in Comm.                                  ', end='\r', flush=True)
+
+                    if iteration_counter == 0:
+                        # Then grab the reference telemetry
+                        reference_telemetry = fetch.MSIDset(msidlist, start=lookback_time)
+
+                        print(f"({timestamp_string()}) Not in Comm. Fetched reference telemetry from last comm. .  ", end='\r', flush=True
+
+
+                    if recently_in_comm:
+                        # We might have just had a loss in telemetry. Try again after waiting for a minute
+                        time.sleep(60)
+                        in_comm = are_we_in_comm(verbose=False, cadence=2)
+                        if in_comm:
+                            continue
+
+                        elif not in_comm:
+                            #TO DO
+                            pass
+
+                    recently_in_comm = False
+                    in_comm_counter = 0
+                    out_of_comm_refresh_counter += 1
 
                 elif in_comm:
-                    print(f"({timestamp_string()})  In Comm!", flush=True)
-                    audit_telemetry(CxoTime.now() - 1 * u.hr,
-                                    iteration_counter=iteration_counter)
+
+                    if in_comm_counter == 0:
+                        comm_start_time = CxoTime.now()
+
+                    # Toggle the recently_in_comm flag so that, on the next out-of-comm loop, it'll allow us to do stuff
+                    recently_in_comm = True
+                    in_comm_counter += 1
+
+                    print(f"({timestamp_string()})  In Comm!", end='\r', flush=True)
+
+                    telemetry_start_time = CxoTime.now() - 12 * u.hr
+
+                    audit_telemetry(CxoTime.now() - 1 * u.hr, iteration_counter=iteration_counter)
 
                     iteration_counter += 1
-                    print(iteration_counter)
+
         except Exception as e:
             print(e)
 

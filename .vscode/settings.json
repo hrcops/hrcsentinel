@@ -1,3 +1,8 @@
 {
-    "python.pythonPath": "/Applications/Anaconda/bin/python"
+    "python.pythonPath": "/Applications/Anaconda/bin/python",
+    "python.testing.pytestArgs": [
+        "hrcsentinel"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
 }

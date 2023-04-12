@@ -231,7 +231,7 @@ if __name__ == "__main__":
     if args.monitor is False:
         print('Creating a single Shield Plot...')
         make_shield_plot(fig_save_directory=fig_save_directory,
-                         show_plot=True, debug_prints=args.verbose)
+                         show_plot=True)
         plt.show()
         print('Done')
     elif args.monitor is True:

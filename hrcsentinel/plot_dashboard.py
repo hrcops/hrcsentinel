@@ -4,6 +4,7 @@ import argparse
 import datetime as dt
 import sys
 
+import matplotlib
 import matplotlib.dates as mdate
 import matplotlib.pyplot as plt
 import numpy as np
@@ -318,7 +319,7 @@ def main() -> None:
     # Enable this thing to run on the command line for on-demand plots with specific date ranges
 
     # Force a gui backend
-    # matplotlib.use('MacOSX', force=True)
+    matplotlib.use('MacOSX', force=True)
     plot_stylers.styleplots()
 
     args = parse_args()
@@ -338,6 +339,7 @@ def main() -> None:
 
     make_realtime_plot(plot_start=plot_start, plot_stop=plot_stop,
                        current_hline=False, sampling=args.sampling, force_limits=args.force_limits, show_in_gui=True, use_cheta=args.use_cheta)
+    plt.show()
 
 
 if __name__ == '__main__':
