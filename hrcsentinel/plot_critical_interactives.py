@@ -153,7 +153,7 @@ def main():
 
     args = parse_args()
 
-    fetch.data_source.set('maude allow_subset=False highrate=True')
+    fetch.data_source.set('maude allow_subset=False')
 
     time_zero = dt.datetime.now() - dt.timedelta(days=7, minutes=0)
     telem_start = convert_to_doy(time_zero)
