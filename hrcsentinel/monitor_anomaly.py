@@ -21,8 +21,6 @@ from monitor_comms import send_slack_message
 from chandratime import convert_to_doy
 
 
-<<<<<<< Updated upstream
-=======
 def check_safe_modes(start_time, slack_channel=''):
     '''
     Check for any current or prior safing actions
@@ -79,7 +77,6 @@ def audit_telemetry(start_time, in_comm: bool):
     # except:
     #     continue
 
->>>>>>> Stashed changes
 
 def get_args():
     '''Fetch command line args, if given'''
@@ -121,7 +118,6 @@ def main():
 
     misidlist = ['2C15PALV', '2N15PALV', '2FHTRMZT', '2CHTRPZT']
 
-
     # Loop infintely :)
     while True:
 
@@ -137,50 +133,6 @@ def main():
                     verbose=False, cadence=5, fake_comm=fake_comm)
 
                 if not in_comm:
-<<<<<<< Updated upstream
-                    print(
-                        f'({timestamp_string()}) Not in Comm.                                  ', end='\r', flush=True)
-
-                    if iteration_counter == 0:
-                        # Then grab the reference telemetry
-                        reference_telemetry = fetch.MSIDset(msidlist, start=lookback_time)
-
-                        print(f"({timestamp_string()}) Not in Comm. Fetched reference telemetry from last comm. .  ", end='\r', flush=True
-
-
-                    if recently_in_comm:
-                        # We might have just had a loss in telemetry. Try again after waiting for a minute
-                        time.sleep(60)
-                        in_comm = are_we_in_comm(verbose=False, cadence=2)
-                        if in_comm:
-                            continue
-
-                        elif not in_comm:
-                            #TO DO
-                            pass
-
-                    recently_in_comm = False
-                    in_comm_counter = 0
-                    out_of_comm_refresh_counter += 1
-
-                elif in_comm:
-
-                    if in_comm_counter == 0:
-                        comm_start_time = CxoTime.now()
-
-                    # Toggle the recently_in_comm flag so that, on the next out-of-comm loop, it'll allow us to do stuff
-                    recently_in_comm = True
-                    in_comm_counter += 1
-
-                    print(f"({timestamp_string()})  In Comm!", end='\r', flush=True)
-
-                    telemetry_start_time = CxoTime.now() - 12 * u.hr
-
-                    audit_telemetry(CxoTime.now() - 1 * u.hr, iteration_counter=iteration_counter)
-
-                    iteration_counter += 1
-
-=======
                     in_comm_counter = 0
                     audit_telemetry(pull_telem_from, in_comm=False)
 
@@ -190,7 +142,6 @@ def main():
 
             iteration_counter += 1
 
->>>>>>> Stashed changes
         except Exception as e:
             print(e)
 

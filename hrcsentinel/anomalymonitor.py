@@ -64,11 +64,11 @@ def main():
 
                 if iteration == 0:
                     send_slack_message(
-                        f'Comm Bot started with +15 V reference value of: {reference_telem} V ', channel='#hrc-s_side_a_checkout_sep2022_cap1636')
+                        f'Comm Bot started with +15 V reference value of: {reference_telem} V ', channel='#comm_passes')
 
                 if latest_telem < 14.0:
                     send_slack_message(
-                        f'WARNING: the +15V Bus Voltage looks bad ({latest_telem} V) Check this!', channel='#hrc-s_side_a_checkout_sep2022_cap1636')
+                        f'WARNING: the +15V Bus Voltage looks bad ({latest_telem} V) Check this!', channel='#comm_passes')
 
                 iteration += 1
             except Exception as e:

@@ -319,7 +319,7 @@ def main() -> None:
     # Enable this thing to run on the command line for on-demand plots with specific date ranges
 
     # Force a gui backend
-    matplotlib.use('MacOSX', force=True)
+    # matplotlib.use('MacOSX', force=True)
     plot_stylers.styleplots()
 
     args = parse_args()
