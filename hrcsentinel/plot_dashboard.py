@@ -4,11 +4,6 @@ import argparse
 import datetime as dt
 import sys
 
-import matplotlib
-import matplotlib.dates as mdate
-import matplotlib.pyplot as plt
-import numpy as np
-import pytz
 
 try:
     from cheta import fetch
@@ -25,6 +20,12 @@ from plot_motors import make_motor_plots
 from plot_rates import make_shield_plot
 from plot_thermals import make_thermal_plots
 from heartbeat import timestamp_string
+
+import matplotlib
+import matplotlib.dates as mdate
+import matplotlib.pyplot as plt
+import numpy as np
+import pytz
 
 
 def comm_status_stamp(comm_status, code_start_time, hostname, fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/', debug_prints=False) -> None:
@@ -231,8 +232,9 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
             plt.savefig(fig_save_directory + 'status_wide.pdf',
                         dpi=300)
 
-    if show_in_gui:
-        plt.show(block=False)
+    # plt.show()
+    if show_in_gui is True:
+        plt.show()
 
     plt.close()
 
@@ -339,7 +341,6 @@ def main() -> None:
 
     make_realtime_plot(plot_start=plot_start, plot_stop=plot_stop,
                        current_hline=False, sampling=args.sampling, force_limits=args.force_limits, show_in_gui=True, use_cheta=args.use_cheta)
-    plt.show()
 
 
 if __name__ == '__main__':

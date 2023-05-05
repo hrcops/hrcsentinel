@@ -67,7 +67,7 @@ def drawnow(draw_fig, show_once=False, confirm=False, stop_on_close=False,
     draw_fig(*args, **kwargs)
 
     if show_once:
-        plt.show(block=True)
+        plt.show()
     else:
         plt.draw_all()
 

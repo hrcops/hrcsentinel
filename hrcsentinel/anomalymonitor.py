@@ -17,7 +17,7 @@ from cheta import fetch_sci as fetch
 from cxotime import CxoTime
 
 from chandratime import convert_to_doy
-from heartbeat import are_we_in_comm
+from heartbeat import are_we_in_comm, timestamp_string, force_timeout, TimeoutException
 
 # import psutil
 # process = psutil.Process(os.getpid())
@@ -43,37 +43,48 @@ def main():
     '''
     Loop!
     '''
-    fetch.data_source.set('maude allow_subset=True')
-
     iteration = 0
 
+    fetch.data_source.set('maude allow_subset=False highrate=True')
+
     while True:
-        in_comm = are_we_in_comm(verbose=False, cadence=5)
+        try:
 
-        if not in_comm:
-            print(f'Not in comm')
+            # Grab telemetry starting from 24 hours ago
+            one_day_ago = dt.datetime.now() - dt.timedelta(days=1)
+            telem_start = convert_to_doy(one_day_ago)
 
-        if in_comm:
-            try:
-                reference_telem = audit_telemetry(
-                    start=CxoTime.now() - 60 * u.s)
-                time.sleep(3)
-                latest_telem = audit_telemetry(start=CxoTime.now() - 60 * u.s)
+            in_comm = are_we_in_comm(verbose=False, cadence=5)
 
-                print(f'Iteration {iteration}: {latest_telem} V')
+            if not in_comm:
+                print(f'({timestamp_string()}) Not in comm')
 
-                if iteration == 0:
-                    send_slack_message(
-                        f'Comm Bot started with +15 V reference value of: {reference_telem} V ', channel='#comm_passes')
+            if in_comm:
+                try:
+                    # reference_telem = audit_telemetry(
+                    #     start=telem_start)
+                    time.sleep(3)
+                    latest_telem = audit_telemetry(
+                        start=telem_start)
 
-                if latest_telem < 14.0:
-                    send_slack_message(
-                        f'WARNING: the +15V Bus Voltage looks bad ({latest_telem} V) Check this!', channel='#comm_passes')
+                    print(
+                        f'({timestamp_string()}) Iteration {iteration}: {latest_telem} V')
 
-                iteration += 1
-            except Exception as e:
-                print(e)
-                continue
+                    if iteration == 0:
+                        send_slack_message(
+                            f'Comm Bot started with +15 V reference value of: {latest_telem} V ', channel='#comm_passes')
+
+                    if latest_telem < 14.0:
+                        send_slack_message(
+                            f'@channel WARNING: the +15V Bus Voltage looks bad ({latest_telem} V) Check this!', channel='#comm_passes')
+
+                    iteration += 1
+                except Exception as e:
+                    print(e)
+                    continue
+        except Exception as e:
+            print(e)
+            continue
 
 
 if __name__ == '__main__':

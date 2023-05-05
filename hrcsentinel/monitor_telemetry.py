@@ -77,12 +77,12 @@ def main():
         sys.exit(
             f'({timestamp_string()}) Hostname {hostname} is not recognized. Exiting.')
 
-    # if args.show_in_gui is False:
-    #     # Then we're on a headless machine and you should use agg
-    #     backend = 'agg'
-    # elif args.show_in_gui is True:
-    #     backend = 'MacOSX'
-    # matplotlib.use(backend, force=True)
+    if args.show_in_gui is False:
+        # Then we're on a headless machine and you should use agg
+        backend = 'agg'
+    elif args.show_in_gui is True:
+        backend = 'MacOSX'
+    matplotlib.use(backend, force=True)
 
     # Initial settings
     recently_in_comm = False
