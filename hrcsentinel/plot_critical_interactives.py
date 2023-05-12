@@ -19,13 +19,18 @@ import datetime as dt
 
 import event_times
 from plot_helpers import scp_file_to_hrcmonitor
+import traceback
+
+from heartbeat import are_we_in_comm, timestamp_string, force_timeout, TimeoutException
+from Ska.Matplotlib import cxctime2plotdate as cxc2pd
+from chandratime import cxctime_to_datetime
 
 
 def format_dates(cheta_dates):
     return np.array([dt.datetime.strptime(d, '%Y:%j:%H:%M:%S.%f') for d in CxoTime(cheta_dates).date])
 
 
-def make_interactives(telem_start, time_zero, old_telem=None):
+def make_interactives(telem_start):
 
     msidlist = ['2P15VAVL', '2N15VAVL', '2P05VAVL',
                 '2FHTRMZT', '2CHTRPZT', '2CEAHVPT', '2LVPLATM', '2DTSTATT', '2SPINATM']
@@ -33,116 +38,51 @@ def make_interactives(telem_start, time_zero, old_telem=None):
 
     fig = make_subplots()
 
-    fig.add_trace(go.Scatter(
-        x=(telem['2P15VAVL'].times), y=telem['2P15VAVL'].vals, name='+15V 2P15VAVL'))
-
-    fig.add_trace(go.Scatter(
-        x=(telem['2N15VAVL'].times), y=telem['2N15VAVL'].vals, name='-15V 2N15VAVL'))
-
-    fig.add_trace(go.Scatter(
-        x=(telem['2P05VAVL'].times), y=telem['2P05VAVL'].vals, name='+5V 2P05VAVL'))
+    for msid in msidlist[:3]:
+        fig.add_trace(go.Scatter(
+            x=cxctime_to_datetime((telem[msid].times)), y=telem[msid].vals, name=msid))
 
     fig.update_layout(
         title=f'Interactive Voltages | Updated {dt.datetime.now().strftime("%b %d %H:%M:%S")}',
-        xaxis_title="Chandra Time (seconds since 1999.0)",
+        xaxis_title="Date",
         yaxis_title="Bus Voltages (V)",
         font=dict(size=12),
-        template="plotly",
+        template="ggplot2",
         yaxis_range=[-16, 30],
         # legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01)
     )
 
-    # fig.add_vline(x=0, line_width=1, line_color="gray")
-
-    # fig.add_vline(x=4.4, line_width=1, line_color="gray")
-
     out_html_file = '/Users/grant/Desktop/voltages.html'
 
     fig.write_html(out_html_file, auto_open=True, full_html=False)
-    scp_file_to_hrcmonitor(file_to_scp=out_html_file)
+    # scp_file_to_hrcmonitor(file_to_scp=out_html_file)
 
     fig2 = make_subplots()
-    # ts_new = new_cea.times - t_ref_2022.secs
-    # ts_old = old_cea.times - t_ref_2020.secs
 
-    # if old_telem is not None:
-    #     fig2.add_trace(go.Scatter(x=(old_telem['old_cea_temp'].times - sideb_reset_2020.secs) / 3600, y=old_telem['old_cea_temp'].vals,
-    #                               name='CEA 2020 Behavior', line=dict(color='gray', width=2)), secondary_y=False)
-    #     fig2.add_trace(go.Scatter(x=(old_telem['old_fea_temp'].times - sideb_reset_2020.secs) / 3600, y=old_telem['old_fea_temp'].vals,
-    #                               name='FEA 2020 Behavior', line=dict(color='gray', width=2)), secondary_y=False)
-    # fig.add_trace(go.Scatter(x=ts_old, y=old_cea.vals,
-    #                          name='2020 2CEAHVPT', line=dict(width=4)), secondary_y=False)
-
-    fig2.add_trace(go.Scatter(x=(telem['2CEAHVPT'].times) /
-                              3600, y=telem['2CEAHVPT'].vals, name='2CEAHVPT'))
-
-    fig2.add_trace(go.Scatter(x=(telem['2CHTRPZT'].times) /
-                              3600, y=telem['2CHTRPZT'].vals, name='2CHTRPZT'))
-
-    fig2.add_trace(go.Scatter(x=(telem['2FHTRMZT'].times) /
-                              3600, y=telem['2FHTRMZT'].vals, name='2FTRMZT'))
-
-    fig2.add_trace(go.Scatter(x=(telem['2LVPLATM'].times) /
-                              3600, y=telem['2LVPLATM'].vals, name='2LVPLATM'))
-
-    fig2.add_trace(go.Scatter(x=(telem['2DTSTATT'].times) /
-                              3600, y=telem['2DTSTATT'].vals, name='2DTSTATT'))
-
-    fig2.add_trace(go.Scatter(x=(telem['2SPINATM'].times) /
-                              3600, y=telem['2SPINATM'].vals, name='2SPINATM'))
-
-    # fig2.add_vline(x=0, line_width=1, line_color="gray")
-
-    # fig2.add_vline(x=4.4, line_width=1, line_color="gray")
-
-    # fig2.add_hline(y=10, line_width=4, line_color="red")
-
-    fig2.add_annotation(x=4.4, y=11,
-                        text="End",
-                        showarrow=False)
+    for msid in msidlist[3:]:
+        fig.add_trace(go.Scatter(
+            x=cxctime_to_datetime((telem[msid].times)), y=telem[msid].vals, name=msid))
 
     fig2.update_layout(
         title=f'Interactive Temperatures | Updated {dt.datetime.now().strftime("%b %d %H:%M:%S")}',
-        xaxis_title="Hours Relative to start of CAP",
+        xaxis_title="Date",
         yaxis_title="Temperatures (C)",
         font=dict(size=12),
-        template="plotly",
+        template="ggplot2",
         yaxis_range=[-15, 15],
         legend=dict(yanchor="top", y=1, xanchor="right", x=1)
     )
 
     out_html_file = '/Users/grant/Desktop/temperatures.html'
     fig2.write_html(out_html_file, auto_open=True, full_html=False)
-    scp_file_to_hrcmonitor(file_to_scp=out_html_file)
-
-
-def get_old_telem():
-
-    sideb_reset_2020 = chandraDateTime(event_times.time_of_cap_1543)
-    old_N15 = fetch.MSID('2N15VBVL', start=convert_to_doy(event_times.time_of_cap_1543),
-                         stop=convert_to_doy(event_times.time_of_cap_1543 + dt.timedelta(days=1)))
-    old_P15 = fetch.MSID('2P15VBVL', start=convert_to_doy(event_times.time_of_cap_1543),
-                         stop=convert_to_doy(event_times.time_of_cap_1543 + dt.timedelta(days=1)))
-    old_cea_temp = fetch.MSID('2CHTRPZT', start=convert_to_doy(event_times.time_of_cap_1543),
-                              stop=convert_to_doy(event_times.time_of_cap_1543 + dt.timedelta(days=1)))
-    old_fea_temp = fetch.MSID('2FHTRMZT', start=convert_to_doy(event_times.time_of_cap_1543),
-                              stop=convert_to_doy(event_times.time_of_cap_1543 + dt.timedelta(days=1)))
-    times_old = (old_N15.times - sideb_reset_2020.secs) / 3600
-
-    old_telem = {'old_N15': old_N15,
-                 'old_P15': old_P15,
-                 'old_cea_temp': old_cea_temp,
-                 'old_fea_temp': old_fea_temp,
-                 'times_old': times_old}
-
-    return old_telem
+    # scp_file_to_hrcmonitor(file_to_scp=out_html_file)
 
 
 def parse_args():
 
     argparser = argparse.ArgumentParser()
 
-    argparser.add_argument('--monitor', action='store_true')
+    argparser.add_argument('--show_once', action='store_true')
 
     args = argparser.parse_args()
 
@@ -155,30 +95,44 @@ def main():
 
     fetch.data_source.set('maude allow_subset=False')
 
-    time_zero = dt.datetime.now() - dt.timedelta(days=7, minutes=0)
-    telem_start = convert_to_doy(time_zero)
-    # time_zero = CxoTime('2022:263:17:26:12')  # CAP start
+    one_day_ago = dt.datetime.now() - dt.timedelta(days=1)
+    telem_start = convert_to_doy(one_day_ago)
 
-    iteration_count = 0
+    iteration_counter = 0
+    sleep_period_seconds = 30
 
-    # old_telem = get_old_telem()
-    old_telem = None
+    if args.show_once is True:
+        make_interactives(telem_start)
 
-    if args.monitor is False:
-        make_interactives(telem_start, time_zero, old_telem=old_telem)
-
-    elif args.monitor is True:
-
-        sleep_period_seconds = 30
+    elif args.show_once is False:
 
         while True:
-            make_interactives(telem_start, time_zero)
-            time.sleep(30)
 
-            for i in range(0, sleep_period_seconds):
-                print('Refreshing Plotly plots in {} seconds...'.format(
-                    sleep_period_seconds-i), end="\r", flush=True)
-                time.sleep(1)  # sleep for 1 second per iteration
+            iteration_counter += 1
+
+            try:
+                with force_timeout(600):  # this shouldn't take longer than 10 minutes
+                    print(
+                        f'({timestamp_string()}) Refreshing interactive plots (iteration {iteration_counter})... ', end="\r", flush=True)
+                    make_interactives(telem_start)
+
+                    for i in range(0, sleep_period_seconds):
+                        print('Refreshing Plotly plots in {} seconds...'.format(
+                            sleep_period_seconds-i), end="\r", flush=True)
+                        time.sleep(1)  # sleep for 1 second per iteration
+
+            except TimeoutException:
+                print(
+                    f"({timestamp_string()}) Funtion timed out! Pressing on...                             ", end="\r", flush=True)
+                continue
+
+            except Exception as e:
+                print(
+                    f"({timestamp_string()}) ERROR on iteration {iteration_counter}: {e}")
+                print("Heres the traceback:")
+                print(traceback.format_exc())
+                print(f"({timestamp_string()}) Pressing on...")
+                continue
 
 
 if __name__ == '__main__':

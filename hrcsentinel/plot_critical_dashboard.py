@@ -38,7 +38,7 @@ def update_plot(telem_start, iteration_count, save_path=None):
         comm_status_color = plot_stylers.red
 
     # heartbeat.py currently resets to remove the highrate=True flag. You need to reset!
-    fetch.data_source.set('maude allow_subset=False highrate=True')
+    fetch.data_source.set('maude allow_subset=False')
 
     msidlist = ['2P15VAVL', '2N15VAVL', '2P05VAVL', '2P24VAVL',
                 '2FHTRMZT', '2CHTRPZT', '2LVPLATM', '2DTSTATT', '2SPINATM', '3FABRAAT', '2CEAHVPT',
@@ -139,7 +139,7 @@ def main():
         print(f'({timestamp_string()}) Recognized host: {hostname}. Plots will be saved to {fig_save_directory}')
 
     plt.ion()
-    fetch.data_source.set('maude allow_subset=False highrate=True')
+    fetch.data_source.set('maude allow_subset=False')
     plot_stylers.styleplots(labelsizes=12)
 
     # Grab telemetry starting from 24 hours ago
