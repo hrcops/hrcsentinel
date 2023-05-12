@@ -35,7 +35,7 @@ def format_dates(cheta_dates, scp=False):
 def make_interactives(telem_start, save_dir, scp=False):
 
     # Set the MSIDs we want to plot
-    msidlist = ['2P15VAVL', '2N15VAVL', '2P05VAVL', '2SHEV1RT',
+    msidlist = ['2P15VAVL', '2N15VAVL', '2P05VAVL',
                 '2FHTRMZT', '2CHTRPZT', '2CEAHVPT']  # i previously included '2LVPLATM', '2DTSTATT', '2SPINATM'
 
     rate_msids = ['2TLEV1RT',  # The Total Event Rate
