@@ -103,8 +103,8 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
                 data = fetch.get_telem(msid, start=convert_to_doy(
                     plot_start), sampling=sampling, max_fetch_Mb=100000, max_output_Mb=100000, quiet=True)
 
-                print(
-                    f'({timestamp_string()}) Fetching from {convert_to_doy(plot_start)} at {sampling} resolution: {msid}', end='\r', flush=True)
+                # print(
+                #     f'({timestamp_string()}) Fetching from {convert_to_doy(plot_start)} at {sampling} resolution: {msid}', end='\r', flush=True)
                 # Clear the command line manually
                 sys.stdout.write("\033[K")
 
