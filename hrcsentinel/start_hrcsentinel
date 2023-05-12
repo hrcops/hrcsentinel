@@ -26,9 +26,10 @@ def parse_args():
     return args
 
 
-scripts_to_run = ['monitor_comms.py', 'monitor_telemetry.py']
+scripts_to_run = ['monitor_comms.py', 'monitor_telemetry.py', 'plot_critical_interactives.py']
 terminal_window_titles = ['Comm Pass Monitor | HRCSentinel',
-                          'Telemetry Monitor | HRCSentinel']
+                          'Telemetry Monitor | HRCSentinel',
+                          'Interactive Plot Generator | HRCSentinel']
 
 HRCSENTINEL_DIRECTORY_HEAD = '/home/tremblay/HRCOps/hrcsentinel/hrcsentinel'
 SKAINIT_STRING = 'source /proj/sot/ska3/flight/bin/ska_envs.sh'
