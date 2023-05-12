@@ -91,18 +91,18 @@ def make_interactives(telem_start, save_dir, scp=False):
                                 text="Now",
                                 showarrow=True,
                                 arrowhead=1,
-                                xshift=4)
+                                xshift=-3)
 
     fig_temperatures.add_annotation(x=dt.datetime.now(), y=0,
                                     text="Now",
                                     showarrow=True,
                                     arrowhead=1,
-                                    xshift=4)
+                                    xshift=-3)
 
     fig_temperatures.add_hrect(y0=10, y1=12, fillcolor="orange", opacity=0.3,
-                               annotation_text="2CEAHVPT Warning Limit", annotation_position="inside bottom left")
+                               annotation_text="2CEAHVPT Planning Limit", annotation_position="inside bottom left")
     fig_temperatures.add_hrect(y0=12, y1=100, fillcolor="red", opacity=0.3,
-                               annotation_text="2CEAHVPT Red Limit", annotation_position="inside bottom left")
+                               annotation_text="2CEAHVPT Warning Limit", annotation_position="inside bottom left")
     # fig_temperatures.add_hline(y=12, line_width=1, line_color="red")
     # fig.add_hrect(y0=0.9, y1=2.6, line_width=0, fillcolor="red", opacity=0.2)
 
