@@ -53,10 +53,10 @@ def make_motor_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/hrc
                 data = fetch.get_telem(
                     msid, start=convert_to_doy(plot_start), sampling=sampling, max_fetch_Mb=100000, max_output_Mb=100000, quiet=True)
 
-                print('Fetching from {} at {} resolution: {}'.format(
-                    convert_to_doy(plot_start), sampling, msid), end='\r', flush=True)
+                # print('Fetching from {} at {} resolution: {}'.format(
+                #     convert_to_doy(plot_start), sampling, msid), end='\r', flush=True)
                 # Clear the command line manually
-                sys.stdout.write("\033[K")
+                # sys.stdout.write("\033[K")
 
                 # plotting the absolute value here to ignore -1
                 ax.plot_date(cxctime_to_datetime(
