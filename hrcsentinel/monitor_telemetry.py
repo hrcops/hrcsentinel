@@ -71,18 +71,18 @@ def main():
 
     if hostname in allowed_hosts:
         fig_save_directory = allowed_hosts[hostname]
-        #print(f'({timestamp_string()}) Recognized host: {hostname}. Plots will be saved to {fig_save_directory}', end='\r', flush=True)
+        # print(f'({timestamp_string()}) Recognized host: {hostname}. Plots will be saved to {fig_save_directory}', end='\r', flush=True)
 
     else:
         sys.exit(
             f'({timestamp_string()}) Hostname {hostname} is not recognized. Exiting.')
 
-    if args.show_in_gui is False:
-        # Then we're on a headless machine and you should use agg
-        backend = 'agg'
-    elif args.show_in_gui is True:
-        backend = 'MacOSX'
-    matplotlib.use(backend, force=True)
+    # if args.show_in_gui is False:
+    #     # Then we're on a headless machine and you should use agg
+    #     backend = 'agg'
+    # elif args.show_in_gui is True:
+    #     backend = 'MacOSX'
+    # matplotlib.use(backend, force=True)
 
     # Initial settings
     recently_in_comm = False
