@@ -1,6 +1,7 @@
 #!/usr/bin/env/python
 
 import os
+import sys
 import time
 import argparse
 import socket
@@ -214,6 +215,7 @@ def main():
                     for i in range(0, sleep_period_seconds):
                         print('Refreshing interactive plots in {} seconds...                                    '.format(
                             sleep_period_seconds-i), end="\r", flush=True)
+                        sys.stdout.write("\033[K")
                         time.sleep(1)  # sleep for 1 second per iteration
 
             except TimeoutException:
