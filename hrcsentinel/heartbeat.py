@@ -10,7 +10,6 @@ import Ska.engarchive.fetch as fetch
 from contextlib import contextmanager
 import signal
 
-
 class TimeoutException(Exception):
     pass
 
@@ -22,7 +21,7 @@ def force_timeout(seconds):
     timeout on the ssl.do_handshake() call. I'm lazy and don't want
     to figure it out, so this function will force a timeout of the call
     after a given number of seconds. If you wrap it in a try/except and a while
-    loop, it will simply try again (which almost always fixes the issue). 
+    loop, it will simply try again (which almost always fixes the issue).
     '''
     def signal_handler(signum, frame):
         raise TimeoutException("Timed out! Pressing on...")

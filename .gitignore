@@ -1,7 +1,5 @@
 # Random stuff
 dsn_summary.yaml
-last_orbit_metadata.json
-hrcsentinel/last_orbit_metadata.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -132,3 +130,4 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+hrcsentinel/last_orbit_metadata.json

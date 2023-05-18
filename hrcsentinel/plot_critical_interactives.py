@@ -18,6 +18,7 @@ from cxotime import CxoTime
 from Chandra.Time import DateTime as chandraDateTime
 from chandratime import convert_to_doy
 import datetime as dt
+import pytz
 
 import event_times
 from plot_helpers import scp_file_to_hrcmonitor
@@ -83,10 +84,10 @@ def make_interactives(telem_start, save_dir, scp=False):
     # Add the critical temperature thresholds as horizontal lines
 
     fig_voltages.add_vline(
-        dt.datetime.now(), line_width=1)
+        dt.datetime.now() + dt.timedelta(hours=4), line_width=1)
 
     fig_temperatures.add_vline(
-        dt.datetime.now(), line_width=1)
+        dt.datetime.now() + dt.timedelta(hours=4), line_width=1)
 
     fig_voltages.add_annotation(x=dt.datetime.now(), y=20,
                                 text="Now",
@@ -194,7 +195,7 @@ def main():
     telem_start = convert_to_doy(five_days_ago)
 
     iteration_counter = 0
-    sleep_period_seconds = 180
+    sleep_period_seconds = 300
 
     if args.show_once is True:
         make_interactives(telem_start)
@@ -213,9 +214,9 @@ def main():
                         telem_start, save_dir=fig_save_directory, scp=args.scp)
 
                     for i in range(0, sleep_period_seconds):
-                        print('Refreshing interactive plots in {} seconds...                                    '.format(
-                            sleep_period_seconds-i), end="\r", flush=True)
-                        sys.stdout.write("\033[K")
+                        # print('Refreshing interactive plots in {} seconds...                                    '.format(
+                        #     sleep_period_seconds-i), end="\r", flush=True)
+                        # sys.stdout.write("\033[K")
                         time.sleep(1)  # sleep for 1 second per iteration
 
             except TimeoutException:
