@@ -116,8 +116,8 @@ def get_args():
     argparser = argparse.ArgumentParser()
 
     argparser.add_argument('--freeze', action='store_true')
-    argparser.add_argument('--monitor', action='store_true',
-                           help='Save every iteration as a PNG and SCP it to HRCmonitor')
+    argparser.add_argument('--save', action='store_true',
+                           help='Save every iteration as a PNG')
     argparser.add_argument('--debug', action='store_true')
 
     args = argparser.parse_args()
@@ -163,5 +163,4 @@ def main():
 
 
 if __name__ == '__main__':
-    # matplotlib.use('MacOSX', force=True)
     main()

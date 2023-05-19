@@ -65,9 +65,19 @@ def make_interactives(telem_start, save_dir, scp=False):
         fig_voltages.add_trace(go.Scatter(
             x=cxctime_to_datetime((voltage_telem[msid].times)), y=voltage_telem[msid].vals, name=msid, line=dict(color=voltage_plot_colors[i])))
 
-    for i, msid in enumerate(rate_msids):
+    for i, msid in enumerate(state_msids):
         fig_voltages.add_trace(go.Scatter(
-            x=cxctime_to_datetime((rate_telem[msid].times)), y=rate_telem[msid].vals, name=msid, opacity=0.8, line=dict(color=rate_plot_colors[i])), secondary_y=True)
+            x=cxctime_to_datetime((state_telem[msid].times)), y=state_telem[msid].vals, name=msid, opacity=0.8, line=dict(color='#4f6d7a', width=0.5)), secondary_y=True)
+
+    fig_rates = make_subplots(specs=[[{"secondary_y": True}]])
+
+    for i, msid in enumerate(rate_msids):
+        fig_rates.add_trace(go.Scatter(
+            x=cxctime_to_datetime((rate_telem[msid].times)), y=rate_telem[msid].vals, name=msid, opacity=0.8, line=dict(color=rate_plot_colors[i])))
+
+    for i, msid in enumerate(state_msids):
+        fig_rates.add_trace(go.Scatter(
+            x=cxctime_to_datetime((state_telem[msid].times)), y=state_telem[msid].vals, name=msid, opacity=0.8, line=dict(color='#4f6d7a', width=0.5)), secondary_y=True)
 
     # now make the temperatures plot
     fig_temperatures = make_subplots(specs=[[{"secondary_y": True}]])
@@ -79,45 +89,72 @@ def make_interactives(telem_start, save_dir, scp=False):
     for i, msid in enumerate(state_msids):
         fig_temperatures.add_trace(go.Scatter(
             x=cxctime_to_datetime((state_telem[msid].times)), y=state_telem[msid].vals, name=msid, opacity=0.8, line=dict(color='#4f6d7a', width=0.5)), secondary_y=True)
+
     # ANNOTATE THE PLOTS
 
     # Add the critical temperature thresholds as horizontal lines
 
     fig_voltages.add_vline(
-        dt.datetime.now() + dt.timedelta(hours=4), line_width=1)
+        dt.datetime.utcnow(), line_width=1)
 
-    fig_temperatures.add_vline(
-        dt.datetime.now() + dt.timedelta(hours=4), line_width=1)
+    fig_rates.add_vline(dt.datetime.utcnow(), line_width=1)
 
-    fig_voltages.add_annotation(x=dt.datetime.now(), y=20,
+    fig_temperatures.add_vline(dt.datetime.utcnow(), line_width=1)
+
+    fig_voltages.add_annotation(x=dt.datetime.utcnow(), y=20,
                                 text="Now",
                                 showarrow=True,
                                 arrowhead=1,
                                 xshift=-3)
 
-    fig_temperatures.add_annotation(x=dt.datetime.now(), y=0,
+    fig_rates.add_annotation(x=dt.datetime.utcnow(), y=0,
+                             text="Now",
+                             showarrow=True,
+                             arrowhead=1,
+                             xshift=-3)
+
+    fig_temperatures.add_annotation(x=dt.datetime.utcnow(), y=0,
                                     text="Now",
                                     showarrow=True,
                                     arrowhead=1,
                                     xshift=-3)
 
+    # fig_rates.add_hrect(y0=40000, y1=60000, fillcolor="orange", opacity=0.3,
+    #                     annotation_text="SCS 107 Trip", annotation_position="inside bottom left")
+    # fig_rates.add_hrect(y0=60000, y1=100000, fillcolor="red", opacity=0.3,
+    #                     annotation_text="Background rate warning", annotation_position="inside bottom left")
+
+    fig_rates.add_hline(y=60000, line_width=1, line_color="red")
+
     fig_temperatures.add_hrect(y0=10, y1=12, fillcolor="orange", opacity=0.3,
                                annotation_text="2CEAHVPT Planning Limit", annotation_position="inside bottom left")
     fig_temperatures.add_hrect(y0=12, y1=100, fillcolor="red", opacity=0.3,
                                annotation_text="2CEAHVPT Warning Limit", annotation_position="inside bottom left")
-    # fig_temperatures.add_hline(y=12, line_width=1, line_color="red")
-    # fig.add_hrect(y0=0.9, y1=2.6, line_width=0, fillcolor="red", opacity=0.2)
 
     # FIDDLE WITH PLOT LABELS AND LAYOUT
 
     fig_voltages.update_layout(
-        title=f'Interactive <b>Voltages & Counts</b> | Last Five Days | Updated {dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")} EST<br><sup>Updated every three minutes | This plot is interactive; use your mouse to zoom & pan</sup>',
+        title=f'Interactive <b>Bus Voltages</b> | Last Five Days | Updated {dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")} EST<br><sup>Updated every three minutes | This plot is interactive; use your mouse to zoom & pan</sup>',
         xaxis_title="Date",
         yaxis_title="<b>Bus Voltages</b> (V)",
         font=dict(size=12),
         template="ggplot2",
-        yaxis_range=[-16, 30],
-        yaxis2=dict(type='log'),
+        yaxis_range=[-16, 16],
+        xaxis_range=[dt.datetime.utcnow()-dt.timedelta(days=5),
+                     dt.datetime.utcnow() + dt.timedelta(hours=2)],
+        # legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01)
+    )
+
+    fig_rates.update_layout(
+        title=f'Interactive <b>Event Counts</b> | Last Five Days | Updated {dt.datetime.now().strftime("%Y-%b-%d %H:%M:%S")} EST<br><sup>Updated every three minutes | This plot is interactive; use your mouse to zoom & pan</sup>',
+        xaxis_title="Date",
+        yaxis_title="<b>Event Rates</b> (counts / sec)",
+        font=dict(size=12),
+        template="ggplot2",
+        xaxis_range=[dt.datetime.utcnow()-dt.timedelta(days=5),
+                     dt.datetime.utcnow() + dt.timedelta(hours=2)],
+        # yaxis_range=[1, 80000],
+        yaxis=dict(type='log'),
         # legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01)
     )
 
@@ -128,6 +165,8 @@ def make_interactives(telem_start, save_dir, scp=False):
         font=dict(size=12),
         template="ggplot2",
         yaxis_range=[-15, 15],
+        xaxis_range=[dt.datetime.utcnow()-dt.timedelta(days=5),
+                     dt.datetime.utcnow() + dt.timedelta(hours=2)],
         # legend=dict(yanchor="top", y=1, xanchor="right", x=1)
     )
 
@@ -135,7 +174,10 @@ def make_interactives(telem_start, save_dir, scp=False):
     # fig_voltages.update_yaxes(
     #     title_text="<b>Event Rates</b> (counts / sec)", secondary_y=True)
     fig_voltages.update_yaxes(
-        title_text="<b>Event Rates</b> (counts / sec)", secondary_y=True, showgrid=False)
+        title_text="<b>+15V State</b> (on / off)", secondary_y=True, showgrid=False)
+    fig_rates.update_yaxes(
+        title_text="<b>+15V State</b> (on / off)", secondary_y=True, showgrid=False)
+
     fig_temperatures.update_yaxes(
         title_text="<b>+15V State</b> (on / off)", secondary_y=True, showgrid=False)
 
@@ -143,11 +185,14 @@ def make_interactives(telem_start, save_dir, scp=False):
 
     # Set the paths of the HTML files we'll create
     voltages_plot_file = os.path.join(save_dir, 'voltages.html')
+    rates_plot_file = os.path.join(save_dir, 'rates.html')
     temperatures_plot_file = os.path.join(save_dir, 'temperatures.html')
 
     # Save the plots to HTML files
     fig_voltages.write_html(
         voltages_plot_file, auto_open=True, full_html=False, config=dict(displaylogo=False))
+    fig_rates.write_html(
+        rates_plot_file, auto_open=True, full_html=False, config=dict(displaylogo=False))
     fig_temperatures.write_html(
         temperatures_plot_file, auto_open=True, full_html=False, config=dict(displaylogo=False))
 
@@ -158,6 +203,7 @@ def make_interactives(telem_start, save_dir, scp=False):
 
         else:
             scp_file_to_hrcmonitor(file_to_scp=voltages_plot_file)
+            scp_file_to_hrcmonitor(file_to_scp=rates_plot_file)
             scp_file_to_hrcmonitor(file_to_scp=temperatures_plot_file)
 
 
@@ -214,9 +260,9 @@ def main():
                         telem_start, save_dir=fig_save_directory, scp=args.scp)
 
                     for i in range(0, sleep_period_seconds):
-                        # print('Refreshing interactive plots in {} seconds...                                    '.format(
-                        #     sleep_period_seconds-i), end="\r", flush=True)
-                        # sys.stdout.write("\033[K")
+                        print('Refreshing interactive plots in {} seconds...                                    '.format(
+                            sleep_period_seconds-i), end="\r", flush=True)
+                        sys.stdout.write("\033[K")
                         time.sleep(1)  # sleep for 1 second per iteration
 
             except TimeoutException:

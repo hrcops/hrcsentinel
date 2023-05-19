@@ -37,6 +37,7 @@ SKAINIT_STRING = 'source /proj/sot/ska3/flight/bin/ska_envs.sh'
 args = parse_args()
 
 if os.path.exists(HRCSENTINEL_DIRECTORY_HEAD):
+    # Then we are on the HEAD LAN and on linux using Gnome Terminal
 
     print('Starting HRCSentinel using the HEAD LAN...')
     for title, script in zip(terminal_window_titles, scripts_to_run):
@@ -46,7 +47,7 @@ if os.path.exists(HRCSENTINEL_DIRECTORY_HEAD):
 
 elif sys.platform == 'darwin':
     # then you are on macOS and presumably on a self-managed machine
-    # See if you're on one of Grant's machines, which will have iTerm2 (and its python package) installed
+    # See if you're on one of Grant's machines, which will have iTerm2 (and its Python package) installed
 
     if args.iterm is True:
 

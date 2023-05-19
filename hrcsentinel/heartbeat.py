@@ -10,6 +10,7 @@ import Ska.engarchive.fetch as fetch
 from contextlib import contextmanager
 import signal
 
+
 class TimeoutException(Exception):
     pass
 
@@ -33,9 +34,16 @@ def force_timeout(seconds):
         signal.alarm(0)
 
 
-
-
 def are_we_in_comm(verbose=False, cadence=2, fake_comm=False):
+    """
+    Check if the spacecraft is in communication with the ground by checking if there are any VCDU frame values within the last 60 seconds.
+
+    :param verbose: Set to True to print status messages to the screen. Default is False.
+    :param cadence: How often to check if we are in comm. Default is 2 seconds.
+    :param fake_comm: Set to True to fake being in comm. Default is False.
+    :return: True if in comm, False if not.
+    """
+
     # Always be fetching from MAUDE
     fetch.data_source.set('maude allow_subset=True')
 
@@ -63,9 +71,11 @@ def are_we_in_comm(verbose=False, cadence=2, fake_comm=False):
 
 
 def timestamp_string():
-    # return CxoTime.now().strftime("%m/%d/%Y %H:%M:%S")
-    # return dt.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
-    return dt.datetime.now(pytz.timezone('US/Eastern')).strftime("%m/%d/%Y %I:%M:%S %p") + f" {dt.datetime.now(pytz.timezone('US/Eastern')).astimezone().tzinfo}"
+    """Return the current date and time in the format 'MM/DD/YYYY HH:MM:SS'.
+    """
+    time_zone = pytz.timezone('US/Eastern')
+    eastern_time = dt.datetime.now(time_zone)
+    return eastern_time.strftime("%m/%d/%Y %I:%M:%S %p") + f" {eastern_time.astimezone().tzinfo}"
 
 
 def main():
