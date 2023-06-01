@@ -15,7 +15,7 @@ import pytz
 import matplotlib.dates as mdate
 from matplotlib import gridspec
 
-from chandratime import cxc2dt, convert_to_doy
+from chandratime import cxctime_to_datetime, convert_to_doy
 
 
 import matplotlib.pyplot as plt
@@ -100,13 +100,13 @@ def make_thermal_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/h
             msid), end='\r', flush=True)
         # Clear the command line manually
         sys.stdout.write("\033[K")
-        ax.plot_date(cxc2dt(msids_daily[msid].times),
+        ax.plot_date(cxctime_to_datetime(msids_daily[msid].times),
                      msids_daily[msid].means, '.', alpha=1.0, markersize=2.5, label='{}'.format(msid), color=plt.cm.RdYlBu_r(i),  rasterized=rasterized)
 
         # Draw a large point line where the current data point is
         with fetch.data_source('maude'):
             latest_datapoint = fetch.Msid(msid, start='2020:340')
-            ax.plot_date(cxc2dt(latest_datapoint.times)[
+            ax.plot_date(cxctime_to_datetime(latest_datapoint.times)[
                          -1], latest_datapoint.vals[-1], markersize=8, color=plt.cm.RdYlBu_r(i), rasterized=rasterized, zorder=4)
 
     ax.set_ylabel("Temperature (C)", fontsize=10)
@@ -159,7 +159,7 @@ def make_thermal_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/h
         # Clear the command line manually
         sys.stdout.write("\033[K")
 
-        times = cxc2dt(msids_daily[msid].times)
+        times = cxctime_to_datetime(msids_daily[msid].times)
         # ax.plot(all_trends["{}_trend".format(msidname)], lw=3.0, label=msidname, color=plt.cm.coolwarm(i))
         ax.plot_date(times[time_corrector:], all_trends["{}_trend".format(
             msid)], '-', label='{}'.format(msid), lw=3.0, color=plt.cm.RdYlBu_r(i), rasterized=rasterized)
@@ -169,7 +169,7 @@ def make_thermal_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/h
         # Draw a large point line where the current data point is
         with fetch.data_source('maude'):
             latest_datapoint = fetch.Msid(msid, start='2020:340')
-            ax.plot_date(cxc2dt(latest_datapoint.times)[
+            ax.plot_date(cxctime_to_datetime(latest_datapoint.times)[
                          -1], latest_datapoint.vals[-1], markersize=8, color=plt.cm.RdYlBu_r(i), rasterized=rasterized, zorder=4)
 
     ax.legend(prop={'size': 13}, loc='center left',

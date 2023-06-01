@@ -8,7 +8,7 @@ from Chandra.Time import DateTime as cxcDateTime
 from Ska.Matplotlib import cxctime2plotdate as cxc2pd
 
 
-def cxc2dt(rawtimes):
+def cxctime_to_datetime(rawtimes):
     """
     Convert input CXC time (seconds since 1998.0) to a datetime object
 

@@ -5,7 +5,7 @@ import datetime as dt
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdate
 
-from chandratime import cxc2dt, convert_to_doy
+from chandratime import cxctime_to_datetime as cxc2dt, convert_to_doy
 
 # GENERAL TIMES
 

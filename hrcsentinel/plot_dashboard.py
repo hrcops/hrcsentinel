@@ -14,7 +14,7 @@ except ImportError:
 import event_times
 import msidlists
 import plot_stylers
-from chandratime import convert_to_doy, cxc2dt
+from chandratime import convert_to_doy, cxctime_to_datetime as cxc2dt
 from monitor_comms import convert_bus_current_to_dn
 from plot_motors import make_motor_plots
 from plot_rates import make_shield_plot

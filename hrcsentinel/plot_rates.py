@@ -25,7 +25,7 @@ from Ska.Matplotlib import cxctime2plotdate as cxc2pd
 
 from global_configuration import allowed_hosts
 import plot_stylers
-from chandratime import cxc2dt, convert_to_doy
+from chandratime import cxctime_to_datetime as cxc2dt, convert_to_doy
 from goes_proxy import get_goes_proxy
 from plot_helpers import drawnow
 
