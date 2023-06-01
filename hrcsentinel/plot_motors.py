@@ -59,7 +59,7 @@ def make_motor_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/hrc
                 # sys.stdout.write("\033[K")
 
                 # plotting the absolute value here to ignore -1
-                ax.plot_date(cxctime_to_datetime(
+                ax.plot_date(cxc2dt(
                     data[msid].times), abs(data[msid].raw_vals), markersize=1, label=msid, zorder=1, rasterized=True, alpha=0.8)
 
                 # Plot a HORIZONTAL line at location of last data point.

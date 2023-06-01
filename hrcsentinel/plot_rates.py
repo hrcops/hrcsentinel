@@ -25,7 +25,7 @@ from Ska.Matplotlib import cxctime2plotdate as cxc2pd
 
 from global_configuration import allowed_hosts
 import plot_stylers
-from chandratime import cxctime_to_datetime, convert_to_doy
+from chandratime import cxc2dt, convert_to_doy
 from goes_proxy import get_goes_proxy
 from plot_helpers import drawnow
 
@@ -107,7 +107,7 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
         data = fetch.get_telem(msid, start=convert_to_doy(
             plot_start), sampling='full', max_fetch_Mb=100000, max_output_Mb=100000, quiet=True)
         # ax.plot(data[msid].times, data[msid].vals, label=msid)
-        ax.plot_date(cxctime_to_datetime(
+        ax.plot_date(cxc2dt(
             data[msid].times), data[msid].vals, marker='o', fmt="", markersize=1.5, label=namelist[i])
 
     # Try to plot the GOES proxy rates. Don't die if it fails.
@@ -148,9 +148,9 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
             comm_start_raw = comm['tstart'] + 3600
             comm_stop_raw = comm['tstop']
 
-            comm_start = cxctime_to_datetime(comm_start_raw)
-            comm_stop = cxctime_to_datetime(comm_stop_raw)
-            comm_midpoint = cxctime_to_datetime(
+            comm_start = cxc2dt(comm_start_raw)
+            comm_stop = cxc2dt(comm_stop_raw)
+            comm_midpoint = cxc2dt(
                 (comm_stop_raw + comm_start_raw) / 2)
 
             # comm_midpoint = mdate.num2date((cxc2pd(cxcDateTime(
@@ -174,10 +174,10 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
             radzone_start_raw = orbit['t_perigee'] + orbit['dt_start_radzone']
             radzone_stop_raw = orbit['t_perigee'] + orbit['dt_stop_radzone']
 
-            radzone_start = cxctime_to_datetime(radzone_start_raw)
-            radzone_stop = cxctime_to_datetime(radzone_stop_raw)
+            radzone_start = cxc2dt(radzone_start_raw)
+            radzone_stop = cxc2dt(radzone_stop_raw)
 
-            radzone_midpoint = cxctime_to_datetime(
+            radzone_midpoint = cxc2dt(
                 (radzone_stop_raw + radzone_start_raw) / 2)
 
             ax.axvspan(radzone_start, radzone_stop,

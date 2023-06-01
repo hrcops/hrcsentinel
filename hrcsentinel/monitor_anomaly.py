@@ -14,11 +14,14 @@ import numpy as np
 import requests
 from cheta import fetch_sci as fetch
 from cxotime import CxoTime
+from Chandra.Time import DateTime as cxcDateTime
 
 from heartbeat import are_we_in_comm, timestamp_string, force_timeout, TimeoutException
 from goes_proxy import get_goes_proxy
 from monitor_comms import send_slack_message
-from chandratime import convert_to_doy
+from chandratime import convert_to_doy, timedelta_formatter
+
+import datetime as dt
 
 
 def check_safe_modes(start_time, slack_channel=''):
@@ -28,39 +31,39 @@ def check_safe_modes(start_time, slack_channel=''):
     scs_107_state = fetch.MSID('COSCS107S', start=start_time)
 
 
-def audit_telemetry(start_time, in_comm: bool):
-    '''
-    Audit the most relevant telemetry and send slack warnings if they are out of bounds
-    '''
+# def audit_telemetry(start_time, in_comm: bool):
+#     '''
+#     Audit the most relevant telemetry and send slack warnings if they are out of bounds
+#     '''
 
-    # Check the Mission-critical MSIDs
-    msidlist = ['2C05PALV', '2C15PALV', '2CEAHVPT']
-    telem = fetch.MSIDset(msidlist, start=start_time)
+#     # Check the Mission-critical MSIDs
+#     msidlist = ['2C05PALV', '2C15PALV', '2CEAHVPT']
+#     telem = fetch.MSIDset(msidlist, start=start_time)
 
-    # Find where the 15V has been OFF, i.e. reads between 19 and 20 V (usually/always 19.84375 V)
-    fifteen_volt_off_mask = np.ma.masked_inside(
-        telem['2C15PALV'].vals, 19, 20).mask
+#     # Find where the 15V has been OFF, i.e. reads between 19 and 20 V (usually/always 19.84375 V)
+#     fifteen_volt_off_mask = np.ma.masked_inside(
+#         telem['2C15PALV'].vals, 19, 20).mask
 
-    fifteen_volt_on_mask = np.logical_not(fifteen_volt_off_mask)
+#     fifteen_volt_on_mask = np.logical_not(fifteen_volt_off_mask)
 
-    print(fifteen_volt_off_mask)
+#     print(fifteen_volt_off_mask)
 
-    # Check the latest values
-    latest_5v = np.round(telem['2C05PALV'].vals[-1], 1)
-    latest_15v = np.round(telem['2C15PALV'].vals[-1], 1)
-    latest_ceatemp = np.round(telem['2CEAHVPT'].vals[-1], 1)
+#     # Check the latest values
+#     latest_5v = np.round(telem['2C05PALV'].vals[-1], 1)
+#     latest_15v = np.round(telem['2C15PALV'].vals[-1], 1)
+#     latest_ceatemp = np.round(telem['2CEAHVPT'].vals[-1], 1)
 
-    if latest_15v < 20.0 and latest_15v > 19.0:
-        # then the 15V is probably off
-        print('The 15V is OFF')
-        print(
-            f"({timestamp_string()}) last 100 values: {telem['2C15PALV'].vals[0:100]}")
+#     if latest_15v < 20.0 and latest_15v > 19.0:
+#         # then the 15V is probably off
+#         print('The 15V is OFF')
+#         print(
+#             f"({timestamp_string()}) last 100 values: {telem['2C15PALV'].vals[0:100]}")
 
-    if latest_ceatemp < 10.0 and latest_ceatemp > -15.0:
-        # then the 15V is probably off
-        print(f'({timestamp_string()}) CEA HVPS Temperature is {latest_ceatemp} C')
+#     if latest_ceatemp < 10.0 and latest_ceatemp > -15.0:
+#         # then the 15V is probably off
+#         print(f'({timestamp_string()}) CEA HVPS Temperature is {latest_ceatemp} C')
 
-    return None
+#     return None
     # critical_msidlist = ['CCSDSTMF', '2SHEV1RT', '2PRBSCR', '2FHTRMZT', '2CHTRPZT',
     #                     '2IMTPAST', '2IMBPAST', '2SPTPAST', '2SPBPAST', '2TLEV1RT', '2VLEV1RT']
 
@@ -108,13 +111,7 @@ def main():
 
     fetch.data_source.set('maude allow_subset=False')
 
-    # Initial settings
-    recently_in_comm = False
-    in_comm_counter = 0
-    out_of_comm_refresh_counter = 0
     iteration_counter = 0
-
-    lookback_time = CxoTime().now() - 12 * u.hr
 
     misidlist = ['2C15PALV', '2N15PALV', '2FHTRMZT', '2CHTRPZT']
 
@@ -122,28 +119,57 @@ def main():
     while True:
 
         # Let's check the last 24h of data, which is longer than the longest time we'll ever be out of comm (hopefully!)
-        one_day_ago = dt.datetime.now() - dt.timedelta(days=1)
+        two_days_ago = dt.datetime.now() - dt.timedelta(days=2)
         # Convert this to a YYYY:DOY string like '2023:101'
-        pull_telem_from = convert_to_doy(one_day_ago)
+        pull_telem_from = convert_to_doy(two_days_ago)
 
         try:
             with force_timeout(600):  # don't let this take longer than 10 minutes
 
-                in_comm = are_we_in_comm(
-                    verbose=False, cadence=5, fake_comm=fake_comm)
+                # Check the Mission-critical MSIDs
 
-                if not in_comm:
-                    in_comm_counter = 0
-                    audit_telemetry(pull_telem_from, in_comm=False)
+                state_msidlist = ['215PCAST']
+                telem_msidlist = ['2C05PALV', '2C15PALV', '2CEAHVPT']
+                telem_msidlist_units = ['V', 'V', 'C']
 
-                elif in_comm:
-                    in_comm_counter += 1
-                    audit_telemetry(pull_telem_from, in_comm=True)
+                state = fetch.MSIDset(state_msidlist, start=pull_telem_from)
+                telem = fetch.MSIDset(
+                    telem_msidlist, start=pull_telem_from)
 
-            iteration_counter += 1
+                fifteen_volt_should_be_on = state['215PCAST'].vals[-1] == 'ON'
+
+                if fifteen_volt_should_be_on:
+
+                    print(
+                        f"({timestamp_string()}) \033[1mLast received telemetry report\033[0m")
+                    for msid, unit in zip(telem_msidlist, telem_msidlist_units):
+
+                        # Calculate age of this telemetry
+                        latest_value = np.round(telem[msid].vals[-1], 3)
+                        latest_time = cxcDateTime(
+                            telem[msid].times[-1]).date
+
+                        telemetry_age_seconds = CxoTime().now().secs - \
+                            telem[msid].times[-1]  # in units of seconds
+                        telemetry_age_timedelta = timedelta_formatter(dt.timedelta(
+                            seconds=telemetry_age_seconds))
+
+                        print(f'{msid}: {latest_value} {unit}')
+
+                        if msid == '2C15PALV':
+                            pass
+
+                            if telem[msid].vals[-1] > 14.0:
+                                print(
+                                    f"HRC is ON and the +15V bus is GOOD at {latest_value} (Latest telemetry is {telemetry_age_timedelta} old)")
+                    print('\n')
+                    # print(
+                    #     f'({timestamp_string()}) Latest {msid} is : {latest_value} at {latest_time} ({telemetry_age_timedelta} old)')
 
         except Exception as e:
-            print(e)
+            print(f'ERROR: {traceback.format_exc()}')
+
+        # time.sleep(20)
 
 
 if __name__ == "__main__":

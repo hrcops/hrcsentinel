@@ -14,7 +14,7 @@ except ImportError:
 import event_times
 import msidlists
 import plot_stylers
-from chandratime import convert_to_doy, cxctime_to_datetime
+from chandratime import convert_to_doy, cxc2dt
 from monitor_comms import convert_bus_current_to_dn
 from plot_motors import make_motor_plots
 from plot_rates import make_shield_plot
@@ -109,11 +109,11 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
                 sys.stdout.write("\033[K")
 
                 if sampling == 'full':
-                    ax.plot_date(cxctime_to_datetime(
+                    ax.plot_date(cxc2dt(
                         data[msid].times), data[msid].vals, markersize=1, label=msid, zorder=1, rasterized=True)
                 elif sampling == 'daily':
                     # Then plot the means
-                    ax.plot_date(cxctime_to_datetime(
+                    ax.plot_date(cxc2dt(
                         data[msid].times), data[msid].means, markersize=1, label=msid, zorder=1, rasterized=True)
                 # Plot a HORIZONTAL line at location of last data point.
                 if current_hline is True:
@@ -148,9 +148,9 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
                         format_changes = fetch.get_telem('CCSDSTMF', start=convert_to_doy(
                             plot_start), sampling=sampling, max_fetch_Mb=100000, max_output_Mb=100000, quiet=True)
                         ax_resets = ax.twinx()
-                        ax_resets.plot_date(cxctime_to_datetime(
+                        ax_resets.plot_date(cxc2dt(
                             fifo_resets['2FIFOAVR'].times), fifo_resets['2FIFOAVR'].vals, linewidth=0.5, marker=None, fmt="", alpha=0.7,  color=plot_stylers.blue, label='FIFO Reset', zorder=0, rasterized=True)
-                        ax_resets.plot_date(cxctime_to_datetime(format_changes['CCSDSTMF'].times), format_changes['CCSDSTMF'].vals,
+                        ax_resets.plot_date(cxc2dt(format_changes['CCSDSTMF'].times), format_changes['CCSDSTMF'].vals,
                                             linewidth=0.5, marker=None, fmt="", alpha=0.7,  color=plot_stylers.purple, label='Format Changes', zorder=0, rasterized=True)
                         ax_resets.tick_params(labelright='off')
                         ax_resets.set_yticks([])
@@ -170,7 +170,7 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
                     for msid in voltage_msids_a:
                         a_side_voltages = fetch.get_telem(msid, start=convert_to_doy(plot_start), stop=convert_to_doy(
                             event_times.time_of_cap_1543), sampling=sampling, max_fetch_Mb=100000, max_output_Mb=100000, quiet=True)
-                        ax.plot_date(cxctime_to_datetime(a_side_voltages[msid].times), a_side_voltages[msid].means,
+                        ax.plot_date(cxc2dt(a_side_voltages[msid].times), a_side_voltages[msid].means,
                                      color=plot_stylers.green, markersize=0.3, alpha=0.3, label=msid, zorder=1, rasterized=True)
 
                     # Label the B-side swap (Aug 2020)

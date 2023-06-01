@@ -8,7 +8,7 @@ from Chandra.Time import DateTime as cxcDateTime
 from Ska.Matplotlib import cxctime2plotdate as cxc2pd
 
 
-def cxctime_to_datetime(rawtimes):
+def cxc2dt(rawtimes):
     """
     Convert input CXC time (seconds since 1998.0) to a datetime object
 
@@ -45,3 +45,20 @@ def convert_to_doy(datetime_start):
     doystring = '{}:{:03d}'.format(year, day_of_year)
 
     return doystring
+
+
+def timedelta_formatter(timedelta_object):
+    # getting the seconds field of the timedelta
+    td_sec = timedelta_object.seconds
+    # calculating the total hours
+    hour_count, rem = divmod(td_sec, 3600)
+    minute_count, second_count = divmod(
+        rem, 60)         # distributing the remainders
+
+    day_msg = f"{timedelta_object.days} days, " if timedelta_object.days > 0 else ""
+    hour_msg = f"{hour_count} hours, " if hour_count > 0 else ""
+    minute_msg = f"{minute_count} minutes, " if minute_count > 0 else ""
+    second_msg = f"{second_count} seconds" if second_count > 0 else ""
+
+    msg = f"{day_msg}{hour_msg}{minute_msg}{second_msg}"
+    return msg                                           # returning the custom output

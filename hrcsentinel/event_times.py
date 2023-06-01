@@ -5,7 +5,7 @@ import datetime as dt
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdate
 
-from chandratime import cxctime_to_datetime, convert_to_doy
+from chandratime import cxc2dt, convert_to_doy
 
 # GENERAL TIMES
 
@@ -37,8 +37,8 @@ thursday_early_pass = dt.datetime(2020, 8, 27, 10, 0)
 thursday_early_pass_end = dt.datetime(2020, 8, 27, 11, 0)
 
 # I got the time of second anomaly from the first bad frame in the data. That is the Chandra time stamp below.
-time_of_second_anomaly = cxctime_to_datetime(714916399.97800004)
-time_of_second_shutdown = cxctime_to_datetime(714951463.18)
+time_of_second_anomaly = cxc2dt(714916399.97800004)
+time_of_second_shutdown = cxc2dt(714951463.18)
 
 # B-side swap
 time_of_cap_1543 = dt.datetime(2020, 8, 31, 17, 50)

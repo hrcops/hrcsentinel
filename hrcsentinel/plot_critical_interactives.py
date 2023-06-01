@@ -26,7 +26,7 @@ import traceback
 
 from heartbeat import are_we_in_comm, timestamp_string, force_timeout, TimeoutException
 from Ska.Matplotlib import cxctime2plotdate as cxc2pd
-from chandratime import cxctime_to_datetime
+from chandratime import cxc2dt
 from global_configuration import allowed_hosts
 
 
@@ -63,32 +63,32 @@ def make_interactives(telem_start, save_dir, scp=False):
 
     for i, msid in enumerate(voltage_msids):
         fig_voltages.add_trace(go.Scatter(
-            x=cxctime_to_datetime((voltage_telem[msid].times)), y=voltage_telem[msid].vals, name=msid, line=dict(color=voltage_plot_colors[i])))
+            x=cxc2dt((voltage_telem[msid].times)), y=voltage_telem[msid].vals, name=msid, line=dict(color=voltage_plot_colors[i])))
 
     for i, msid in enumerate(state_msids):
         fig_voltages.add_trace(go.Scatter(
-            x=cxctime_to_datetime((state_telem[msid].times)), y=state_telem[msid].vals, name=msid, opacity=0.8, line=dict(color='#4f6d7a', width=0.5)), secondary_y=True)
+            x=cxc2dt((state_telem[msid].times)), y=state_telem[msid].vals, name=msid, opacity=0.8, line=dict(color='#4f6d7a', width=0.5)), secondary_y=True)
 
     fig_rates = make_subplots(specs=[[{"secondary_y": True}]])
 
     for i, msid in enumerate(rate_msids):
         fig_rates.add_trace(go.Scatter(
-            x=cxctime_to_datetime((rate_telem[msid].times)), y=rate_telem[msid].vals, name=msid, opacity=0.8, line=dict(color=rate_plot_colors[i])))
+            x=cxc2dt((rate_telem[msid].times)), y=rate_telem[msid].vals, name=msid, opacity=0.8, line=dict(color=rate_plot_colors[i])))
 
     for i, msid in enumerate(state_msids):
         fig_rates.add_trace(go.Scatter(
-            x=cxctime_to_datetime((state_telem[msid].times)), y=state_telem[msid].vals, name=msid, opacity=0.8, line=dict(color='#4f6d7a', width=0.5)), secondary_y=True)
+            x=cxc2dt((state_telem[msid].times)), y=state_telem[msid].vals, name=msid, opacity=0.8, line=dict(color='#4f6d7a', width=0.5)), secondary_y=True)
 
     # now make the temperatures plot
     fig_temperatures = make_subplots(specs=[[{"secondary_y": True}]])
 
     for i, msid in enumerate(temperature_msids):
         fig_temperatures.add_trace(go.Scatter(
-            x=cxctime_to_datetime((temperature_telem[msid].times)), y=temperature_telem[msid].vals, name=msid,  line=dict(color=temperature_plot_colors[i])))
+            x=cxc2dt((temperature_telem[msid].times)), y=temperature_telem[msid].vals, name=msid,  line=dict(color=temperature_plot_colors[i])))
 
     for i, msid in enumerate(state_msids):
         fig_temperatures.add_trace(go.Scatter(
-            x=cxctime_to_datetime((state_telem[msid].times)), y=state_telem[msid].vals, name=msid, opacity=0.8, line=dict(color='#4f6d7a', width=0.5)), secondary_y=True)
+            x=cxc2dt((state_telem[msid].times)), y=state_telem[msid].vals, name=msid, opacity=0.8, line=dict(color='#4f6d7a', width=0.5)), secondary_y=True)
 
     # ANNOTATE THE PLOTS
 
@@ -101,13 +101,13 @@ def make_interactives(telem_start, save_dir, scp=False):
 
     fig_temperatures.add_vline(dt.datetime.utcnow(), line_width=1)
 
-    fig_voltages.add_annotation(x=dt.datetime.utcnow(), y=20,
+    fig_voltages.add_annotation(x=dt.datetime.utcnow(), y=0,
                                 text="Now",
                                 showarrow=True,
                                 arrowhead=1,
                                 xshift=-3)
 
-    fig_rates.add_annotation(x=dt.datetime.utcnow(), y=0,
+    fig_rates.add_annotation(x=dt.datetime.utcnow(), y=1000,
                              text="Now",
                              showarrow=True,
                              arrowhead=1,
@@ -140,7 +140,7 @@ def make_interactives(telem_start, save_dir, scp=False):
         font=dict(size=12),
         template="ggplot2",
         yaxis_range=[-16, 16],
-        xaxis_range=[dt.datetime.utcnow()-dt.timedelta(days=5),
+        xaxis_range=[dt.datetime.utcnow()-dt.timedelta(days=6),
                      dt.datetime.utcnow() + dt.timedelta(hours=2)],
         # legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01)
     )
@@ -151,7 +151,7 @@ def make_interactives(telem_start, save_dir, scp=False):
         yaxis_title="<b>Event Rates</b> (counts / sec)",
         font=dict(size=12),
         template="ggplot2",
-        xaxis_range=[dt.datetime.utcnow()-dt.timedelta(days=5),
+        xaxis_range=[dt.datetime.utcnow()-dt.timedelta(days=6),
                      dt.datetime.utcnow() + dt.timedelta(hours=2)],
         # yaxis_range=[1, 80000],
         yaxis=dict(type='log'),

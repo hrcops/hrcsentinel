@@ -21,7 +21,7 @@ import event_times
 
 from global_configuration import allowed_hosts
 from heartbeat import timestamp_string
-from chandratime import convert_to_doy, cxctime_to_datetime
+from chandratime import convert_to_doy, cxc2dt
 
 
 def update_plot(telem_start, iteration_count, save_path=None):
@@ -48,27 +48,27 @@ def update_plot(telem_start, iteration_count, save_path=None):
 
     ax1 = plt.subplot(2, 1, 1)
 
-    ax1.plot_date(cxctime_to_datetime(telem['2P15VAVL'].times), telem['2P15VAVL'].vals,
+    ax1.plot_date(cxc2dt(telem['2P15VAVL'].times), telem['2P15VAVL'].vals,
                   markersize=weight, label='+15V 2P15VAVL')
-    ax1.plot_date(cxctime_to_datetime(telem['2N15VAVL'].times),
+    ax1.plot_date(cxc2dt(telem['2N15VAVL'].times),
                   telem['2N15VAVL'].vals, markersize=weight, label='-15V 2N15VAVL')
-    ax1.plot_date(cxctime_to_datetime(telem['2P05VAVL'].times),
+    ax1.plot_date(cxc2dt(telem['2P05VAVL'].times),
                   telem['2P05VAVL'].vals, markersize=weight, label='+5V 2P05VAVL')
-    ax1.plot_date(cxctime_to_datetime(telem['2P24VAVL'].times),
+    ax1.plot_date(cxc2dt(telem['2P24VAVL'].times),
                   telem['2P24VAVL'].vals, markersize=weight, label='+24V 2P24VBVL')
 
     ax1.set_ylabel('Bus Voltages (V)')
 
     ax2 = plt.subplot(2, 1, 2, sharex=ax1)
 
-    ax2.plot_date(cxctime_to_datetime(telem['2CEAHVPT'].times),
+    ax2.plot_date(cxc2dt(telem['2CEAHVPT'].times),
                   telem['2CEAHVPT'].vals, markersize=weight, label='2CEAHVPT')
 
-    ax2.plot_date(cxctime_to_datetime(telem['2CHTRPZT'].times),
+    ax2.plot_date(cxc2dt(telem['2CHTRPZT'].times),
                   telem['2CHTRPZT'].vals, markersize=weight, label='CEA Temperature 2CHTRPZT')
-    ax2.plot_date(cxctime_to_datetime(telem['2FHTRMZT'].times),
+    ax2.plot_date(cxc2dt(telem['2FHTRMZT'].times),
                   telem['2FHTRMZT'].vals, markersize=weight, label='FEA Temperature 2FHTRMZT')
-    ax2.plot_date(cxctime_to_datetime(telem['2LVPLATM'].times),
+    ax2.plot_date(cxc2dt(telem['2LVPLATM'].times),
                   telem['2LVPLATM'].vals, markersize=weight, label='LV Plate 2LVPLATM')
 
     ax2.set_xlabel(f'Date')
