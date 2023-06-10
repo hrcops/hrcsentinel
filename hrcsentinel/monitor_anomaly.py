@@ -14,6 +14,7 @@ import numpy as np
 import requests
 from cheta import fetch_sci as fetch
 from cxotime import CxoTime
+from chandratime import cxctime_to_datetime
 from Chandra.Time import DateTime as cxcDateTime
 
 from heartbeat import are_we_in_comm, timestamp_string, force_timeout, TimeoutException
@@ -112,6 +113,8 @@ def main():
     fetch.data_source.set('maude allow_subset=False')
 
     iteration_counter = 0
+    things_are_normal_counter = 0
+    anomaly_counter = 0  # reset the anomaly counter
 
     misidlist = ['2C15PALV', '2N15PALV', '2FHTRMZT', '2CHTRPZT']
 
@@ -132,39 +135,69 @@ def main():
                 telem_msidlist = ['2C05PALV', '2C15PALV', '2CEAHVPT']
                 telem_msidlist_units = ['V', 'V', 'C']
 
-                state = fetch.MSIDset(state_msidlist, start=pull_telem_from)
-                telem = fetch.MSIDset(
-                    telem_msidlist, start=pull_telem_from)
+                # state = fetch.MSIDset(state_msidlist, start=pull_telem_from)
+                telem = fetch.MSIDset(telem_msidlist, start=pull_telem_from)
 
-                fifteen_volt_should_be_on = state['215PCAST'].vals[-1] == 'ON'
+                anomalous_condition = (telem['2C15PALV'].vals > 0.5) & (
+                    telem['2C15PALV'].vals < 14.0)
 
-                if fifteen_volt_should_be_on:
+                anomalous_voltage_indices = np.argwhere(anomalous_condition)
 
-                    print(
-                        f"({timestamp_string()}) \033[1mLast received telemetry report\033[0m")
-                    for msid, unit in zip(telem_msidlist, telem_msidlist_units):
+                if len(anomalous_voltage_indices) == 0:
+                    things_are_normal_counter += 1
+                    anomaly_counter = 0  # reset the anomaly counter
+                    if things_are_normal_counter == 1 or things_are_normal_counter % 500 == 0:
+                        print(f'({timestamp_string()}) All seems well.')
 
-                        # Calculate age of this telemetry
-                        latest_value = np.round(telem[msid].vals[-1], 3)
-                        latest_time = cxcDateTime(
-                            telem[msid].times[-1]).date
+                if len(anomalous_voltage_indices) > 2:
+                    things_are_normal_counter = 0
+                    anomaly_counter += 1
+                    # print(anomalous_voltage_indices[0])
 
-                        telemetry_age_seconds = CxoTime().now().secs - \
-                            telem[msid].times[-1]  # in units of seconds
-                        telemetry_age_timedelta = timedelta_formatter(dt.timedelta(
-                            seconds=telemetry_age_seconds))
+                    firstbad_voltage = telem['2C15PALV'].vals[anomalous_voltage_indices[0]][0]
 
-                        print(f'{msid}: {latest_value} {unit}')
+                    firstbad_cxctime = telem[
+                        '2C15PALV'].times[anomalous_voltage_indices[0]][0]
 
-                        if msid == '2C15PALV':
-                            pass
+                    firstbad_datetime = cxctime_to_datetime(firstbad_cxctime)
 
-                            if telem[msid].vals[-1] > 14.0:
-                                print(
-                                    f"HRC is ON and the +15V bus is GOOD at {latest_value} (Latest telemetry is {telemetry_age_timedelta} old)")
-                    print('\n')
-                    # print(
-                    #     f'({timestamp_string()}) Latest {msid} is : {latest_value} at {latest_time} ({telemetry_age_timedelta} old)')
+                    # Repeating the slack iteration every 10th iteration results in a cadence of
+                    # a message every ~minute for a two-day telemetry pull. That works for now.
+
+                    if anomaly_counter == 1 or anomaly_counter % 10 == 0:
+                        message = f'*ALERT*: *ANOMALOUS VOLTAGES DETECTED*\n\nStarting at *{firstbad_datetime.strftime("%m/%d/%Y %H:%M:%S")}* UTC \n(Chandra time *{firstbad_cxctime}*),\nI detect *{len(anomalous_voltage_indices)}* anomalous voltage readings! CHECK TELEMETRY NOW! \n\n(Warning #{anomaly_counter})'
+                        print(f'({timestamp_string()}) {message}')
+                        send_slack_message(message, channel='#comm-passes')
+
+                # fifteen_volt_should_be_on = state['215PCAST'].vals[-1] == 'ON'
+
+                # if fifteen_volt_should_be_on:
+
+                #     print(
+                #         f"({timestamp_string()}) \033[1mLast received telemetry report\033[0m")
+                #     for msid, unit in zip(telem_msidlist, telem_msidlist_units):
+
+                #         # Calculate age of this telemetry
+                #         latest_value = np.round(telem[msid].vals[-1], 3)
+                #         latest_time = cxcDateTime(
+                #             telem[msid].times[-1]).date
+
+                #         telemetry_age_seconds = CxoTime().now().secs - \
+                #             telem[msid].times[-1]  # in units of seconds
+                #         telemetry_age_timedelta = timedelta_formatter(dt.timedelta(
+                #             seconds=telemetry_age_seconds))
+
+                #         print(f'{msid}: {latest_value} {unit}')
+
+                #         if msid == '2C15PALV':
+                #             pass
+
+                #             if telem[msid].vals[-1] > 14.0:
+                #                 print(
+                #                     f"HRC is ON and the +15V bus is GOOD at {latest_value} (Latest telemetry is {telemetry_age_timedelta} old)")
+                #     print('\n')
+                #     print(
+                #         f'({timestamp_string()}) Latest {msid} is : {latest_value} at {latest_time} ({telemetry_age_timedelta} old)')
 
         except Exception as e:
             print(f'ERROR: {traceback.format_exc()}')

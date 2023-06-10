@@ -26,9 +26,11 @@ def parse_args():
     return args
 
 
-scripts_to_run = ['monitor_comms.py', 'monitor_telemetry.py', 'plot_critical_interactives.py']
+scripts_to_run = ['monitor_comms.py', 'monitor_telemetry.py',
+                  'monitor_anomaly.py', 'plot_critical_interactives.py']
 terminal_window_titles = ['Comm Pass Monitor | HRCSentinel',
                           'Telemetry Monitor | HRCSentinel',
+                          'Anomaly Monitor | HRCSentinel',
                           'Interactive Plot Generator | HRCSentinel']
 
 HRCSENTINEL_DIRECTORY_HEAD = '/home/tremblay/HRCOps/hrcsentinel/hrcsentinel'
