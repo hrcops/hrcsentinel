@@ -138,6 +138,11 @@ def main():
                 # state = fetch.MSIDset(state_msidlist, start=pull_telem_from)
                 telem = fetch.MSIDset(telem_msidlist, start=pull_telem_from)
 
+                telemetry_age_seconds = CxoTime().now().secs - \
+                    telem['2C15PALV'].times[-1]  # in units of seconds
+                telemetry_age_timedelta = timedelta_formatter(
+                    dt.timedelta(seconds=telemetry_age_seconds))
+
                 anomalous_condition = (telem['2C15PALV'].vals > 0.5) & (
                     telem['2C15PALV'].vals < 14.0)
 
@@ -147,7 +152,8 @@ def main():
                     things_are_normal_counter += 1
                     anomaly_counter = 0  # reset the anomaly counter
                     if things_are_normal_counter == 1 or things_are_normal_counter % 500 == 0:
-                        print(f'({timestamp_string()}) All seems well.')
+                        print(
+                            f'({timestamp_string()}) All seems well. Latest telemetry is {telemetry_age_timedelta} old.')
 
                 if len(anomalous_voltage_indices) > 2:
                     things_are_normal_counter = 0
