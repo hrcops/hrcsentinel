@@ -173,7 +173,7 @@ def main():
                     if anomaly_counter == 1 or anomaly_counter % 10 == 0:
                         message = f'*ALERT*: *ANOMALOUS VOLTAGES DETECTED*\n\nStarting at *{firstbad_datetime.strftime("%m/%d/%Y %H:%M:%S")}* UTC \n(Chandra time *{firstbad_cxctime}*),\nI detect *{len(anomalous_voltage_indices)}* anomalous voltage readings! CHECK TELEMETRY NOW! \n\n(Warning #{anomaly_counter})'
                         print(f'({timestamp_string()}) {message}')
-                        send_slack_message(message, channel='#comm-passes')
+                        send_slack_message(message, channel='#comm_passes')
 
                 # fifteen_volt_should_be_on = state['215PCAST'].vals[-1] == 'ON'
 
