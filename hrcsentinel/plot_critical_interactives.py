@@ -26,7 +26,7 @@ import traceback
 
 from heartbeat import are_we_in_comm, timestamp_string, force_timeout, TimeoutException
 from Ska.Matplotlib import cxctime2plotdate as cxc2pd
-from chandratime import cxc2dt
+from chandratime import cxctime_to_datetime as cxc2dt
 from global_configuration import allowed_hosts
 
 
