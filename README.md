@@ -4,139 +4,69 @@
 # HRCSentinel
 __Real-time trending, telemetry auditing, and comm alerts for the *Chandra* High Resolution Camera__
 
+`hrcsentinel` is a collection of Python scripts that enable real-time and backorbit telemetry monitoring (with associated team alerts) for *Chandra*'s High Resolution Camera (HRC). It was developed by [Grant Tremblay](www.granttremblay.com) of the HRC Instrument Principal Investigator Team in the wake of the [2020 and 2022 A- and B-side anomalies](https://cxc.cfa.harvard.edu/newsletters/news_31/article4.html) with the +15 V power supply bus. 
 
-## tl;dr
-`hrcsentinel` is a family of simple Python scripts that enable real-time and backorbit telemetry monitoring for *Chandra*'s High Resolution Camera (HRC). It was developed by Grant Tremblay of the HRC Instrument Principal Investigator Team in the wake of the 2020 and 2022 A- and B-side anomalies with the +15 V power supply bus. 
+The codes are designed to run in the `Ska flight` environment on the [Center for Astrophysics](www.cfa.harvard.edu) High Energy Astrophyscis Division Linux network. It is also possible to run it on your own personal machine, provided you have the [`Ska3` runtime environment](https://github.com/sot/skare3/wiki/Ska3-runtime-environment-for-users) installed and initialized on your machine. Please note that, if you're running this on your personal machine, I have *some* code still hardwired to my personal setup (e.g. `/Users/grant/`), so you should either fix this yourself, or wait for me to do it! 
 
-The codes are designed to run in the `ska flight` environment on the Center for Astrophysics High Energy Astrophyscis Division network. It is also possible to run it on your own personal machine, provided you have the `ska3` for users conda environment installed and initialized on your machine. 
+## Prerequisites & Caveats
 
-If you're on the CfA HEAD LAN, run 
+This code requires
+* Either that you are on the HEAD network (i.e. somewhere at the Center for Astrophysics), *or* that you have access to the SAO VPN, which must be connected if you're planning to run this code remotely. 
+* Either direct access to the `Ska flight` runtime environment on the CfA HEAD Linux Network, *or* installation of the [`Ska3` runtime environment](https://github.com/sot/skare3/wiki/Ska3-runtime-environment-for-users) on your personal machine. 
+* Because this code includes a (Slack)[www.slack.com] Bot to push alerts to the HRC Team, you will require access to the HRCOps Slack Workspace *and* a (Slack Bot `oauth` token)[https://api.slack.com/authentication/token-types] with the proper credentials to push bot notifications to channels within that workspace. Currently, Grant Tremblay and Ralph Kraft administer the Slack Workspace, and they are the only users with authority to generate the tokens. 
+
+If you need help with any of the above requirements, see Grant Tremblay. 
+
+Please note that this code relies *entirely* on the [`MAUDE` telemetry server](https://occweb.cfa.harvard.edu/twiki/bin/view/Software/MAUDE/WebHome), provided by the Flight Operations Team. We are single-strung on this: if *MAUDE* goes down, `hrcsetinel` goes down! Of course, the HRC SOT team does have several independent monitoring codes / interfaces that are totally separate from `MAUDE`. 
+
+## Quick Start
+
+### Installation
+Nothing fancy here. Simply `git clone` this repository onto a local directory of your choice (presumably in your user account on the HEAD Linux Network). Stable code will always live in the `main` branch. Once cloned, `cd` to the `hrcsentinel` subdirectory within the repository and, if you're on the CfA HEAD LAN, run 
 ```
 ./start_hrcsentinel
 ```
 
-This shell script will launch four `gnome terminal` windows, which will independently run the four main `hrcsentinel` subroutines in the `ska flight` environment. 
+This shell script will initailize the `Ska flight` environment and launch four `gnome terminal` windows. These will will independently run the four main `hrcsentinel` subroutines. On the HEAD LAN, these codes are stable against timeouts and `MAUDE` downtimes, and should run essentially indefinitely. 
 
 ![Screenshots](misc/4panel.png)
 
 ## In more detail
 
+`HRCSentinel` is composed of four main components:
 
-`HRCSentinel` is composed of three main components:
+* `monitor_telemetry.py`, which continually updates an instrument status dashboard. At this time, we host that dashboard [here](https://icxc.cfa.harvard.edu/hrcops/hrcmonitor/) (SAO VPN required). The status dashboard looks like this: 
 
-* `HRCMonitor`, which continually updates an instrument status dashboard. At this time, we host that dashboard [here](https://icxc.cfa.harvard.edu/hrcops/hrcmonitor/) (SAO VPN required).
+![Dashboard](misc/screenshots.png)
 
-* `HRCAuditor`, which audits instrument telemetry during all real-time DSN comm
-passes, and sends Slack alerts when anomalies are detected.
+* `plot_critical_interactives.py`, a separate script that produces *interactive* plots (using [Plotly](https://plotly.com/)) on the [telemetry status dashboard](https://icxc.cfa.harvard.edu/hrcops/hrcmonitor/). The interactive plots look like this: 
 
-* `HRCCommBot`, a Slack Bot that provides real-time DSN comm pass alerts.
+![Interactives](misc/interactives.png)
 
-
-
-
-![Screenshots](misc/screenshots.png)
-
-This code will only work on *Chandra* [Operations Control Center](https://www.si.edu/newsdesk/releases/virtual-behind-scenes-tour-chandra-operations-control-center-now-available) EGSE machines and the [Center for Astrophysics](www.cfa.harvard.edu) LAN. This is because it heavily relies on *Chandra*-internal tools, namely `MAUDE` (for real-time processed telemetry) and the `ska/cheta` archives (for long-term monitoring). Therefore, if you're a member of the public, *this code will probably not work on your machine!* (but you're still welcome to see it!). If you are a *Chandra* Flight Operations Team member and you would like help adapting this code for your use, please contact [Grant Tremblay](www.granttremblay.com).
-
-## Caveats and warnings
-
-The code relies *entirely* on `MAUDE`, provided by the Flight Operations Team, for all telemetry monitoring. We are single-strung on this: if *MAUDE* goes down, `hrcsetinel` goes down! 
-
-
-## `HRCSentinel` in more detail
-
-At a basic level, the codes main components are:
-* `commbot.py`, which watches for every DSN Comm Pass with *Chandra*. At the start and end of every Comm pass, it sends a Slack message to our channel summarizing the current status of the HRC. `HRCCommBot` is also used to send Slack alerts (i.e. mobile & desktop push notifications) in the event that `HRCMonitor`'s telemetry monitoring detects an anomaly.
+* `monitor_comms.py`, which listens for any active [DSN comm pass with *Chandra*](https://cxc.cfa.harvard.edu/mta/ASPECT/arc/) and reports critical real-time telemetry associated with that pass. It is meant to both alert the team that a comm pass has either just begun or just ended, and it provides a (non-exhaustive) quicklook at HRC's State of Health to bracket every pass. A comm pass slack alert looks something like this: 
 
 ![An example of an HRCCommBot Alert on Slack](misc/commbot_1.png)
 
+* `monitor_anomaly.py`, which continuously scans the prior two days of HRC telemetry (including backorbit data from `MAUDE` as soon as it's populated in the wake of a comm pass), and searches for bad/anomalous telemetry that would signal a return of the [2020 and 2022 A- and B-side anomalies](https://cxc.cfa.harvard.edu/newsletters/news_31/article4.html). It also searches for violations of the (new as of 2023) 10 C `2CEAHVPT` planning limit, and any occurrances of `SCS 107`. If it finds any of the above, it will quickly send an alert to the Slack Workspace to alert the team. An anomaly alert looks (something like) this: 
 
-* `hrcmonitor.py`, which creates a large number of plots that are viewable [here](https://icxc.cfa.harvard.edu/hrcops/hrcmonitor/). These plots include:
+![Interactives](misc/example_alert.png)
 
+
+
+## The HRC Status Dashboard
+
+`monitor_telemetry.py` and `plot_critical_interactives.py` create a large number of plots that are viewable [here](https://icxc.cfa.harvard.edu/hrcops/hrcmonitor/). These plots include:
+
+  * Interactive (zoomable / pannable) plots of the last five days of critical HRC telemetry (voltages, temperatures, and count rates). Any occurance of the anomaly will be immediately visible and inspectable here. 
   * A 12-pane status dashboard of all relevant HRC telelmetry (temperatures, voltages, etc.). These plots show all telemetry over a 7 day window. A vertical line is used to indicate the current time.
-  * A continually updated plot of anti-coincidence shield and detector event rates. This plot includes markers for all scheduled DSN comm passes. It will eventually incorporate the new GOES Shield proxy.
+  * A continually updated plot of anti-coincidence shield and detector event rates. This plot includes markers for all scheduled DSN comm passes, the GOES HRC Shield Proxy, and upcoming scheduled HRC observations. 
   * Twenty-year mission-wide plots of all MSIDs shown on the current status dashboard. Yellow lines are used to indicate the very latest telemetry, so that currrent temperatures / voltages (etc.) can be compared with mission-wide trends.
   * Two detailed plots of thermal trending over the mission lifetime.
-  * Motor Control status plots. These should NEVER move. The motor control dashboard is for piece of mind and should always show straight horizontal lines. No step functions! :)
+  * Motor Control status plots (which should *never* show state changes). 
 
 ![An example of an HRCCommBot Alert on Slack](misc/hrcmonitor_examples.png)
 
 
-## How to run `HRCSentinel`
-
-#### tl;dr
-On a HEAD LAN machine such as `han-v.cfa.harvard.edu`, run
-```shell
-./hrcsentinel_masterstart
-```
-(or `sh hrcsentinel_masterstart`). This will launch a GNU `screen` session with two split panes that run `hrcmonitor` and `commbot` (the two primary components of `HRCSentinel`) independently and in parallel (as intended). The split `screen` looks like this (`hrcmonitor` is on the top, `commbot` is on the bottom):
-![What HRCSentinel looks like on an EGSE machine](misc/screen_example.png)
-
-
-
-`hrcsentinel` is primarily comprised of two separate codes, `hrcmonitor.py` and `commbot.py`, which I run independently on `han-v`, a CfA internal (virtual) machine.
-
-Starting both codes should be as simple as:
-
-`./hrc_masterstart` (or `sh hrc_masterstart`)
-
-
-1. Initialize the `ska` Flight environment:
-`source /proj/sot/ska3/flight/bin/ska_envs.sh` (I use an alias for this), then:
-
-`python hrcmonitor.py`
-
-You can get help with:
-
-```
-❯ python hrcmonitor.py --help
-usage: hrcmonitor.py [-h] [--fake_comm] [--force_ska] [--report_errors] [--show_in_gui]
-
-Monitor the VCDU telemetry stream, and update critical status plots whenever we are in comm.
-
-optional arguments:
-  -h, --help       show this help message and exit
-  --fake_comm      Trick the code to think we are in comm. Useful for testing.
-  --force_ska      Trick the code pull from Ska/CXC instead of MAUDE with a switch to fetch.data_source.set()
-  --report_errors  Print MAUDE exceptions (which are common) to the command line
-  --show_in_gui    Show plots with plt.show()
-```
-
-```
-❯ python commbot.py --help
-usage: commbot.py [-h] [--fake_comm] [--report_errors]
-
-Monitor the VCDU telemetry stream, and send a message to the HRC Ops Slack with critical HRC telemetry whenever we are in comm.
-
-optional arguments:
-  -h, --help       show this help message and exit
-  --fake_comm      Trick the code to think we are in comm. Useful for testing.
-  --report_errors  Print MAUDE exceptions (which are common) to the command line
-```
-
-
-### CommBot
-
-```commbot.py``` calls ```heartbeat.py``` to monitor the VCDU counter MSID in MAUDE and look for increments, indicating that we are currently in DSN comm with Chandra. When these VCDU increments are first detected, ```commbot``` sends a Slack message to a dedicated channel in our private HRCOps Slack Workspace.
-
-```python
-python commbot.py --report_errors
-```
-
-### Other utilities
-
-```python
-python plot_rates.py
-```
-will plot a 7 day view of the HRC AntiCoincidence shield rate, as well as total
-and valid detector event rates. It will also plot the GOES-16 proxy for the AntiCo shield rate (if available).
-
-You can also call `plot_dashboard.py` directly from the command line for a custom dashboard view with
-user-defined date ranges and data sampling. For example,
-
-```python
-python plot_dashboard.py --start 2001-07-17 --stop 2012-05-21 --sampling daily
-```
 
 ### Testing, faking a comm pass, etc.
 
