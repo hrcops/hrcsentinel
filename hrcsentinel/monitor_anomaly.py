@@ -94,6 +94,9 @@ def get_args():
     argparser.add_argument("--test", help="Run a full test of the code. ",
                            action="store_true")
 
+    argparser.add_argument("--report_errors", help="Print the full traceback of any exception encountered. ",
+                           action="store_true")
+
     args = argparser.parse_args()
 
     return args
@@ -112,9 +115,15 @@ def main():
 
     fetch.data_source.set('maude allow_subset=False')
 
+    bot_channel = '#comm_passes'  # the default channel for alerts
+
     iteration_counter = 0
     things_are_normal_counter = 0
     anomaly_counter = 0  # reset the anomaly counter
+    anomaly_warning_counter = 0
+
+    bad_temperature_counter = 0
+    temperature_warning_counter = 0  # reset the temp warning counter
 
     misidlist = ['2C15PALV', '2N15PALV', '2FHTRMZT', '2CHTRPZT']
 
@@ -131,49 +140,77 @@ def main():
 
                 # Check the Mission-critical MSIDs
 
-                state_msidlist = ['215PCAST']
-                telem_msidlist = ['2C05PALV', '2C15PALV', '2CEAHVPT']
-                telem_msidlist_units = ['V', 'V', 'C']
+                # state_msidlist = ['215PCAST']
+                # telem_msidlist = ['2C05PALV', '2C15PALV', '2CEAHVPT']
+                telem_msidlist = ['2P15VAVL', '2CEAHVPT']
+                telem_msidlist_units = ['V', 'C']
 
                 # state = fetch.MSIDset(state_msidlist, start=pull_telem_from)
                 telem = fetch.MSIDset(telem_msidlist, start=pull_telem_from)
 
+                if args.test is True:
+                    # Then we'll pick a time when we know an anomaly occurred
+                    bot_channel = '#bot-testing'
+                    telem = fetch.MSIDset(
+                        telem_msidlist, start='2020:236', stop='2020:240')
+
                 telemetry_age_seconds = CxoTime().now().secs - \
-                    telem['2C15PALV'].times[-1]  # in units of seconds
+                    telem['2P15VAVL'].times[-1]  # in units of seconds
                 telemetry_age_timedelta = timedelta_formatter(
                     dt.timedelta(seconds=telemetry_age_seconds))
 
-                anomalous_condition = (telem['2C15PALV'].vals > 0.5) & (
-                    telem['2C15PALV'].vals < 14.0)
+                # 2P15VAVL reads as 2.81 V when the +5 V is on and the +15 V is off
+                anomalous_condition = (telem['2P15VAVL'].vals > 2.85) & (
+                    telem['2P15VAVL'].vals < 14.0)
+
+                bad_temperature = (telem['2CEAHVPT'].vals > 10.0)
 
                 anomalous_voltage_indices = np.argwhere(anomalous_condition)
+                bad_temperature_indices = np.argwhere(bad_temperature)
 
-                if len(anomalous_voltage_indices) == 0:
+                if len(anomalous_voltage_indices) < 2 and len(bad_temperature_indices) < 2:
                     things_are_normal_counter += 1
                     anomaly_counter = 0  # reset the anomaly counter
+                    anomaly_warning_counter = 0  # reset the warning counter
                     if things_are_normal_counter == 1 or things_are_normal_counter % 500 == 0:
                         print(
-                            f'({timestamp_string()}) All seems well. Latest telemetry is {telemetry_age_timedelta} old.')
+                            f"({timestamp_string()}) All seems well.\n\nLast +15V Reading: {np.round(telem['2P15VAVL'].vals[-1],3)} V\nLast 2CEAHVPT Temperature Reading: {np.round(telem['2CEAHVPT'].vals[-1],3)} C\n\nLast telemetry is {telemetry_age_timedelta} old. ")
 
                 if len(anomalous_voltage_indices) > 2:
                     things_are_normal_counter = 0
                     anomaly_counter += 1
                     # print(anomalous_voltage_indices[0])
 
-                    firstbad_voltage = telem['2C15PALV'].vals[anomalous_voltage_indices[0]][0]
+                    firstbad_voltage = telem['2P15VAVL'].vals[anomalous_voltage_indices[0]][0]
 
-                    firstbad_cxctime = telem[
-                        '2C15PALV'].times[anomalous_voltage_indices[0]][0]
+                    firstbad_voltage_cxctime = telem[
+                        '2P15VAVL'].times[anomalous_voltage_indices[0]][0]
 
-                    firstbad_datetime = cxctime_to_datetime(firstbad_cxctime)
+                    firstbad_voltabe_datetime = cxctime_to_datetime(
+                        firstbad_voltage_cxctime)
 
                     # Repeating the slack iteration every 10th iteration results in a cadence of
                     # a message every ~minute for a two-day telemetry pull. That works for now.
 
                     if anomaly_counter == 1 or anomaly_counter % 10 == 0:
-                        message = f'*ALERT*: *ANOMALOUS VOLTAGES DETECTED*\n\nStarting at *{firstbad_datetime.strftime("%m/%d/%Y %H:%M:%S")}* UTC \n(Chandra time *{firstbad_cxctime}*),\nI detect *{len(anomalous_voltage_indices)}* anomalous voltage readings! CHECK TELEMETRY NOW! \n\n(Warning #{anomaly_counter})'
+                        anomaly_warning_counter += 1
+                        message = f'*ALERT*: *ANOMALOUS VOLTAGES DETECTED*\n\nStarting at *{firstbad_voltabe_datetime.strftime("%m/%d/%Y %H:%M:%S")}* UTC \n(Chandra time *{firstbad_voltage_cxctime}*),\nI detect *{len(anomalous_voltage_indices)}* anomalous voltage readings! CHECK TELEMETRY NOW! \n\n(Warning #{anomaly_warning_counter})'
                         print(f'({timestamp_string()}) {message}')
-                        send_slack_message(message, channel='#comm_passes')
+                        send_slack_message(message, channel=bot_channel)
+
+                if len(bad_temperature_indices) > 2:
+                    bad_temperature_counter += 1
+
+                    firstbad_temperature = telem['2CEAHVPT'].vals[bad_temperature_indices[0]][0]
+
+                    firstbad_temperature_cxctime = telem['2CEAHVPT'].times[bad_temperature_indices[0]][0]
+
+                    firstbad_temperature_datetime = cxctime_to_datetime(
+                        firstbad_temperature_cxctime)
+
+                    if temperature_warning_counter == 1 or temperature_warning_counter % 10 == 0:
+                        temperature_warning_counter += 1
+                        message = f'*WARNING*: 2CEAHVPT shows {len(bad_temperature_indices)} values above 10.0 C planning limit starting at *{firstbad_temperature_datetime.strftime("%m/%d/%Y %H:%M:%S")}* UTC \n(Chandra time *{firstbad_temperature_cxctime}*)\n\n(Warning #{temperature_warning_counter})'
 
                 # fifteen_volt_should_be_on = state['215PCAST'].vals[-1] == 'ON'
 
@@ -206,7 +243,10 @@ def main():
                 #         f'({timestamp_string()}) Latest {msid} is : {latest_value} at {latest_time} ({telemetry_age_timedelta} old)')
 
         except Exception as e:
-            print(f'ERROR: {traceback.format_exc()}')
+            print(f'({timestamp_string()}) Error! Use --report_errors to show them!')
+
+            if args.report_errors is True:
+                print(f'({timestamp_string()}) Error! \n{traceback.format_exc()}')
 
         # time.sleep(20)
 

@@ -34,7 +34,7 @@ def format_dates(cheta_dates, scp=False):
     return np.array([dt.datetime.strptime(d, '%Y:%j:%H:%M:%S.%f') for d in CxoTime(cheta_dates).date])
 
 
-def make_interactives(telem_start, save_dir, scp=False):
+def make_interactives(telem_start, telem_stop=None, save_dir='/Users/grant/Desktop/', scp=False):
 
     # Set the MSIDs we want to plot
     voltage_msids = ['2P15VAVL', '2N15VAVL', '2P05VAVL']
@@ -54,10 +54,13 @@ def make_interactives(telem_start, save_dir, scp=False):
     temperature_plot_colors = ["#fb8b24", "#d90368", "#820263"]
 
     # Fetch the telemetry
-    voltage_telem = fetch.MSIDset(voltage_msids, start=telem_start)
-    rate_telem = fetch.MSIDset(rate_msids, start=telem_start)
-    temperature_telem = fetch.MSIDset(temperature_msids, start=telem_start)
-    state_telem = fetch.MSIDset(state_msids, start=telem_start)
+    voltage_telem = fetch.MSIDset(
+        voltage_msids, start=telem_start, stop=telem_stop)
+    rate_telem = fetch.MSIDset(rate_msids, start=telem_start, stop=telem_stop)
+    temperature_telem = fetch.MSIDset(
+        temperature_msids, start=telem_start, stop=telem_stop)
+    state_telem = fetch.MSIDset(
+        state_msids, start=telem_start, stop=telem_stop)
 
     fig_voltages = make_subplots(specs=[[{"secondary_y": True}]])
 
@@ -94,30 +97,31 @@ def make_interactives(telem_start, save_dir, scp=False):
 
     # Add the critical temperature thresholds as horizontal lines
 
-    fig_voltages.add_vline(
-        dt.datetime.utcnow(), line_width=1)
+    if telem_stop is None:
+        fig_voltages.add_vline(
+            dt.datetime.utcnow(), line_width=1)
 
-    fig_rates.add_vline(dt.datetime.utcnow(), line_width=1)
+        fig_rates.add_vline(dt.datetime.utcnow(), line_width=1)
 
-    fig_temperatures.add_vline(dt.datetime.utcnow(), line_width=1)
+        fig_temperatures.add_vline(dt.datetime.utcnow(), line_width=1)
 
-    fig_voltages.add_annotation(x=dt.datetime.utcnow(), y=0,
-                                text="Now",
-                                showarrow=True,
-                                arrowhead=1,
-                                xshift=-3)
-
-    fig_rates.add_annotation(x=dt.datetime.utcnow(), y=1000,
-                             text="Now",
-                             showarrow=True,
-                             arrowhead=1,
-                             xshift=-3)
-
-    fig_temperatures.add_annotation(x=dt.datetime.utcnow(), y=0,
+        fig_voltages.add_annotation(x=dt.datetime.utcnow(), y=0,
                                     text="Now",
                                     showarrow=True,
                                     arrowhead=1,
                                     xshift=-3)
+
+        fig_rates.add_annotation(x=dt.datetime.utcnow(), y=1000,
+                                 text="Now",
+                                 showarrow=True,
+                                 arrowhead=1,
+                                 xshift=-3)
+
+        fig_temperatures.add_annotation(x=dt.datetime.utcnow(), y=0,
+                                        text="Now",
+                                        showarrow=True,
+                                        arrowhead=1,
+                                        xshift=-3)
 
     # fig_rates.add_hrect(y0=40000, y1=60000, fillcolor="orange", opacity=0.3,
     #                     annotation_text="SCS 107 Trip", annotation_position="inside bottom left")
@@ -213,6 +217,8 @@ def parse_args():
 
     argparser.add_argument('--show_once', action='store_true')
 
+    argparser.add_argument('--test_anomaly', action='store_true')
+
     argparser.add_argument('--scp', action='store_true')
 
     argparser.add_argument('--verbose', action='store_true')
@@ -239,6 +245,14 @@ def main():
 
     five_days_ago = dt.datetime.now() - dt.timedelta(days=5)
     telem_start = convert_to_doy(five_days_ago)
+    telem_stop = None
+
+    if args.test_anomaly is True:
+        telem_start = '2020:236'
+        telem_stop = '2020:240'
+        make_interactives(
+            telem_start=telem_start, telem_stop=telem_stop, save_dir=fig_save_directory, scp=args.scp)
+        sys.exit()
 
     iteration_counter = 0
     sleep_period_seconds = 300
@@ -257,7 +271,7 @@ def main():
                     print(
                         f'({timestamp_string()}) Refreshing interactive plots (iteration {iteration_counter})... ', end="\r", flush=True)
                     make_interactives(
-                        telem_start, save_dir=fig_save_directory, scp=args.scp)
+                        telem_start, telem_stop=telem_stop, save_dir=fig_save_directory, scp=args.scp)
 
                     for i in range(0, sleep_period_seconds):
                         print('Refreshing interactive plots in {} seconds...                                    '.format(
