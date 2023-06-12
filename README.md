@@ -6,10 +6,18 @@ __Real-time trending, telemetry auditing, and comm alerts for the *Chandra* High
 
 
 ## tl;dr
+`hrcsentinel` is a family of simple Python scripts that enable real-time and backorbit telemetry monitoring for *Chandra*'s High Resolution Camera (HRC). It was developed by Grant Tremblay of the HRC Instrument Principal Investigator Team in the wake of the 2020 and 2022 A- and B-side anomalies with the +15 V power supply bus. 
+
+The codes are designed to run in the `ska flight` environment on the Center for Astrophysics High Energy Astrophyscis Division network. It is also possible to run it on your own personal machine, provided you have the `ska3` for users conda environment installed and initialized on your machine. 
+
 If you're on the CfA HEAD LAN, run 
 ```
-./start_hrcsentienl
+./start_hrcsentinel
 ```
+
+This shell script will launch four `gnome terminal` windows, which will independently run the four main `hrcsentinel` subroutines in the `ska flight` environment. 
+
+![Screenshots](misc/4panel.png)
 
 ## In more detail
 
@@ -29,6 +37,11 @@ passes, and sends Slack alerts when anomalies are detected.
 ![Screenshots](misc/screenshots.png)
 
 This code will only work on *Chandra* [Operations Control Center](https://www.si.edu/newsdesk/releases/virtual-behind-scenes-tour-chandra-operations-control-center-now-available) EGSE machines and the [Center for Astrophysics](www.cfa.harvard.edu) LAN. This is because it heavily relies on *Chandra*-internal tools, namely `MAUDE` (for real-time processed telemetry) and the `ska/cheta` archives (for long-term monitoring). Therefore, if you're a member of the public, *this code will probably not work on your machine!* (but you're still welcome to see it!). If you are a *Chandra* Flight Operations Team member and you would like help adapting this code for your use, please contact [Grant Tremblay](www.granttremblay.com).
+
+## Caveats and warnings
+
+The code relies *entirely* on `MAUDE`, provided by the Flight Operations Team, for all telemetry monitoring. We are single-strung on this: if *MAUDE* goes down, `hrcsetinel` goes down! 
+
 
 ## `HRCSentinel` in more detail
 
