@@ -174,7 +174,7 @@ def main():
                     anomaly_warning_counter = 0  # reset the warning counter
                     if things_are_normal_counter == 1 or things_are_normal_counter % 20 == 0:
                         print(
-                            f"({timestamp_string()}) All seems well.\n\nLast +15V Reading: {np.round(telem['2P15VAVL'].vals[-1],3)} V\nLast 2CEAHVPT Temperature Reading: {np.round(telem['2CEAHVPT'].vals[-1],3)} C\n\nLast telemetry is {telemetry_age_timedelta} old. ")
+                            f"\n--------------------------------------------\n({timestamp_string()}) All seems well.\n\nLast +15V Reading: {np.round(telem['2P15VAVL'].vals[-1],3)} V\nLast 2CEAHVPT Temperature Reading: {np.round(telem['2CEAHVPT'].vals[-1],3)} C\n\nLast telemetry is {telemetry_age_timedelta} old. ")
 
                 if len(anomalous_voltage_indices) > 2:
                     things_are_normal_counter = 0
