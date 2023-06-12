@@ -50,7 +50,7 @@ This shell script will initailize the `Ska flight` environment and launch four `
 * `monitor_anomaly.py`, which continuously scans the prior two days of HRC telemetry (including backorbit data from `MAUDE` as soon as it's populated in the wake of a comm pass), and searches for bad/anomalous telemetry that would signal a return of the [2020 and 2022 A- and B-side anomalies](https://cxc.cfa.harvard.edu/newsletters/news_31/article4.html). It also searches for violations of the (new as of 2023) 10 C `2CEAHVPT` planning limit, and any occurrances of `SCS 107`. If it finds any of the above, it will quickly send an alert to the Slack Workspace to alert the team. An anomaly alert looks (something like) this: 
 
 ![Interactives](misc/example_alert.png)
-
+![Interactives](misc/anomaly_range.png)
 
 
 ## The HRC Status Dashboard
