@@ -37,7 +37,10 @@ def format_dates(cheta_dates, scp=False):
 def make_interactives(telem_start, telem_stop=None, save_dir='/Users/grant/Desktop/', scp=False):
 
     # Set the MSIDs we want to plot
-    voltage_msids = ['2P15VAVL', '2N15VAVL', '2P05VAVL']
+    voltage_msids = ['2P15VAVL', '2N15VAVL',
+                     '2P05VAVL']
+
+    step_msids = ['2IMTPAST', '2SPTPAST']
 
     rate_msids = ['2TLEV1RT',  # The Total Event Rate
                   '2VLEV1RT',  # VAlie Event Rate
@@ -61,6 +64,7 @@ def make_interactives(telem_start, telem_stop=None, save_dir='/Users/grant/Deskt
         temperature_msids, start=telem_start, stop=telem_stop)
     state_telem = fetch.MSIDset(
         state_msids, start=telem_start, stop=telem_stop)
+    step_telem = fetch.MSIDset(step_msids, start=telem_start, stop=telem_stop)
 
     fig_voltages = make_subplots(specs=[[{"secondary_y": True}]])
 
@@ -71,6 +75,12 @@ def make_interactives(telem_start, telem_stop=None, save_dir='/Users/grant/Deskt
     for i, msid in enumerate(state_msids):
         fig_voltages.add_trace(go.Scatter(
             x=cxc2dt((state_telem[msid].times)), y=state_telem[msid].vals, name=msid, opacity=0.8, line=dict(color='#4f6d7a', width=0.5)), secondary_y=True)
+
+    fig_steps = make_subplots(specs=[[{"secondary_y": True}]])
+
+    for i, msid in enumerate(step_msids):
+        fig_steps.add_trace(go.Scatter(
+            x=cxc2dt((step_telem[msid].times)), y=step_telem[msid].vals, name=msid, opacity=0.8))
 
     fig_rates = make_subplots(specs=[[{"secondary_y": True}]])
 
@@ -191,6 +201,7 @@ def make_interactives(telem_start, telem_stop=None, save_dir='/Users/grant/Deskt
     voltages_plot_file = os.path.join(save_dir, 'voltages.html')
     rates_plot_file = os.path.join(save_dir, 'rates.html')
     temperatures_plot_file = os.path.join(save_dir, 'temperatures.html')
+    steps_plot_file = os.path.join(save_dir, 'steps.html')
 
     # Save the plots to HTML files
     fig_voltages.write_html(
@@ -199,6 +210,9 @@ def make_interactives(telem_start, telem_stop=None, save_dir='/Users/grant/Deskt
         rates_plot_file, auto_open=True, full_html=False, config=dict(displaylogo=False))
     fig_temperatures.write_html(
         temperatures_plot_file, auto_open=True, full_html=False, config=dict(displaylogo=False))
+
+    fig_steps.write_html(
+        steps_plot_file, auto_open=True, full_html=False, config=dict(displaylogo=False))
 
     if scp is True:
         if os.path.exists('/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/'):

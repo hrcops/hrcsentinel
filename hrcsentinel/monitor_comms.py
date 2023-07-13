@@ -308,7 +308,7 @@ def main():
                         #                 channel=bot_slack_channel)
 
         except TimeoutException:
-            print(f"Funtion timed out! Pressing on...")
+            print(f"Main event loop timed out! Pressing on...")
             continue
 
         except Exception as e:
