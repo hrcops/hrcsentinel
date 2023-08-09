@@ -25,7 +25,14 @@ def cxctime_to_datetime(rawtimes):
     t0 = Chandra.Time.DateTime(times[0]).unix
     delta_time = (cxctime - unixtime).total_seconds() + seconds_since_1998_0
     plotdate_start = mdate.epoch2num(delta_time) # convert to days since start of Year 1 AD
+
+    DEPRECATE THIS. JUST USE CXOTIME! 
     """
+
+    # TODO
+    # As currently implemented, this is stupid. What you're actually doing
+    # is taking a DateTime, converting it into plot_date format, and then re-converting it into
+    # a DateTime. Lol.
 
     plot_date_time = mdate.num2date(cxc2pd(cxcDateTime(rawtimes).secs))
 

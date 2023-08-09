@@ -126,7 +126,7 @@ def calc_hrc_shield(dat):
 
 def get_goes_proxy():
     """
-    Return a format string for the PlotDate function and an array of GOES proxy rates.
+    Return an GOES proxy times (in datetime format) and rates (in counts per second)
     Used for HRCMonitor's shield plot
     """
     # Fetch the raw GOES data
