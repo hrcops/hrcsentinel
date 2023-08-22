@@ -21,6 +21,8 @@ def parse_args():
 
     argparser.add_argument('--iterm', action='store_true')
 
+    argparser.add_argument('--report_errors', action='store_true')
+
     args = argparser.parse_args()
 
     return args
@@ -38,6 +40,11 @@ SKAINIT_STRING = 'source /proj/sot/ska3/flight/bin/ska_envs.sh'
 
 args = parse_args()
 
+if args.report_errors is True:
+    report_error_string = '--report_errors'
+else:
+    report_error_string = ''
+
 if os.path.exists(HRCSENTINEL_DIRECTORY_HEAD):
     # Then we are on the HEAD LAN and on linux using Gnome Terminal
 
@@ -45,7 +52,7 @@ if os.path.exists(HRCSENTINEL_DIRECTORY_HEAD):
     for title, script in zip(terminal_window_titles, scripts_to_run):
         print(f'Launching {script} in a new terminal window...')
         os.system(
-            f'gnome-terminal --title "{title}" -- bash -c "{SKAINIT_STRING}; cd {HRCSENTINEL_DIRECTORY_HEAD}; python {script}"')
+            f'gnome-terminal --title "{title}" -- bash -c "{SKAINIT_STRING}; cd {HRCSENTINEL_DIRECTORY_HEAD}; python {script} {report_error_string}"')
 
 elif sys.platform == 'darwin':
     # then you are on macOS and presumably on a self-managed machine
@@ -87,4 +94,4 @@ elif sys.platform == 'darwin':
     elif args.iterm is False:
         for title, script in zip(terminal_window_titles, scripts_to_run):
             os.system(
-                f"osascript -e 'tell app \"Terminal\" to do script \"skainit && cd /Users/grant/HRCOps/hrcsentinel/hrcsentinel && clear  && python {script}\"'")
+                f"osascript -e 'tell app \"Terminal\" to do script \"skainit && cd /Users/grant/HRCOps/hrcsentinel/hrcsentinel && clear  && python {script} {report_error_string}\"'")
