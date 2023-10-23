@@ -14,13 +14,12 @@ import numpy as np
 import requests
 from cheta import fetch_sci as fetch
 from cxotime import CxoTime
-from chandratime import cxctime_to_datetime
-from Chandra.Time import DateTime as cxcDateTime
+from cxotime import CxoTime
 
 from heartbeat import are_we_in_comm, timestamp_string, force_timeout, TimeoutException
 from goes_proxy import get_goes_proxy
 from monitor_comms import send_slack_message
-from chandratime import convert_to_doy, timedelta_formatter
+from time_helpers import convert_to_doy, timedelta_formatter
 
 import datetime as dt
 
@@ -186,8 +185,8 @@ def main():
                     firstbad_voltage_cxctime = telem[
                         '2P15VAVL'].times[anomalous_voltage_indices[0]][0]
 
-                    firstbad_voltabe_datetime = cxctime_to_datetime(
-                        firstbad_voltage_cxctime)
+                    firstbad_voltabe_datetime = CxoTime(
+                        firstbad_voltage_cxctime).datetime
 
                     # Repeating the slack iteration every 10th iteration results in a cadence of
                     # a message every ~minute for a two-day telemetry pull. That works for now.
@@ -205,8 +204,8 @@ def main():
 
                     firstbad_temperature_cxctime = telem['2CEAHVPT'].times[bad_temperature_indices[0]][0]
 
-                    firstbad_temperature_datetime = cxctime_to_datetime(
-                        firstbad_temperature_cxctime)
+                    firstbad_temperature_datetime = CxoTime(
+                        firstbad_temperature_cxctime).datetime
 
                     if temperature_warning_counter == 1 or temperature_warning_counter % 10 == 0:
                         temperature_warning_counter += 1

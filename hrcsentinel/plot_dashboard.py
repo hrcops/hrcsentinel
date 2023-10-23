@@ -14,12 +14,16 @@ except ImportError:
 import event_times
 import msidlists
 import plot_stylers
-from chandratime import convert_to_doy, cxctime_to_datetime as cxc2dt
+from time_helpers import convert_to_doy
 from monitor_comms import convert_bus_current_to_dn
 from plot_motors import make_motor_plots
 from plot_rates import make_shield_plot
 from plot_thermals import make_thermal_plots
 from heartbeat import timestamp_string
+
+from global_configuration import determine_fig_save_directory
+
+from cxotime import CxoTime
 
 import matplotlib
 import matplotlib.dates as mdate
@@ -28,7 +32,7 @@ import numpy as np
 import pytz
 
 
-def comm_status_stamp(comm_status, code_start_time, hostname, fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/', debug_prints=False) -> None:
+def comm_status_stamp(comm_status, code_start_time, hostname, fig_save_directory=determine_fig_save_directory(), debug_prints=False) -> None:
     '''
     Make the comm status stamp
     '''
@@ -70,7 +74,7 @@ def comm_status_stamp(comm_status, code_start_time, hostname, fig_save_directory
     plt.close('all')
 
 
-def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), plot_stop=dt.date.today() + dt.timedelta(days=2), sampling='full', current_hline=False, date_format=mdate.DateFormatter('%d %H'), force_limits=False, missionwide=False, fig_save_directory=None, show_in_gui=False, use_cheta=False) -> None:
+def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), plot_stop=dt.date.today() + dt.timedelta(days=2), sampling='full', current_hline=False, date_format=mdate.DateFormatter('%d %H'), force_limits=False, missionwide=False, fig_save_directory=determine_fig_save_directory(), show_in_gui=False, use_cheta=False) -> None:
     plotnum = -1
 
     fig = plt.figure(figsize=(16, 6), constrained_layout=True)
@@ -109,12 +113,12 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
                 sys.stdout.write("\033[K")
 
                 if sampling == 'full':
-                    ax.plot_date(cxc2dt(
-                        data[msid].times), data[msid].vals, markersize=1, label=msid, zorder=1, rasterized=True)
+                    ax.plot(CxoTime(
+                        data[msid].times).datetime, data[msid].vals, markersize=1, label=msid, zorder=1, rasterized=True)
                 elif sampling == 'daily':
                     # Then plot the means
-                    ax.plot_date(cxc2dt(
-                        data[msid].times), data[msid].means, markersize=1, label=msid, zorder=1, rasterized=True)
+                    ax.plot(CxoTime(
+                        data[msid].times).datetime, data[msid].means, markersize=1, label=msid, zorder=1, rasterized=True)
                 # Plot a HORIZONTAL line at location of last data point.
                 if current_hline is True:
                     if missionwide is False:
@@ -148,9 +152,9 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
                         format_changes = fetch.get_telem('CCSDSTMF', start=convert_to_doy(
                             plot_start), sampling=sampling, max_fetch_Mb=100000, max_output_Mb=100000, quiet=True)
                         ax_resets = ax.twinx()
-                        ax_resets.plot_date(cxc2dt(
-                            fifo_resets['2FIFOAVR'].times), fifo_resets['2FIFOAVR'].vals, linewidth=0.5, marker=None, fmt="", alpha=0.7,  color=plot_stylers.blue, label='FIFO Reset', zorder=0, rasterized=True)
-                        ax_resets.plot_date(cxc2dt(format_changes['CCSDSTMF'].times), format_changes['CCSDSTMF'].vals,
+                        ax_resets.plot_date(CxoTime(
+                            fifo_resets['2FIFOAVR'].times).datetime, fifo_resets['2FIFOAVR'].vals, linewidth=0.5, marker=None, fmt="", alpha=0.7,  color=plot_stylers.blue, label='FIFO Reset', zorder=0, rasterized=True)
+                        ax_resets.plot_date(CxoTime(format_changes['CCSDSTMF'].times).datetime, format_changes['CCSDSTMF'].vals,
                                             linewidth=0.5, marker=None, fmt="", alpha=0.7,  color=plot_stylers.purple, label='Format Changes', zorder=0, rasterized=True)
                         ax_resets.tick_params(labelright='off')
                         ax_resets.set_yticks([])
@@ -170,8 +174,8 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
                     for msid in voltage_msids_a:
                         a_side_voltages = fetch.get_telem(msid, start=convert_to_doy(plot_start), stop=convert_to_doy(
                             event_times.time_of_cap_1543), sampling=sampling, max_fetch_Mb=100000, max_output_Mb=100000, quiet=True)
-                        ax.plot_date(cxc2dt(a_side_voltages[msid].times), a_side_voltages[msid].means,
-                                     color=plot_stylers.green, markersize=0.3, alpha=0.3, label=msid, zorder=1, rasterized=True)
+                        ax.plot(CxoTime(a_side_voltages[msid].times).datetime, a_side_voltages[msid].means,
+                                color=plot_stylers.green, markersize=0.3, alpha=0.3, label=msid, zorder=1, rasterized=True)
 
                     # Label the B-side swap (Aug 2020)
                     ax.text(event_times.time_of_cap_1543, ax.get_ylim()[
@@ -239,7 +243,7 @@ def make_realtime_plot(counter=None, plot_start=dt.datetime(2020, 8, 31, 00), pl
     plt.close()
 
 
-def make_ancillary_plots(fig_save_directory, show_in_gui=False):
+def make_ancillary_plots(fig_save_directory=determine_fig_save_directory(), show_in_gui=False):
     '''
     Create the thermal and motor plots
     '''

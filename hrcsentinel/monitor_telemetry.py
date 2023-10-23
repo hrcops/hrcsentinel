@@ -15,7 +15,7 @@ from matplotlib import gridspec
 from cheta import fetch
 from cxotime import CxoTime
 
-from global_configuration import allowed_hosts
+from global_configuration import allowed_hosts, determine_fig_save_directory
 import plot_stylers
 from heartbeat import are_we_in_comm, timestamp_string, force_timeout, TimeoutException
 from plot_dashboard import (comm_status_stamp, make_ancillary_plots,
@@ -62,20 +62,13 @@ def main():
 
     print('\033[1mHRCSentinel\033[0m | Telemetry Monitor')
 
-    # split is to get rid of .local or .cfa.harvard.edu
-    hostname = socket.gethostname().split('.')[0]
-
     args = get_args()
     fake_comm = args.fake_comm
     chatty = args.report_errors  # Will be True if user set --report_errors
 
-    if hostname in allowed_hosts:
-        fig_save_directory = allowed_hosts[hostname]
-        # print(f'({timestamp_string()}) Recognized host: {hostname}. Plots will be saved to {fig_save_directory}', end='\r', flush=True)
+    hostname = socket.gethostname().split('.')[0]
 
-    else:
-        sys.exit(
-            f'({timestamp_string()}) Hostname {hostname} is not recognized. Exiting.')
+    fig_save_directory = determine_fig_save_directory()
 
     # if args.show_in_gui is False:
     #     # Then we're on a headless machine and you should use agg

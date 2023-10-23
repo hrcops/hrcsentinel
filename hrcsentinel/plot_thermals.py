@@ -1,5 +1,6 @@
 #!/usr/bin/env conda run -n ska3 python
 
+import matplotlib.pyplot as plt
 from msidlists import *
 import pandas as pd
 import numpy as np
@@ -8,6 +9,7 @@ import sys
 from Ska.engarchive import fetch_sci as fetch
 import Chandra.Time
 
+
 from astropy.table import Table
 
 import datetime as dt
@@ -15,10 +17,16 @@ import pytz
 import matplotlib.dates as mdate
 from matplotlib import gridspec
 
-from chandratime import cxctime_to_datetime, convert_to_doy
+from time_helpers import convert_to_doy
+from cxotime import CxoTime
 
 
-import matplotlib.pyplot as plt
+from heartbeat import timestamp_string
+
+from global_configuration import determine_fig_save_directory
+import plot_stylers
+plot_stylers.styleplots()
+
 # plt.switch_backend('agg')
 
 
@@ -40,7 +48,7 @@ def compute_yearly_average(values, window):
     return moving_ave_array
 
 
-def make_thermal_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/'):
+def make_thermal_plots(counter=None, fig_save_directory=determine_fig_save_directory()):
 
     # Fetch all MSIDs
     msids_daily = fetch.Msidset(
@@ -96,24 +104,25 @@ def make_thermal_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/h
 
     for i, msid in zip(color_idx, ordered_msidlist):
 
-        print('Plotting daily thermals for {}'.format(
-            msid), end='\r', flush=True)
+        print(f'({timestamp_string()}) Plotting daily thermals for {msid}',
+              end='\r', flush=True)
         # Clear the command line manually
         sys.stdout.write("\033[K")
-        ax.plot_date(cxctime_to_datetime(msids_daily[msid].times),
-                     msids_daily[msid].means, '.', alpha=1.0, markersize=2.5, label='{}'.format(msid), color=plt.cm.RdYlBu_r(i),  rasterized=rasterized)
+        ax.plot(CxoTime(msids_daily[msid].times).datetime,
+                msids_daily[msid].means, '.', alpha=1.0, markersize=2.5, label='{}'.format(msid), color=plt.cm.RdYlBu_r(i),  rasterized=rasterized)
 
         # Draw a large point line where the current data point is
         with fetch.data_source('maude'):
-            latest_datapoint = fetch.Msid(msid, start='2020:340')
-            ax.plot_date(cxctime_to_datetime(latest_datapoint.times)[
-                         -1], latest_datapoint.vals[-1], markersize=8, color=plt.cm.RdYlBu_r(i), rasterized=rasterized, zorder=4)
+            latest_datapoint = fetch.Msid(
+                msid, start=convert_to_doy(dt.datetime.now()))
+            ax.plot(CxoTime(latest_datapoint.times[-1]).datetime, latest_datapoint.vals[-1],
+                    markersize=8, color=plt.cm.RdYlBu_r(i), rasterized=rasterized, zorder=4)
 
     ax.set_ylabel("Temperature (C)", fontsize=10)
     ax.set_xlabel("Date", fontsize=10)
     plt.xticks(fontsize=10)
     plt.yticks(fontsize=10)
-    ax.set_ylim(0, 40)
+    # ax.set_ylim(-20, 40)
 
     if counter is not None:
         ax.set_title('HRC Thermistor MSIDs (Daily Means) | Updated as of {} EST'.format(
@@ -147,30 +156,31 @@ def make_thermal_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/h
 
     fetch.data_source.set('cxc')
 
-    fig, ax = plt.subplots(figsize=(17, 8))
+    fig, ax = plt.subplots(figsize=(16, 8))
 
     n_lines = len(ordered_msidlist)
     color_idx = np.linspace(0, 1, n_lines)
 
     for i, msid in zip(color_idx, ordered_msidlist):
 
-        print('Plotting thermal trends for {}'.format(
-            msid), end='\r', flush=True)
+        print(f'({timestamp_string()}) Plotting thermal trends for {msid}',
+              end='\r', flush=True)
         # Clear the command line manually
         sys.stdout.write("\033[K")
 
-        times = cxctime_to_datetime(msids_daily[msid].times)
+        times = CxoTime(msids_daily[msid].times).datetime
         # ax.plot(all_trends["{}_trend".format(msidname)], lw=3.0, label=msidname, color=plt.cm.coolwarm(i))
-        ax.plot_date(times[time_corrector:], all_trends["{}_trend".format(
+        ax.plot(times[time_corrector:], all_trends["{}_trend".format(
             msid)], '-', label='{}'.format(msid), lw=3.0, color=plt.cm.RdYlBu_r(i), rasterized=rasterized)
         ax.fill_between(times[time_corrector:], all_trends["{}_trend".format(msid)] + all_trends["{}_stds".format(
             msid)], all_trends["{}_trend".format(msid)] - all_trends["{}_stds".format(msid)], facecolor='gray', alpha=0.4)
 
         # Draw a large point line where the current data point is
         with fetch.data_source('maude'):
-            latest_datapoint = fetch.Msid(msid, start='2020:340')
-            ax.plot_date(cxctime_to_datetime(latest_datapoint.times)[
-                         -1], latest_datapoint.vals[-1], markersize=8, color=plt.cm.RdYlBu_r(i), rasterized=rasterized, zorder=4)
+            latest_datapoint = fetch.Msid(
+                msid, start=convert_to_doy(dt.datetime.now()))
+            ax.plot(CxoTime(latest_datapoint.times[-1]).datetime, latest_datapoint.vals[-1],
+                    markersize=8, color=plt.cm.RdYlBu_r(i), rasterized=rasterized, zorder=4)
 
     ax.legend(prop={'size': 13}, loc='center left',
               bbox_to_anchor=(1, 0.5))
@@ -198,7 +208,7 @@ def make_thermal_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/h
     ax.set_xlim(dt.datetime(2001, 1, 1),
                 dt.date.today() + dt.timedelta(days=180))
 
-    ax.set_ylim(0, 40)
+    # ax.set_ylim(-20, 40)
 
     fig.savefig(fig_save_directory + 'thermal_trends.png',
                 dpi=300, bbox_inches='tight')
@@ -209,7 +219,7 @@ def make_thermal_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/h
 
 
 if __name__ == "__main__":
-    print('Updating Thermal Plots...', end='')
+    print(f'({timestamp_string()}) Updating Thermal Plots...', end='')
     make_thermal_plots()
     plt.show()
-    print('Done', end='')
+    print(f'({timestamp_string()}) Thermal plots created', end='')

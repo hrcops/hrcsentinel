@@ -1,30 +1,21 @@
 #!/usr/bin/env conda run -n ska3 python
+
+import datetime as dt
+import pytz
+
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdate
+
+from astropy.table import Table
+from Ska.engarchive import fetch_sci as fetch
+
+from cxotime import CxoTime
+
 from plot_stylers import *
 from event_times import *
 from msidlists import *
-import pandas as pd
-import numpy as np
-import os
-import sys
-import shutil
-import time
-import pytz
-import traceback
-
-from Ska.engarchive import fetch_sci as fetch
-import Chandra.Time
-
-from astropy.table import Table
-
-import datetime as dt
-import matplotlib.dates as mdate
-from matplotlib import gridspec
-
-from chandratime import convert_to_doy
-
-
-import matplotlib.pyplot as plt
-# plt.switch_backend('agg')
+from time_helpers import convert_to_doy
+from global_configuration import determine_fig_save_directory
 
 
 def make_motor_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor/plots/', plot_start=dt.datetime(2020, 8, 31, 00), plot_end=dt.date.today() + dt.timedelta(days=2), sampling='full', current_hline=False, date_format=mdate.DateFormatter('%d %H'), force_limits=False, missionwide=False):
@@ -59,8 +50,8 @@ def make_motor_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/hrc
                 # sys.stdout.write("\033[K")
 
                 # plotting the absolute value here to ignore -1
-                ax.plot_date(cxc2dt(
-                    data[msid].times), abs(data[msid].raw_vals), markersize=1, label=msid, zorder=1, rasterized=True, alpha=0.8)
+                ax.plot(CxoTime(
+                    data[msid].times).datetime, abs(data[msid].raw_vals), markersize=1, label=msid, zorder=1, rasterized=True, alpha=0.8)
 
                 # Plot a HORIZONTAL line at location of last data point.
                 if current_hline is True:
@@ -100,4 +91,4 @@ def make_motor_plots(counter=None, fig_save_directory='/proj/web-icxc/htdocs/hrc
 
 
 if __name__ == "__main__":
-    make_motor_plots(fig_save_directory='/Users/grant/Desktop/')
+    make_motor_plots(fig_save_directory=determine_fig_save_directory())

@@ -13,7 +13,7 @@ import requests
 from cheta import fetch_sci as fetch
 from cxotime import CxoTime
 
-from chandratime import convert_to_doy
+from time_helpers import convert_to_doy
 from heartbeat import are_we_in_comm, timestamp_string, force_timeout, TimeoutException
 
 import psutil

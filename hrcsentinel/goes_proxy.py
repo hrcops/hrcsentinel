@@ -8,7 +8,7 @@ import requests
 from astropy.table import Table
 from astropy.time import Time
 
-from chandratime import cxctime_to_datetime
+from cxotime import CxoTime
 
 # Globals
 
@@ -136,7 +136,7 @@ def get_goes_proxy():
     parsed_goes_data, _bad_goes_data = format_proton_data(
         raw_goes_data, data_types=data_types)
 
-    goes_times = cxctime_to_datetime(parsed_goes_data['time'])
+    goes_times = CxoTime(parsed_goes_data['time']).datetime
     goes_rates = parsed_goes_data['hrc_shield']
 
     return goes_times, goes_rates

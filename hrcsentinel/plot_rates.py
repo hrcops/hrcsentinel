@@ -16,16 +16,17 @@ import requests
 import yaml
 from astropy.table import Table
 from astropy.time import Time
-from Chandra.Time import DateTime as cxcDateTime
+
 from cheta import fetch
-from kadi import events
+
 from matplotlib import pyplot as plt
 from matplotlib.patches import Rectangle
-from Ska.Matplotlib import cxctime2plotdate as cxc2pd
+
 
 from global_configuration import allowed_hosts
 import plot_stylers
-from chandratime import cxctime_to_datetime as cxc2dt, convert_to_doy
+from time_helpers import convert_to_doy
+from cxotime import CxoTime
 from goes_proxy import get_goes_proxy
 from plot_helpers import drawnow
 
@@ -107,14 +108,14 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
         data = fetch.get_telem(msid, start=convert_to_doy(
             plot_start), sampling='full', max_fetch_Mb=100000, max_output_Mb=100000, quiet=True)
         # ax.plot(data[msid].times, data[msid].vals, label=msid)
-        ax.plot_date(cxc2dt(
-            data[msid].times), data[msid].vals, marker='o', fmt="", markersize=1.5, label=namelist[i])
+        ax.plot(CxoTime(
+            data[msid].times).datetime, data[msid].vals, marker='o', markersize=1.5, label=namelist[i])
 
     # Try to plot the GOES proxy rates. Don't die if it fails.
     try:
         goes_times, goes_rates = get_goes_proxy()
-        ax.plot_date(goes_times, goes_rates, marker=None, fmt="",
-                     alpha=0.8, zorder=1, label='GOES-16 Proxy')
+        ax.plot(goes_times, goes_rates, marker=None,
+                alpha=0.8, zorder=1, label='GOES-16 Proxy')
     except Exception as e:
         # This is bad practice but I don't give a !@#$%
         print('Error grabbing GOES proxy: {}'.format(e))
@@ -148,10 +149,10 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
             comm_start_raw = comm['tstart'] + 3600
             comm_stop_raw = comm['tstop']
 
-            comm_start = cxc2dt(comm_start_raw)
-            comm_stop = cxc2dt(comm_stop_raw)
-            comm_midpoint = cxc2dt(
-                (comm_stop_raw + comm_start_raw) / 2)
+            comm_start = CxoTime(comm_start_raw).datetime
+            comm_stop = CxoTime(comm_stop_raw).datetime
+            comm_midpoint = CxoTime(
+                (comm_stop_raw + comm_start_raw) / 2).datetime
 
             # comm_midpoint = mdate.num2date((cxc2pd(cxcDateTime(
             #     comm['tstart']).secs) + cxc2pd(cxcDateTime(comm['tstop']).secs)) / 2)
@@ -174,11 +175,11 @@ def make_shield_plot(fig_save_directory='/proj/web-icxc/htdocs/hrcops/hrcmonitor
             radzone_start_raw = orbit['t_perigee'] + orbit['dt_start_radzone']
             radzone_stop_raw = orbit['t_perigee'] + orbit['dt_stop_radzone']
 
-            radzone_start = cxc2dt(radzone_start_raw)
-            radzone_stop = cxc2dt(radzone_stop_raw)
+            radzone_start = CxoTime(radzone_start_raw).datetime
+            radzone_stop = CxoTime(radzone_stop_raw).datetime
 
-            radzone_midpoint = cxc2dt(
-                (radzone_stop_raw + radzone_start_raw) / 2)
+            radzone_midpoint = CxoTime(
+                (radzone_stop_raw + radzone_start_raw) / 2).datetime
 
             ax.axvspan(radzone_start, radzone_stop,
                        alpha=0.3, color='slategray', zorder=1)

@@ -20,7 +20,7 @@ import datetime as dt
 import matplotlib.dates as mdate
 from matplotlib import gridspec
 
-from chandratime import cxc2dt, convert_to_doy
+from time_helpers import convert_to_doy
 
 
 import matplotlib.pyplot as plt

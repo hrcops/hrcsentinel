@@ -16,7 +16,7 @@ from astropy import units as u
 from cheta import fetch_sci as fetch
 from cxotime import CxoTime
 from Chandra.Time import DateTime as chandraDateTime
-from chandratime import convert_to_doy
+from time_helpers import convert_to_doy
 import datetime as dt
 import pytz
 
@@ -25,8 +25,8 @@ from plot_helpers import scp_file_to_hrcmonitor
 import traceback
 
 from heartbeat import are_we_in_comm, timestamp_string, force_timeout, TimeoutException
-from Ska.Matplotlib import cxctime2plotdate as cxc2pd
-from chandratime import cxctime_to_datetime as cxc2dt
+
+from cxotime import CxoTime
 from global_configuration import allowed_hosts
 
 
@@ -70,38 +70,38 @@ def make_interactives(telem_start, telem_stop=None, save_dir='/Users/grant/Deskt
 
     for i, msid in enumerate(voltage_msids):
         fig_voltages.add_trace(go.Scatter(
-            x=cxc2dt((voltage_telem[msid].times)), y=voltage_telem[msid].vals, name=msid, line=dict(color=voltage_plot_colors[i])))
+            x=CxoTime((voltage_telem[msid].times)).datetime, y=voltage_telem[msid].vals, name=msid, line=dict(color=voltage_plot_colors[i])))
 
     for i, msid in enumerate(state_msids):
         fig_voltages.add_trace(go.Scatter(
-            x=cxc2dt((state_telem[msid].times)), y=state_telem[msid].vals, name=msid, opacity=0.8, line=dict(color='#4f6d7a', width=0.5)), secondary_y=True)
+            x=CxoTime((state_telem[msid].times)).datetime, y=state_telem[msid].vals, name=msid, opacity=0.8, line=dict(color='#4f6d7a', width=0.5)), secondary_y=True)
 
     fig_steps = make_subplots(specs=[[{"secondary_y": True}]])
 
     for i, msid in enumerate(step_msids):
         fig_steps.add_trace(go.Scatter(
-            x=cxc2dt((step_telem[msid].times)), y=step_telem[msid].vals, name=msid, opacity=0.8))
+            x=CxoTime((step_telem[msid].times)).datetime, y=step_telem[msid].vals, name=msid, opacity=0.8))
 
     fig_rates = make_subplots(specs=[[{"secondary_y": True}]])
 
     for i, msid in enumerate(rate_msids):
         fig_rates.add_trace(go.Scatter(
-            x=cxc2dt((rate_telem[msid].times)), y=rate_telem[msid].vals, name=msid, opacity=0.8, line=dict(color=rate_plot_colors[i])))
+            x=CxoTime((rate_telem[msid].times)).datetime, y=rate_telem[msid].vals, name=msid, opacity=0.8, line=dict(color=rate_plot_colors[i])))
 
     for i, msid in enumerate(state_msids):
         fig_rates.add_trace(go.Scatter(
-            x=cxc2dt((state_telem[msid].times)), y=state_telem[msid].vals, name=msid, opacity=0.8, line=dict(color='#4f6d7a', width=0.5)), secondary_y=True)
+            x=CxoTime((state_telem[msid].times)).datetime, y=state_telem[msid].vals, name=msid, opacity=0.8, line=dict(color='#4f6d7a', width=0.5)), secondary_y=True)
 
     # now make the temperatures plot
     fig_temperatures = make_subplots(specs=[[{"secondary_y": True}]])
 
     for i, msid in enumerate(temperature_msids):
         fig_temperatures.add_trace(go.Scatter(
-            x=cxc2dt((temperature_telem[msid].times)), y=temperature_telem[msid].vals, name=msid,  line=dict(color=temperature_plot_colors[i])))
+            x=CxoTime((temperature_telem[msid].times)).datetime, y=temperature_telem[msid].vals, name=msid,  line=dict(color=temperature_plot_colors[i])))
 
     for i, msid in enumerate(state_msids):
         fig_temperatures.add_trace(go.Scatter(
-            x=cxc2dt((state_telem[msid].times)), y=state_telem[msid].vals, name=msid, opacity=0.8, line=dict(color='#4f6d7a', width=0.5)), secondary_y=True)
+            x=CxoTime((state_telem[msid].times)).datetime, y=state_telem[msid].vals, name=msid, opacity=0.8, line=dict(color='#4f6d7a', width=0.5)), secondary_y=True)
 
     # ANNOTATE THE PLOTS
 

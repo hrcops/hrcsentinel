@@ -1,10 +1,7 @@
 #!/usr/bin/env conda run -n ska3 python
+# -*- coding: utf-8 -*-
 
-import datetime as dt
-import matplotlib.dates as mdate
-import numpy as np
-from astropy.time import Time
-from Chandra.Time import DateTime as cxcDateTime
+from cxotime import CxoTime
 from Ska.Matplotlib import cxctime2plotdate as cxc2pd
 
 
@@ -26,17 +23,16 @@ def cxctime_to_datetime(rawtimes):
     delta_time = (cxctime - unixtime).total_seconds() + seconds_since_1998_0
     plotdate_start = mdate.epoch2num(delta_time) # convert to days since start of Year 1 AD
 
-    DEPRECATE THIS. JUST USE CXOTIME! 
+    DEPRECATE THIS. JUST USE CXOTIME!
+
+    OKAY. Done. I used to do something idiotic like this, which was totally circular:
+        plot_date_time = mdate.num2date(cxc2pd(cxcDateTime(rawtimes).secs))
+
     """
 
-    # TODO
-    # As currently implemented, this is stupid. What you're actually doing
-    # is taking a DateTime, converting it into plot_date format, and then re-converting it into
-    # a DateTime. Lol.
+    datetime = CxoTime(rawtimes).datetime
 
-    plot_date_time = mdate.num2date(cxc2pd(cxcDateTime(rawtimes).secs))
-
-    return plot_date_time
+    return datetime
 
 
 def convert_to_doy(datetime_start):
