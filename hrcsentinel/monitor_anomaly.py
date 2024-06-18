@@ -159,7 +159,8 @@ def main():
                     dt.timedelta(seconds=telemetry_age_seconds))
 
                 # 2P15VAVL reads as 2.81 V when the +5 V is on and the +15 V is off
-                anomalous_condition = (telem['2P15VAVL'].vals > 2.85) & (
+                # updated this to 3.0 V as threshold because of 6/16/2024 false alarm
+                anomalous_condition = (telem['2P15VAVL'].vals > 3.0) & (
                     telem['2P15VAVL'].vals < 14.0)
 
                 bad_temperature = (telem['2CEAHVPT'].vals > 10.0)
@@ -191,7 +192,7 @@ def main():
                     # Repeating the slack iteration every 10th iteration results in a cadence of
                     # a message every ~minute for a two-day telemetry pull. That works for now.
 
-                    if anomaly_counter == 1 or anomaly_counter % 10 == 0:
+                    if anomaly_counter == 2:
                         anomaly_warning_counter += 1
                         message = f'*ALERT*: *ANOMALOUS VOLTAGES DETECTED*\n\nStarting at *{firstbad_voltabe_datetime.strftime("%m/%d/%Y %H:%M:%S")}* UTC \n(Chandra time *{firstbad_voltage_cxctime}*),\nI detect *{len(anomalous_voltage_indices)}* anomalous voltage readings! CHECK TELEMETRY NOW! \n\n(Warning #{anomaly_warning_counter})'
                         print(f'({timestamp_string()}) {message}')
@@ -207,7 +208,7 @@ def main():
                     firstbad_temperature_datetime = CxoTime(
                         firstbad_temperature_cxctime).datetime
 
-                    if temperature_warning_counter == 1 or temperature_warning_counter % 10 == 0:
+                    if temperature_warning_counter == 2:
                         temperature_warning_counter += 1
                         message = f'*WARNING*: 2CEAHVPT shows {len(bad_temperature_indices)} values above 10.0 C planning limit starting at *{firstbad_temperature_datetime.strftime("%m/%d/%Y %H:%M:%S")}* UTC \n(Chandra time *{firstbad_temperature_cxctime}*)\n\n(Warning #{temperature_warning_counter})'
 

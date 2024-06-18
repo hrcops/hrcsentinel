@@ -131,7 +131,7 @@ def make_thermal_plots(counter=None, fig_save_directory=determine_fig_save_direc
         ax.set_title(
             "HRC Thermistor Temperatures (Daily Averages) Over the Mission Lifetime", color='slategray', size=6)
     # ax.legend()
-    # ax.set_ylim(10, 40)
+    ax.set_ylim(-20, 40)
     ax.legend(prop={'size': 13}, loc='center left',
               bbox_to_anchor=(1, 0.5))
 
@@ -208,7 +208,7 @@ def make_thermal_plots(counter=None, fig_save_directory=determine_fig_save_direc
     ax.set_xlim(dt.datetime(2001, 1, 1),
                 dt.date.today() + dt.timedelta(days=180))
 
-    # ax.set_ylim(-20, 40)
+    ax.set_ylim(-20, 40)
 
     fig.savefig(fig_save_directory + 'thermal_trends.png',
                 dpi=300, bbox_inches='tight')
