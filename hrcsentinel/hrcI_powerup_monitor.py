@@ -3,6 +3,11 @@
 import Ska.engarchive.fetch as fetch
 import Chandra.Time
 
+
+from cxotime import CxoTime
+from Chandra.Time import DateTime as chandraDateTime
+from time_helpers import convert_to_doy, cxctime_to_datetime
+
 import datetime as dt
 import matplotlib.dates as mdate
 from matplotlib import gridspec
@@ -12,11 +17,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+from heartbeat import are_we_in_comm
+
 from msidlists import *
-from event_times import *
-from plot_stylers import *
+
+
+import plot_stylers
+import event_times
 
 import pytz
+
+from time_helpers import cxctime_to_datetime
 
 # from hrcsentinel import hrccore as hrc
 # hrc.styleplots()
@@ -28,26 +39,38 @@ plt.rcParams['ytick.labelsize'] = labelsizes
 
 
 # allow_subset=True should let us draw more data points
-fetch.data_source.set('cxc', 'maude allow_subset=True')
+# fetch.data_source.set('cxc', 'maude allow_subset=True')
+fetch.data_source.set('maude allow_subset=True')
 
 
 def update_plot():
 
+    weight = 2.0
+    in_comm = are_we_in_comm(cadence=0)
+    if in_comm:
+        comm_status_text = 'IN COMM'
+        comm_status_color = plot_stylers.green
+
+    elif not in_comm:
+        comm_status_text = 'NOT IN COMM'
+        comm_status_color = plot_stylers.red
+
     rasterized = True
     markersize = 1.0
-    colors_to_use = [yellow, blue, green, red]
+    colors_to_use = [plot_stylers.yellow, plot_stylers.blue,
+                     plot_stylers.green, plot_stylers.red]
 
     hrcI_msids = ['2IMTPAST', '2IMBPAST', '2IMHBLV', '2IMHVLV']
 
     for msid, color in zip(hrcI_msids, colors_to_use):
-        msid = fetch.MSID(msid, start='2021:045')
-        times = hrc.convert_chandra_time(msid.times)
+        msid = fetch.MSID(msid, start='2024:153')
+        times = cxctime_to_datetime(msid.times)
         vals = msid.vals
         ax1.plot_date(times, vals,
                       markersize=markersize, rasterized=rasterized, color=color,  label=msid.MSID)
 
     ax1.set_ylabel('HRC-I Voltage Step / Monitor Value')
-    xmin = dt.datetime(2021, 2, 16, 0)
+    xmin = dt.datetime(2024, 6, 4, 0)
     # Use today's date, plus 2 days
     end_date = dt.date.today() + dt.timedelta(days=1)
     xmax = end_date
@@ -59,15 +82,15 @@ def update_plot():
     #             color='gray', alpha=0.5)
 
     ax2.axhline(-20, color='gray')
-    ax2.axhline(-40, color=red)
+    ax2.axhline(-40, color=plot_stylers.red)
 
     n_lines = len(temperature_msids)
     color_idx = np.linspace(0, 1, n_lines)
 
     for i, msid in zip(color_idx, temperature_msids):
-        msid = fetch.MSID(msid, start='2021:045')
+        msid = fetch.MSID(msid, start='2024:154')
 
-        times = hrc.convert_chandra_time(msid.times)
+        times = cxctime_to_datetime(msid.times)
 
         if msid.unit == 'K':
             vals = msid.vals - 273.15
@@ -88,12 +111,12 @@ def update_plot():
 
     ax2.set_ylim(-50, 50)
 
-    rates = fetch.get_telem(['2TLEV1RT', '2VLEV1RT'], start='2021:045')
-    rate_times = hrc.convert_chandra_time(rates['2TLEV1RT'].times)
+    rates = fetch.get_telem(['2TLEV1RT', '2VLEV1RT'], start='2024:154')
+    rate_times = cxctime_to_datetime(rates['2TLEV1RT'].times)
     ax3.plot_date(
-        rate_times, rates['2TLEV1RT'].vals, color=red, markersize=markersize)
-    ax3.plot_date(hrc.convert_chandra_time(
-        rates['2VLEV1RT'].times), rates['2VLEV1RT'].vals, color=blue, markersize=markersize)
+        rate_times, rates['2TLEV1RT'].vals, color=plot_stylers.red, markersize=markersize)
+    ax3.plot_date(cxctime_to_datetime(
+        rates['2VLEV1RT'].times), rates['2VLEV1RT'].vals, color=plot_stylers.blue, markersize=markersize)
 
     ax3.set_ylim(0, 400)
     ax3.set_ylabel(r'Total/Valid Event Rates (counts s$^{-1}$)')
@@ -104,6 +127,12 @@ def update_plot():
     ax2.text(xmin, 51, 'Temperatures', color='slategray', fontsize=12)
     ax3.text(xmin, 341, 'Event Rates',
              color='slategray', fontsize=12)
+
+    # nowtime = (CxoTime.now().secs - time_zero.secs)/3600
+    nowtime = cxctime_to_datetime(CxoTime.now())
+    ax1.axvline(nowtime, color=comm_status_color, alpha=0.5)
+    nowtext = ax1.text(nowtime, ax1.get_ylim()[
+                       1], 'Now (' + comm_status_text + ')', fontsize=8, color=comm_status_color, va='top', zorder=3)
 
 
 if __name__ == "__main__":
@@ -120,5 +149,5 @@ if __name__ == "__main__":
             plt.pause(60)
             plt.draw()
         except Exception as e:
-            print('MAUDE error')
+            print(f'MAUDE error: {e}')
             continue
