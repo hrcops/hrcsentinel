@@ -125,9 +125,9 @@ def grab_critical_telemetry(start=CxoTime.now() - 60 * u.s):
         hrc_observing_status = 'NOT observing'
 
     # in order of off, half, full
-    expected_hrc_i_states = [(0, 0), (42, 53), (79, 91)]
+    expected_hrc_i_states = [(0, 0), (42, 53), (80, 92)]
     # in order of off, half, full
-    expected_hrc_s_states = [(0, 0), (43, 54), (95, 107)]
+    expected_hrc_s_states = [(0, 0), (43, 54), (96, 108)]
 
     expected_status = ['OFF', 'at HALF voltage', 'at FULL voltage']
 

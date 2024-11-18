@@ -142,7 +142,7 @@ def make_thermal_plots(counter=None, fig_save_directory=determine_fig_save_direc
     ax.text(dt.datetime.now(tz=pytz.timezone('US/Eastern')), ax.get_ylim()[1]+0.3,
             'Now', fontsize=10, color='slategray')
 
-    ax.set_xlim(dt.datetime(2001, 1, 1),
+    ax.set_xlim(dt.datetime(2020, 1, 1),
                 dt.date.today() + dt.timedelta(days=180))
 
     fig.savefig(fig_save_directory + 'thermals.png',
@@ -205,7 +205,7 @@ def make_thermal_plots(counter=None, fig_save_directory=determine_fig_save_direc
     ax.text(dt.datetime.now(tz=pytz.timezone('US/Eastern')), ax.get_ylim()[1]+0.3,
             'Now', fontsize=10, color='slategray')
 
-    ax.set_xlim(dt.datetime(2001, 1, 1),
+    ax.set_xlim(dt.datetime(2020, 1, 1),
                 dt.date.today() + dt.timedelta(days=180))
 
     ax.set_ylim(-20, 40)
